@@ -26,6 +26,11 @@ dependencies:
   flutter_map: ^6.1.0 # For the Map feature
   latlong2: ^0.9.0
 
+  mime: ^1.0.4
+  http_parser: ^4.0.0  # สำหรับ MediaType
+
+  camera: ^0.10.5+9
+
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
