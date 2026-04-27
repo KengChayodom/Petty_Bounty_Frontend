@@ -11,6 +11,21 @@ dependencies:
   flutter:
     sdk: flutter
 
+# --- State Management & Routing ---
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  go_router: ^13.2.0
+
+  # --- Backend & Network ---
+  supabase_flutter: ^2.4.1
+  http: ^1.2.1
+
+  # --- UI & Utilities ---
+  image_picker: ^1.0.7
+  cached_network_image: ^3.3.1
+  flutter_map: ^6.1.0 # For the Map feature
+  latlong2: ^0.9.0
+
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
@@ -19,6 +34,11 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.13.1
+
+  build_runner: ^2.4.8
+  riverpod_generator: ^2.4.0
+  custom_lint: ^0.6.2
+  riverpod_lint: ^2.3.10
 
 flutter:
 
