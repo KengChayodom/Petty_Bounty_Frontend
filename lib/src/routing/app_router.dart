@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/sightings/presentation/camera_screen.dart';
+import '../features/sightings/presentation/verification_screen.dart';
 // Define route paths as constants to prevent typos
 class AppRoutes {
   static const String home = '/';
@@ -9,11 +11,10 @@ class AppRoutes {
   static const String verification = '/verification';
 }
 
-// Create a Provider for GoRouter so we can access it anywhere
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.home,
-    debugLogDiagnostics: true, // Prints routing info in the console
+    debugLogDiagnostics: true, 
     routes: [
       GoRoute(
         path: AppRoutes.home,
@@ -31,28 +32,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.camera,
         name: 'camera',
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Camera Sighting')),
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () => context.push(AppRoutes.verification),
-              child: const Text('Mock Take Photo -> Go to Verification'),
-            ),
-          ),
-        ),
+        builder: (context, state) => const CameraScreen(),
       ),
+
       GoRoute(
         path: AppRoutes.verification,
         name: 'verification',
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('AI Verification')),
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () => context.go(AppRoutes.home),
-              child: const Text('Confirm & Go Home'),
-            ),
-          ),
-        ),
+        builder: (context, state) {
+          final String imagePath = state.extra as String;
+          // Return our newly created screen
+          return VerificationScreen(imagePath: imagePath);
+        },
       ),
     ],
   );

@@ -4,7 +4,7 @@ import 'src/routing/app_router.dart';
 
 void main() {
   runApp(
-    // ProviderScope is strictly required to use Riverpod in the app
+  
     const ProviderScope(
       child: PettyBountyApp(),
     ),
@@ -16,7 +16,6 @@ class PettyBountyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Read the GoRouter configuration from our provider
     final goRouter = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
@@ -25,7 +24,17 @@ class PettyBountyApp extends ConsumerWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      routerConfig: goRouter, // Inject GoRouter here
+      routerConfig: goRouter, 
+      builder: (context, child) {
+        return SafeArea(
+          // You can disable SafeArea on specific edges if needed (e.g., for full-screen maps later)
+          top: true,
+          bottom: true,
+          left: true,
+          right: true,
+          child: child!,
+        );
+      },
     );
   }
 }

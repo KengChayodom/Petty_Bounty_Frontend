@@ -68,3 +68,6 @@ app.*.map.json
 # Linux/Windows flutter generated
 **/linux/flutter/ephemeral/
 **/windows/flutter/ephemeral/
+
+ios/Runner.xcodeproj/project.pbxproj
+ios/Runner.xcworkspace/
