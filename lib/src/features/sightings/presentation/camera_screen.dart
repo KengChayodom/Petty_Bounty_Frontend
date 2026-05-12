@@ -48,12 +48,10 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
-    // Always dispose the controller to free up resources
     _cameraController?.dispose();
     super.dispose();
   }
 
-  // Action 1: Take photo from live camera
   Future<void> _takePicture() async {
     if (!_cameraController!.value.isInitialized || _isProcessing) return;
 
@@ -73,7 +71,6 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  // Action 2: Pick from Gallery (Bottom Left Button)
   Future<void> _pickFromGallery() async {
     if (_isProcessing) return;
     
@@ -95,9 +92,15 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  void _backtohomepage() {
+    if (mounted) {
+      context.go('/'); 
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Show loading spinner while camera is starting
+  
     if (!_isCameraInitialized || _cameraController == null) {
       return const Scaffold(
         backgroundColor: Colors.black,
@@ -109,12 +112,11 @@ class _CameraScreenState extends State<CameraScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. The Live Camera Feed
+          
           Positioned.fill(
             child: CameraPreview(_cameraController!),
           ),
 
-          // Top Action Bar (Close button)
           Positioned(
             top: 50,
             left: 20,
@@ -124,7 +126,6 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
           ),
 
-          // 2. The Bottom Control Bar
           Positioned(
             bottom: 40,
             left: 0,
@@ -174,14 +175,24 @@ class _CameraScreenState extends State<CameraScreen> {
                         ),
                       ),
 
-                      // Bottom Right: Empty space to balance the row layout
-                      const SizedBox(width: 50),
-                    ],
+                      GestureDetector(
+                        onTap: _backtohomepage,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Image.asset(
+                            'assets/cancel.png',
+                            height: 34, 
+                            width: 34,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      ],
+                    ),
                   ),
-                ),
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
     );
   }
 }

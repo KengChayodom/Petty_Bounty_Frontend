@@ -11,11 +11,10 @@ class AppRoutes {
   static const String verification = '/verification';
 }
 
-// Create a Provider for GoRouter so we can access it anywhere
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.home,
-    debugLogDiagnostics: true, // Prints routing info in the console
+    debugLogDiagnostics: true, 
     routes: [
       GoRoute(
         path: AppRoutes.home,
