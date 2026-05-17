@@ -19,17 +19,21 @@ dependencies:
   # --- Backend & Network ---
   supabase_flutter: ^2.4.1
   http: ^1.2.1
+  json_annotation: ^4.9.0
 
   # --- UI & Utilities ---
   image_picker: ^1.0.7
   cached_network_image: ^3.3.1
   flutter_map: ^6.1.0 # For the Map feature
   latlong2: ^0.9.0
+  equatable: ^2.0.5
 
   mime: ^1.0.4
   http_parser: ^4.0.0  # สำหรับ MediaType
 
   camera: ^0.10.5+9
+  freezed_annotation: ^2.4.1
+  geolocator: ^10.1.0
 
   cupertino_icons: ^1.0.8
 
@@ -44,6 +48,8 @@ dev_dependencies:
   riverpod_generator: ^2.4.0
   custom_lint: ^0.6.2
   riverpod_lint: ^2.3.10
+  freezed: ^2.4.7
+  json_serializable: ^6.7.1
 
 flutter:
 

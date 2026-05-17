@@ -1,58 +1,164 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/app_config.dart';
-
+import '../../../core/auth/auth_service.dart';
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
+import 'models/sighting_model.dart';
+import 'models/match_model.dart';
 
 class SightingRepository {
-
   final String baseUrl = AppConfig.apiBaseUrl;
+  final AuthService _authService;
 
-  Future<String> uploadImage(String filePath) async {
-  final request = http.MultipartRequest(
-    'POST', 
-    Uri.parse('$baseUrl/upload/pet-image'),
-  );
+  SightingRepository(this._authService);
 
-  final mimeType = lookupMimeType(filePath) ?? 'image/jpeg';
-  final mimeTypeSplit = mimeType.split('/');
-
-  request.files.add(
-    await http.MultipartFile.fromPath(
-      'file',
-      filePath,
-      contentType: MediaType(mimeTypeSplit[0], mimeTypeSplit[1]),
-    ),
-  );
-
-  final response = await request.send();
-  if (response.statusCode == 200) {
-    final responseData = await response.stream.bytesToString();
-    final json = jsonDecode(responseData);
-    return json['image_url'];
-  } else {
-    throw Exception('Failed to upload image.');
+  Map<String, String> get _headers {
+    final authToken = _authService.getAuthorizationHeader();
+    final headers = {'Content-Type': 'application/json'};
+    if (authToken != null) {
+      headers['Authorization'] = authToken;
+    }
+    return headers;
   }
-}
 
+  /// Upload pet image to Supabase Storage via FastAPI
+  Future<String> uploadImage(String filePath) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/upload/pet-image'),
+    );
+
+    // Add authorization header
+    final authToken = _authService.getAuthorizationHeader();
+    if (authToken != null) {
+      request.headers['Authorization'] = authToken;
+    }
+
+    final mimeType = lookupMimeType(filePath) ?? 'image/jpeg';
+    final mimeTypeSplit = mimeType.split('/');
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        filePath,
+        contentType: MediaType(mimeTypeSplit[0], mimeTypeSplit[1]),
+      ),
+    );
+
+    final response = await request.send();
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = await response.stream.bytesToString();
+      final json = jsonDecode(responseData) as Map<String, dynamic>;
+      return json['data']['image_url'] as String ??
+          json['image_url'] as String;
+    } else {
+      final error = await response.stream.bytesToString();
+      throw Exception('Failed to upload image: $error');
+    }
+  }
+
+  /// Analyze image with AI to detect species
   Future<Map<String, dynamic>> analyzeImage(String imageUrl) async {
     final response = await http.post(
       Uri.parse('$baseUrl/sightings/analyze'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: jsonEncode({'image_url': imageUrl}),
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception('Failed to analyze image with AI.');
     }
   }
+
+  /// Create a new sighting report
+  Future<SightingModel> createSighting({
+    required String imageUrl,
+    required double latitude,
+    required double longitude,
+    required String detectedSpecies,
+    List<double>? bbox,
+    String? notes,
+  }) async {
+    final userId = _authService.getCurrentUserId();
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final body = SightingCreateRequest(
+      hunterId: userId,
+      imageUrl: imageUrl,
+      latitude: latitude,
+      longitude: longitude,
+      detectedSpecies: detectedSpecies,
+      bbox: bbox,
+      notes: notes,
+    );
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/sightings/'),
+      headers: _headers,
+      body: jsonEncode(body.toJson()),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['data'] as Map<String, dynamic>;
+      return SightingModel.fromJson(data);
+    } else {
+      throw Exception('Failed to create sighting');
+    }
+  }
+
+  /// Get matching missing pets for a sighting
+  Future<List<MatchModel>> getMatches({
+    required String sightingId,
+    int limit = 5,
+    double radiusKm = 10.0,
+    double threshold = 0.7,
+  }) async {
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/sightings/$sightingId/matches'
+        '?limit=$limit&radius_km=$radiusKm&threshold=$threshold',
+      ),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final matchesJson = json['matches'] as List;
+      return matchesJson
+          .map((e) => MatchModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw Exception('Failed to get matches');
+    }
+  }
+
+  /// Get a sighting by ID
+  Future<SightingModel> getSighting(String sightingId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/sightings/$sightingId'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['data'] as Map<String, dynamic>;
+      return SightingModel.fromJson(data);
+    } else {
+      throw Exception('Failed to get sighting');
+    }
+  }
 }
 
-// Provider for injecting the repository easily
+/// Provider for SightingRepository
 final sightingRepositoryProvider = Provider<SightingRepository>((ref) {
-  return SightingRepository();
+  final authService = ref.read(authServiceProvider);
+  return SightingRepository(authService);
 });
