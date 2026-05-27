@@ -24,14 +24,12 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _initializeCamera() async {
     try {
-      
       _cameras = await availableCameras();
       if (_cameras != null && _cameras!.isNotEmpty) {
-       
         _cameraController = CameraController(
           _cameras![0],
           ResolutionPreset.high,
-          enableAudio: false, 
+          enableAudio: false,
         );
 
         await _cameraController!.initialize();
@@ -55,7 +53,9 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _takePicture() async {
     if (!_cameraController!.value.isInitialized || _isProcessing) return;
 
-    setState(() { _isProcessing = true; });
+    setState(() {
+      _isProcessing = true;
+    });
 
     try {
       final XFile photo = await _cameraController!.takePicture();
@@ -66,19 +66,26 @@ class _CameraScreenState extends State<CameraScreen> {
       print('Error taking picture: $e');
     } finally {
       if (mounted) {
-        setState(() { _isProcessing = false; });
+        setState(() {
+          _isProcessing = false;
+        });
       }
     }
   }
 
   Future<void> _pickFromGallery() async {
     if (_isProcessing) return;
-    
-    setState(() { _isProcessing = true; });
+
+    setState(() {
+      _isProcessing = true;
+    });
 
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? photo = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      final XFile? photo = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
 
       if (photo != null && mounted) {
         context.pushNamed('verification', extra: photo.path);
@@ -87,20 +94,21 @@ class _CameraScreenState extends State<CameraScreen> {
       print('Error picking from gallery: $e');
     } finally {
       if (mounted) {
-        setState(() { _isProcessing = false; });
+        setState(() {
+          _isProcessing = false;
+        });
       }
     }
   }
 
   void _backtohomepage() {
     if (mounted) {
-      context.go('/'); 
+      context.go('/');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-  
     if (!_isCameraInitialized || _cameraController == null) {
       return const Scaffold(
         backgroundColor: Colors.black,
@@ -112,10 +120,7 @@ class _CameraScreenState extends State<CameraScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          
-          Positioned.fill(
-            child: CameraPreview(_cameraController!),
-          ),
+          Positioned.fill(child: CameraPreview(_cameraController!)),
 
           Positioned(
             top: 50,
@@ -130,69 +135,74 @@ class _CameraScreenState extends State<CameraScreen> {
             bottom: 40,
             left: 0,
             right: 0,
-            child: _isProcessing 
-              ? const Center(child: CircularProgressIndicator(color: Colors.white))
-              : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Bottom Left: Gallery Button
-                      GestureDetector(
-                        onTap: _pickFromGallery,
-                        child: Container(
-                          height: 50,
-                          width: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.white, width: 2),
+            child: _isProcessing
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Bottom Left: Gallery Button
+                        GestureDetector(
+                          onTap: _pickFromGallery,
+                          child: Container(
+                            height: 50,
+                            width: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(
+                              Icons.photo_library,
+                              color: Colors.white,
+                            ),
                           ),
-                          child: const Icon(Icons.photo_library, color: Colors.white),
                         ),
-                      ),
 
-                      // Center: Shutter Button
-                      GestureDetector(
-                        onTap: _takePicture,
-                        child: Container(
-                          height: 80,
-                          width: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 4),
-                          ),
-                          child: Center(
-                            child: Container(
-                              height: 65,
-                              width: 65,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
+                        // Center: Shutter Button
+                        GestureDetector(
+                          onTap: _takePicture,
+                          child: Container(
+                            height: 80,
+                            width: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 4),
+                            ),
+                            child: Center(
+                              child: Container(
+                                height: 65,
+                                width: 65,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
 
-                      GestureDetector(
-                        onTap: _backtohomepage,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Image.asset(
-                            'assets/cancel.png',
-                            height: 34, 
-                            width: 34,
-                            fit: BoxFit.contain,
+                        GestureDetector(
+                          onTap: _backtohomepage,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.asset(
+                              'assets/cancel.png',
+                              height: 34,
+                              width: 34,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
-                      ),
                       ],
                     ),
                   ),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 }

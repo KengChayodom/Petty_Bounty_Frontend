@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
+import 'package:geolocator/geolocator.dart';
 import '../data/sighting_repository.dart';
+import '../domain/sighting_providers.dart';
 
 class VerificationScreen extends ConsumerStatefulWidget {
   final String imagePath;
@@ -16,6 +18,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
   bool _isLoading = true;
   String? _detectedSpecies;
   String? _errorMessage;
+  String? _uploadedImageUrl;
+  List<double>? _bbox;
+  Position? _currentPosition;
 
   @override
   void initState() {
@@ -28,19 +33,32 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       final repository = ref.read(sightingRepositoryProvider);
 
       final String uploadedUrl = await repository.uploadImage(widget.imagePath);
+      if (mounted) {
+        setState(() {
+          _uploadedImageUrl = uploadedUrl;
+        });
+      }
+
       final analysisResult = await repository.analyzeImage(uploadedUrl);
 
       if (mounted) {
         setState(() {
           _isLoading = false;
           _detectedSpecies = analysisResult['data']['species'];
+          if (analysisResult['data']['bbox'] != null) {
+            _bbox = List<double>.from(
+              (analysisResult['data']['bbox'] as List).map((e) => e as double),
+            );
+          }
         });
+      }
 
-        if (_detectedSpecies != 'Unknown') {
-          _showConfirmationDialog();
-        } else {
+      if (_detectedSpecies != 'Unknown') {
+        _showConfirmationDialog();
+      } else {
+        setState(() {
           _errorMessage = "No target animal detected.";
-        }
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -52,9 +70,35 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     }
   }
 
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied.');
+    }
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+
   void _showConfirmationDialog() {
     String? selectedSpecies = _detectedSpecies;
-    final List<String> speciesList = ['Cat', 'Dog', 'Bird'];
+    final List<String> speciesList = ['Cat', 'Dog', 'Bird', 'Other'];
     bool showDropdown = false;
 
     showDialog(
@@ -72,9 +116,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // --- ส่วน UI แรก: แบบในรูป (ยังไม่กด Reject) ---
                     if (!showDropdown) ...[
-                      // รูปวงกลม + ไอคอนคำถาม
                       Stack(
                         alignment: Alignment.bottomRight,
                         children: [
@@ -97,27 +139,33 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             padding: const EdgeInsets.all(4),
                             child: const CircleAvatar(
                               radius: 16,
-                              backgroundColor: Color(0xFFED7645), // สีส้มแบบในรูป
-                              child: Icon(Icons.question_mark,
-                                  color: Colors.white, size: 20),
+                              backgroundColor: Color(0xFFED7645),
+                              child: Icon(
+                                Icons.question_mark,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      
+
                       RichText(
                         text: TextSpan(
                           style: const TextStyle(
                             fontSize: 22,
                             color: Colors.black87,
-                            fontFamily: 'serif', 
+                            fontFamily: 'serif',
                           ),
                           children: [
                             const TextSpan(text: "Is this a "),
                             TextSpan(
                               text: _detectedSpecies ?? 'Unknown',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24,
+                              ),
                             ),
                             const TextSpan(text: " ?"),
                           ],
@@ -125,38 +173,37 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                        
                           GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Confirmed: $_detectedSpecies. Proceeding..."),
-                                ),
-                              );
-                            },
+                            onTap: () =>
+                                _confirmSpecies(_detectedSpecies!, context),
                             child: const CircleAvatar(
                               radius: 30,
                               backgroundColor: Colors.green,
-                              child: Icon(Icons.check, color: Colors.white, size: 40),
+                              child: Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 40,
+                              ),
                             ),
                           ),
-
                           GestureDetector(
                             onTap: () {
                               setDialogState(() {
-                                showDropdown = true; 
+                                showDropdown = true;
                                 selectedSpecies = null;
                               });
                             },
                             child: const CircleAvatar(
                               radius: 30,
                               backgroundColor: Colors.red,
-                              child: Icon(Icons.close, color: Colors.white, size: 40),
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 40,
+                              ),
                             ),
                           ),
                         ],
@@ -181,10 +228,15 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: selectedSpecies != _detectedSpecies ? selectedSpecies : null,
+                        value: selectedSpecies != _detectedSpecies
+                            ? selectedSpecies
+                            : null,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                         hint: const Text("Select species"),
                         items: speciesList.map((species) {
@@ -210,8 +262,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.warning_amber_rounded,
-                                color: Colors.orange.shade700, size: 18),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange.shade700,
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -235,25 +290,21 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             child: const Text("Cancel"),
                             onPressed: () {
                               Navigator.of(context).pop();
-                              context.pop(); // กลับไปหน้ากล้อง
+                              context.pop();
                             },
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton(
                             onPressed: selectedSpecies == null
                                 ? null
-                                : () {
-                                    Navigator.of(context).pop();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text("Confirmed manually: $selectedSpecies. Proceeding..."),
-                                      ),
-                                    );
-                                  },
+                                : () => _confirmSpecies(
+                                    selectedSpecies!,
+                                    context,
+                                  ),
                             child: const Text("Confirm"),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ],
                 ),
@@ -265,6 +316,41 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     );
   }
 
+  Future<void> _confirmSpecies(
+    String species,
+    BuildContext dialogContext,
+  ) async {
+    Navigator.of(dialogContext).pop();
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final position = await _getCurrentLocation();
+      _currentPosition = position;
+
+      final notifier = ref.read(sightingNotifierProvider.notifier);
+      await notifier.createSightingWithMatch(
+        imageUrl: _uploadedImageUrl!,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        detectedSpecies: species,
+        bbox: _bbox,
+      );
+
+      if (mounted) {
+        // 💡 ส่ง imagePath ต่อไปให้หน้า matching-results เพื่อให้โชว์รูปเราได้
+        context.pushNamed('matching-results', extra: widget.imagePath);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "Error: $e";
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -273,7 +359,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
         fit: StackFit.expand,
         children: [
           Image.file(File(widget.imagePath), fit: BoxFit.cover),
-          
+
           if (_isLoading)
             Container(
               color: Colors.black54,
@@ -282,11 +368,14 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                 children: [
                   CircularProgressIndicator(color: Colors.white),
                   SizedBox(height: 16),
-                  Text("AI is analyzing...", style: TextStyle(color: Colors.white, fontSize: 16)),
+                  Text(
+                    "AI is analyzing...",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ],
               ),
             ),
-            
+
           if (!_isLoading && _errorMessage != null)
             Container(
               color: Colors.black87,
@@ -297,7 +386,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                 ),
               ),
             ),
-            
+
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             left: 10,
@@ -305,7 +394,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
               onPressed: () => context.pop(),
             ),
-          )
+          ),
         ],
       ),
     );
