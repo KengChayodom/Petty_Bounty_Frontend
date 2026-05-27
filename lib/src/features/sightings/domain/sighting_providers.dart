@@ -42,9 +42,15 @@ class SightingNotifier extends StateNotifier<SightingState> {
 
   SightingNotifier(this._repository) : super(const SightingState());
 
-  /// Upload image and create sighting
+  /// Submit the user-confirmed sighting and surface matches in one call.
+  ///
+  /// The backend's optimised 2-step pipeline already runs the pgvector
+  /// match RPC inside `POST /sightings/` and bundles the result in the
+  /// response, so we no longer need a separate `getMatches` HTTP call
+  /// on the hot path. The `bbox` parameter is accepted but ignored —
+  /// kept on the signature so existing callers don't break.
   Future<void> createSightingWithMatch({
-    required String imagePath,
+    required String imageUrl,
     required double latitude,
     required double longitude,
     required String detectedSpecies,
@@ -53,32 +59,22 @@ class SightingNotifier extends StateNotifier<SightingState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // Step 1: Upload image
-      final imageUrl = await _repository.uploadImage(imagePath);
       state = state.copyWith(uploadedImageUrl: imageUrl);
 
-      // Step 2: Create sighting
-      final sighting = await _repository.createSighting(
+      final result = await _repository.createSighting(
         imageUrl: imageUrl,
         latitude: latitude,
         longitude: longitude,
         detectedSpecies: detectedSpecies,
-        bbox: bbox,
       );
-      state = state.copyWith(sighting: sighting);
 
-      // Step 3: Get matches
-      final matches = await _repository.getMatches(
-        sightingId: sighting.id,
-        limit: 5,
-        radiusKm: 10.0,
-      );
-      state = state.copyWith(matches: matches, isLoading: false);
-    } catch (e) {
       state = state.copyWith(
+        sighting: result.sighting,
+        matches: result.matches,
         isLoading: false,
-        errorMessage: e.toString(),
       );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
@@ -91,6 +87,6 @@ class SightingNotifier extends StateNotifier<SightingState> {
 /// Provider for SightingNotifier
 final sightingNotifierProvider =
     StateNotifierProvider<SightingNotifier, SightingState>((ref) {
-  final repository = ref.watch(sightingRepositoryProvider);
-  return SightingNotifier(repository);
-});
+      final repository = ref.watch(sightingRepositoryProvider);
+      return SightingNotifier(repository);
+    });

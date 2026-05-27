@@ -52,8 +52,7 @@ class SightingRepository {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final responseData = await response.stream.bytesToString();
       final json = jsonDecode(responseData) as Map<String, dynamic>;
-      return json['data']['image_url'] as String ??
-          json['image_url'] as String;
+      return json['data']['image_url'] as String ?? json['image_url'] as String;
     } else {
       final error = await response.stream.bytesToString();
       throw Exception('Failed to upload image: $error');
@@ -75,19 +74,21 @@ class SightingRepository {
     }
   }
 
-  /// Create a new sighting report
-  Future<SightingModel> createSighting({
+  /// Create a new sighting report.
+  ///
+  /// The backend's `POST /sightings/` pulls the pre-computed CLIP vector
+  /// from the analyze cache, INSERTs the row with the user-confirmed
+  /// species, and runs the pgvector match RPC — all in one request. So
+  /// this returns BOTH the saved sighting and the ranked matches; the
+  /// follow-up `getMatches` call is no longer needed on the hot path.
+  Future<SightingSubmitResult> createSighting({
     required String imageUrl,
     required double latitude,
     required double longitude,
     required String detectedSpecies,
-    List<double>? bbox,
     String? notes,
   }) async {
     final userId = _authService.getCurrentUserId();
-    if (userId == null) {
-      throw Exception('User not authenticated');
-    }
 
     final body = SightingCreateRequest(
       hunterId: userId,
@@ -95,7 +96,6 @@ class SightingRepository {
       latitude: latitude,
       longitude: longitude,
       detectedSpecies: detectedSpecies,
-      bbox: bbox,
       notes: notes,
     );
 
@@ -108,7 +108,7 @@ class SightingRepository {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as Map<String, dynamic>;
-      return SightingModel.fromJson(data);
+      return SightingSubmitResult.fromJson(data);
     } else {
       throw Exception('Failed to create sighting');
     }

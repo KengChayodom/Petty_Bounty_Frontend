@@ -12,6 +12,7 @@ import '../domain/providers/nearby_pets_providers.dart';
 import '../domain/providers/location_provider.dart'; // โหลด Provider ตัวใหม่ที่เราสร้าง
 import 'marker_helper.dart';
 import 'pet_detail_sheet.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -108,12 +109,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  List<CircleMarker> _getCircleMarkers(NearbyPetsState state) {
+  List<CircleMarker> _getCircleMarkers(
+    NearbyPetsState state,
+    LatLng? myLocation,
+  ) {
     final markers = <CircleMarker>[];
-    if (state.currentLatitude != null && state.currentLongitude != null) {
+    if (myLocation != null) {
       markers.add(
         MarkerHelper.createSearchRadiusCircle(
-          LatLng(state.currentLatitude!, state.currentLongitude!),
+          myLocation,
           _defaultSearchRadiusKm * 1000,
         ),
       );
@@ -121,26 +125,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return markers;
   }
 
-  List<Marker> _getMarkers(NearbyPetsState state) {
-    final markers = <Marker>[];
-    if (state.currentLatitude != null && state.currentLongitude != null) {
-      markers.add(
-        MarkerHelper.createUserMarker(
-          LatLng(state.currentLatitude!, state.currentLongitude!),
-        ),
-      );
-    }
-    markers.addAll(MarkerHelper.createPetMarkers(state.pets, _onMarkerTap));
-    return markers;
+  List<Marker> _getUserMarker(LatLng? myLocation) {
+    if (myLocation == null) return [];
+    return [MarkerHelper.createUserMarker(myLocation)];
+  }
+
+  List<Marker> _getPetMarkers(NearbyPetsState state) {
+    return MarkerHelper.createPetMarkers(state.pets, _onMarkerTap);
   }
 
   @override
   Widget build(BuildContext context) {
-    // ดักฟังว่าถ้า GPS เพิ่งหาพิกัดเสร็จสดๆ ร้อนๆ (ครั้งแรกสุด) ให้สั่งโหลดข้อมูลสัตว์ทันที
+    // ✅ เอาโค้ดชุดนี้ไปวางแทน ref.listen อันเก่าทั้งหมดเลยครับ
     ref.listen<LocationState>(locationProvider, (previous, next) {
-      if (previous?.location == null && next.location != null) {
-        _lastFetchLocation = next.location;
-        _fetchNearbyPets(next.location!);
+      if (next.location != null) {
+        if (previous?.location == null) {
+          // โหลดข้อมูลสัตว์หายเมื่อได้พิกัดครั้งแรกสุด
+          _lastFetchLocation = next.location;
+          _fetchNearbyPets(next.location!);
+        } else if (previous?.location != next.location) {
+          _mapController.move(next.location!, _mapController.camera.zoom);
+        }
       }
     });
 
@@ -187,11 +192,89 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
                 userAgentPackageName: 'com.pettybounty.app',
               ),
-              CircleLayer(circles: _getCircleMarkers(petsState)),
-              MarkerLayer(markers: _getMarkers(petsState)),
+              CircleLayer(
+                circles: _getCircleMarkers(petsState, locState.location),
+              ),
+              // 1. หมุดตำแหน่งของเรา (อยู่เดี่ยวๆ)
+              MarkerLayer(markers: _getUserMarker(locState.location)),
+
+              MarkerClusterLayerWidget(
+                options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 120, // รวบหมุดในระยะ 120 พิกเซล
+                  size: const Size(
+                    55,
+                    55,
+                  ), // ขนาดกล่องเพื่อให้มีที่วางตัวเลขมุมขวาบน
+                  markers: _getPetMarkers(petsState),
+                  polygonOptions: const PolygonOptions(
+                    borderColor: Colors.blueAccent,
+                    color: Colors.black12,
+                    borderStrokeWidth: 3,
+                  ),
+                  builder: (context, markers) {
+                    return Stack(
+                      clipBehavior: Clip.none, // ยอมให้ป้ายตัวเลขล้นขอบได้
+                      alignment: Alignment.center,
+                      children: [
+                        // ✅ ส่วนฐาน: วงกลมสีส้มและไอคอนอุ้งเท้า (ไม่ใช่รูป Me แล้ว!)
+                        Container(
+                          width: 45,
+                          height: 45,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFED7645), // สีส้มธีมแอป
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.pets, // เปลี่ยนเป็นรูปอุ้งเท้า
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        // ✅ ส่วนป้ายแจ้งเตือน (มุมขวาบน): วงกลมสีแดงพร้อมตัวเลข
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: Colors
+                                  .redAccent, // ใช้สีแดงให้ตัวเลขเด้งสะดุดตา
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${markers.length}', // จำนวนแมวที่ทับกัน
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ],
           ),
 
@@ -200,6 +283,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             left: 16,
             right: 16,
             child: _buildSearchBar(petsState),
+          ),
+
+          Positioned(
+            right: 16, // ชิดขวา
+            bottom:
+                MediaQuery.of(context).padding.bottom +
+                110, // ยกสูงขึ้นมาไม่ให้ทับแถบเมนูด้านล่าง
+            child: FloatingActionButton(
+              mini: true, // ทำให้ปุ่มเล็กลงหน่อย จะได้ไม่เกะกะแผนที่
+              backgroundColor: Colors.white,
+              elevation: 4,
+              onPressed: () {
+                final locState = ref.read(locationProvider);
+                if (locState.location != null) {
+                  _mapController.move(
+                    locState.location!,
+                    16.0, // ระดับการซูม (ยิ่งเลขเยอะยิ่งซูมใกล้ ปรับได้ตามชอบ)
+                  );
+                }
+              },
+              child: const Icon(Icons.my_location, color: Colors.blueAccent),
+            ),
           ),
 
           Positioned(

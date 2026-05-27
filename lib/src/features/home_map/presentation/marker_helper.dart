@@ -10,30 +10,33 @@ class MarkerHelper {
   static Marker createUserMarker(LatLng position) {
     return Marker(
       point: position,
-      width: 80,
-      height: 80,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+      width: 60,
+      height: 60,
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.blueAccent, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
-            child: const Text(
-              'Me',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
+          ],
+        ),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/me.png', // 💡 ดึงรูป me.png มาใช้ตรงนี้
+            fit: BoxFit.cover,
+            // ใส่ errorBuilder เผื่อหารูปไม่เจอ จะได้ไม่พัง
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.blue[100],
+                child: const Icon(Icons.person, color: Colors.blue),
+              );
+            },
           ),
-          const Icon(Icons.location_on, color: Colors.blue, size: 32),
-        ],
+        ),
       ),
     );
   }
@@ -43,59 +46,51 @@ class MarkerHelper {
     List<MissingPetEntity> pets,
     Function(String) onMarkerTap,
   ) {
-    return pets
-        .map((pet) {
-          final latLng = LatLng(pet.latitude, pet.longitude);
-          if (latLng == null) return null;
+    return pets.map((pet) {
+      final latLng = LatLng(pet.latitude, pet.longitude);
 
-          return Marker(
-            point: latLng,
-            width: 80,
-            height: 80,
-            child: GestureDetector(
-              onTap: () => onMarkerTap(pet.id),
-              child: _buildPetMarker(pet),
-            ),
-          );
-        })
-        .whereType<Marker>()
-        .toList();
+      return Marker(
+        point: latLng,
+        width: 60,
+        height: 60,
+        child: GestureDetector(
+          onTap: () => onMarkerTap(pet.id),
+          child: _buildPetMarker(pet),
+        ),
+      );
+    }).toList();
   }
 
-  /// Build a custom widget marker for a pet
+  /// Build a custom widget marker for a pet (เหลือแค่รูปวงกลม)
   static Widget _buildPetMarker(MissingPetEntity pet) {
-    return Column(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: _getStatusColor(pet.status), width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 4,
-              ),
-            ],
+    return Container(
+      width: 56, // ปรับให้ใหญ่ขึ้นนิดนึงเพราะไม่มีหมุดแล้ว
+      height: 56,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: _getStatusColor(pet.status), width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 3), // เพิ่มเงาให้รูปลอยขึ้นมาจากแผนที่
           ),
-          child: ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: pet.imageUrl,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                color: Colors.grey[300],
-                child: const Icon(Icons.pets, size: 24),
-              ),
-              errorWidget: (context, url, error) => Container(
-                color: Colors.grey[300],
-                child: const Icon(Icons.error, size: 24),
-              ),
-            ),
+        ],
+      ),
+      child: ClipOval(
+        child: CachedNetworkImage(
+          imageUrl: pet.imageUrl,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(
+            color: Colors.grey[300],
+            child: const Icon(Icons.pets, size: 24),
+          ),
+          errorWidget: (context, url, error) => Container(
+            color: Colors.grey[300],
+            child: const Icon(Icons.error, size: 24),
           ),
         ),
-        Icon(Icons.location_on, color: _getStatusColor(pet.status), size: 28),
-      ],
+      ),
     );
   }
 

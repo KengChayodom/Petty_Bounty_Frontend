@@ -49,7 +49,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.matchingResults,
         name: 'matching-results',
-        builder: (context, state) => const MatchingResultsScreen(),
+        builder: (context, state) {
+          final String imagePath = state.extra as String;
+          return MatchingResultsScreen(imagePath: imagePath);
+        },
       ),
 
       // Active Missions Screen

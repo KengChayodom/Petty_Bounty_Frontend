@@ -21,15 +21,15 @@ SightingModel _$SightingModelFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$SightingModel {
   String get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'hunter_id')
   String get hunterId => throw _privateConstructorUsedError;
   @JsonKey(name: 'image_url')
   String get imageUrl => throw _privateConstructorUsedError;
   @JsonKey(name: 'sighted_location')
   String get sightedLocation => throw _privateConstructorUsedError;
   @JsonKey(name: 'detected_species')
-  String get detectedSpecies => throw _privateConstructorUsedError;
-  @JsonKey(name: 'feature_vector')
-  List<double> get featureVector => throw _privateConstructorUsedError;
+  String get detectedSpecies =>
+      throw _privateConstructorUsedError; // ❌ ลบ featureVector ทิ้งไปเรียบร้อยแล้ว
   @JsonKey(name: 'action_type')
   String get actionType => throw _privateConstructorUsedError;
   @JsonKey(name: 'sighting_status')
@@ -54,11 +54,10 @@ abstract class $SightingModelCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
-      String hunterId,
+      @JsonKey(name: 'hunter_id') String hunterId,
       @JsonKey(name: 'image_url') String imageUrl,
       @JsonKey(name: 'sighted_location') String sightedLocation,
       @JsonKey(name: 'detected_species') String detectedSpecies,
-      @JsonKey(name: 'feature_vector') List<double> featureVector,
       @JsonKey(name: 'action_type') String actionType,
       @JsonKey(name: 'sighting_status') String sightingStatus,
       @JsonKey(name: 'created_at') String createdAt,
@@ -84,7 +83,6 @@ class _$SightingModelCopyWithImpl<$Res, $Val extends SightingModel>
     Object? imageUrl = null,
     Object? sightedLocation = null,
     Object? detectedSpecies = null,
-    Object? featureVector = null,
     Object? actionType = null,
     Object? sightingStatus = null,
     Object? createdAt = null,
@@ -112,10 +110,6 @@ class _$SightingModelCopyWithImpl<$Res, $Val extends SightingModel>
           ? _value.detectedSpecies
           : detectedSpecies // ignore: cast_nullable_to_non_nullable
               as String,
-      featureVector: null == featureVector
-          ? _value.featureVector
-          : featureVector // ignore: cast_nullable_to_non_nullable
-              as List<double>,
       actionType: null == actionType
           ? _value.actionType
           : actionType // ignore: cast_nullable_to_non_nullable
@@ -150,11 +144,10 @@ abstract class _$$SightingModelImplCopyWith<$Res>
   @useResult
   $Res call(
       {String id,
-      String hunterId,
+      @JsonKey(name: 'hunter_id') String hunterId,
       @JsonKey(name: 'image_url') String imageUrl,
       @JsonKey(name: 'sighted_location') String sightedLocation,
       @JsonKey(name: 'detected_species') String detectedSpecies,
-      @JsonKey(name: 'feature_vector') List<double> featureVector,
       @JsonKey(name: 'action_type') String actionType,
       @JsonKey(name: 'sighting_status') String sightingStatus,
       @JsonKey(name: 'created_at') String createdAt,
@@ -178,7 +171,6 @@ class __$$SightingModelImplCopyWithImpl<$Res>
     Object? imageUrl = null,
     Object? sightedLocation = null,
     Object? detectedSpecies = null,
-    Object? featureVector = null,
     Object? actionType = null,
     Object? sightingStatus = null,
     Object? createdAt = null,
@@ -206,10 +198,6 @@ class __$$SightingModelImplCopyWithImpl<$Res>
           ? _value.detectedSpecies
           : detectedSpecies // ignore: cast_nullable_to_non_nullable
               as String,
-      featureVector: null == featureVector
-          ? _value._featureVector
-          : featureVector // ignore: cast_nullable_to_non_nullable
-              as List<double>,
       actionType: null == actionType
           ? _value.actionType
           : actionType // ignore: cast_nullable_to_non_nullable
@@ -239,18 +227,15 @@ class __$$SightingModelImplCopyWithImpl<$Res>
 class _$SightingModelImpl implements _SightingModel {
   const _$SightingModelImpl(
       {required this.id,
-      required this.hunterId,
+      @JsonKey(name: 'hunter_id') required this.hunterId,
       @JsonKey(name: 'image_url') required this.imageUrl,
       @JsonKey(name: 'sighted_location') required this.sightedLocation,
       @JsonKey(name: 'detected_species') required this.detectedSpecies,
-      @JsonKey(name: 'feature_vector')
-      required final List<double> featureVector,
       @JsonKey(name: 'action_type') required this.actionType,
       @JsonKey(name: 'sighting_status') required this.sightingStatus,
       @JsonKey(name: 'created_at') required this.createdAt,
       @JsonKey(name: 'distance_meters') this.distanceMeters,
-      this.similarity})
-      : _featureVector = featureVector;
+      this.similarity});
 
   factory _$SightingModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$SightingModelImplFromJson(json);
@@ -258,6 +243,7 @@ class _$SightingModelImpl implements _SightingModel {
   @override
   final String id;
   @override
+  @JsonKey(name: 'hunter_id')
   final String hunterId;
   @override
   @JsonKey(name: 'image_url')
@@ -268,15 +254,7 @@ class _$SightingModelImpl implements _SightingModel {
   @override
   @JsonKey(name: 'detected_species')
   final String detectedSpecies;
-  final List<double> _featureVector;
-  @override
-  @JsonKey(name: 'feature_vector')
-  List<double> get featureVector {
-    if (_featureVector is EqualUnmodifiableListView) return _featureVector;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_featureVector);
-  }
-
+// ❌ ลบ featureVector ทิ้งไปเรียบร้อยแล้ว
   @override
   @JsonKey(name: 'action_type')
   final String actionType;
@@ -294,7 +272,7 @@ class _$SightingModelImpl implements _SightingModel {
 
   @override
   String toString() {
-    return 'SightingModel(id: $id, hunterId: $hunterId, imageUrl: $imageUrl, sightedLocation: $sightedLocation, detectedSpecies: $detectedSpecies, featureVector: $featureVector, actionType: $actionType, sightingStatus: $sightingStatus, createdAt: $createdAt, distanceMeters: $distanceMeters, similarity: $similarity)';
+    return 'SightingModel(id: $id, hunterId: $hunterId, imageUrl: $imageUrl, sightedLocation: $sightedLocation, detectedSpecies: $detectedSpecies, actionType: $actionType, sightingStatus: $sightingStatus, createdAt: $createdAt, distanceMeters: $distanceMeters, similarity: $similarity)';
   }
 
   @override
@@ -311,8 +289,6 @@ class _$SightingModelImpl implements _SightingModel {
                 other.sightedLocation == sightedLocation) &&
             (identical(other.detectedSpecies, detectedSpecies) ||
                 other.detectedSpecies == detectedSpecies) &&
-            const DeepCollectionEquality()
-                .equals(other._featureVector, _featureVector) &&
             (identical(other.actionType, actionType) ||
                 other.actionType == actionType) &&
             (identical(other.sightingStatus, sightingStatus) ||
@@ -334,7 +310,6 @@ class _$SightingModelImpl implements _SightingModel {
       imageUrl,
       sightedLocation,
       detectedSpecies,
-      const DeepCollectionEquality().hash(_featureVector),
       actionType,
       sightingStatus,
       createdAt,
@@ -358,12 +333,10 @@ class _$SightingModelImpl implements _SightingModel {
 abstract class _SightingModel implements SightingModel {
   const factory _SightingModel(
       {required final String id,
-      required final String hunterId,
+      @JsonKey(name: 'hunter_id') required final String hunterId,
       @JsonKey(name: 'image_url') required final String imageUrl,
       @JsonKey(name: 'sighted_location') required final String sightedLocation,
       @JsonKey(name: 'detected_species') required final String detectedSpecies,
-      @JsonKey(name: 'feature_vector')
-      required final List<double> featureVector,
       @JsonKey(name: 'action_type') required final String actionType,
       @JsonKey(name: 'sighting_status') required final String sightingStatus,
       @JsonKey(name: 'created_at') required final String createdAt,
@@ -376,6 +349,7 @@ abstract class _SightingModel implements SightingModel {
   @override
   String get id;
   @override
+  @JsonKey(name: 'hunter_id')
   String get hunterId;
   @override
   @JsonKey(name: 'image_url')
@@ -386,10 +360,7 @@ abstract class _SightingModel implements SightingModel {
   @override
   @JsonKey(name: 'detected_species')
   String get detectedSpecies;
-  @override
-  @JsonKey(name: 'feature_vector')
-  List<double> get featureVector;
-  @override
+  @override // ❌ ลบ featureVector ทิ้งไปเรียบร้อยแล้ว
   @JsonKey(name: 'action_type')
   String get actionType;
   @override
@@ -416,6 +387,7 @@ SightingCreateRequest _$SightingCreateRequestFromJson(
 
 /// @nodoc
 mixin _$SightingCreateRequest {
+  @JsonKey(name: 'hunter_id')
   String get hunterId => throw _privateConstructorUsedError;
   @JsonKey(name: 'image_url')
   String get imageUrl => throw _privateConstructorUsedError;
@@ -439,7 +411,7 @@ abstract class $SightingCreateRequestCopyWith<$Res> {
       _$SightingCreateRequestCopyWithImpl<$Res, SightingCreateRequest>;
   @useResult
   $Res call(
-      {String hunterId,
+      {@JsonKey(name: 'hunter_id') String hunterId,
       @JsonKey(name: 'image_url') String imageUrl,
       double latitude,
       double longitude,
@@ -513,7 +485,7 @@ abstract class _$$SightingCreateRequestImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String hunterId,
+      {@JsonKey(name: 'hunter_id') String hunterId,
       @JsonKey(name: 'image_url') String imageUrl,
       double latitude,
       double longitude,
@@ -579,7 +551,7 @@ class __$$SightingCreateRequestImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$SightingCreateRequestImpl implements _SightingCreateRequest {
   const _$SightingCreateRequestImpl(
-      {required this.hunterId,
+      {@JsonKey(name: 'hunter_id') required this.hunterId,
       @JsonKey(name: 'image_url') required this.imageUrl,
       required this.latitude,
       required this.longitude,
@@ -592,6 +564,7 @@ class _$SightingCreateRequestImpl implements _SightingCreateRequest {
       _$$SightingCreateRequestImplFromJson(json);
 
   @override
+  @JsonKey(name: 'hunter_id')
   final String hunterId;
   @override
   @JsonKey(name: 'image_url')
@@ -669,7 +642,7 @@ class _$SightingCreateRequestImpl implements _SightingCreateRequest {
 
 abstract class _SightingCreateRequest implements SightingCreateRequest {
   const factory _SightingCreateRequest(
-      {required final String hunterId,
+      {@JsonKey(name: 'hunter_id') required final String hunterId,
       @JsonKey(name: 'image_url') required final String imageUrl,
       required final double latitude,
       required final double longitude,
@@ -681,6 +654,7 @@ abstract class _SightingCreateRequest implements SightingCreateRequest {
       _$SightingCreateRequestImpl.fromJson;
 
   @override
+  @JsonKey(name: 'hunter_id')
   String get hunterId;
   @override
   @JsonKey(name: 'image_url')

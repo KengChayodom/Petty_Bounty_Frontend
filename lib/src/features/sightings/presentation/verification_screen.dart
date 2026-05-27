@@ -140,8 +140,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             child: const CircleAvatar(
                               radius: 16,
                               backgroundColor: Color(0xFFED7645),
-                              child: Icon(Icons.question_mark,
-                                  color: Colors.white, size: 20),
+                              child: Icon(
+                                Icons.question_mark,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                           ),
                         ],
@@ -160,7 +163,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             TextSpan(
                               text: _detectedSpecies ?? 'Unknown',
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 24),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24,
+                              ),
                             ),
                             const TextSpan(text: " ?"),
                           ],
@@ -172,15 +177,16 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           GestureDetector(
-                            onTap: () => _confirmSpecies(
-                              _detectedSpecies!,
-                              context,
-                            ),
+                            onTap: () =>
+                                _confirmSpecies(_detectedSpecies!, context),
                             child: const CircleAvatar(
                               radius: 30,
                               backgroundColor: Colors.green,
-                              child: Icon(Icons.check,
-                                  color: Colors.white, size: 40),
+                              child: Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 40,
+                              ),
                             ),
                           ),
                           GestureDetector(
@@ -193,8 +199,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             child: const CircleAvatar(
                               radius: 30,
                               backgroundColor: Colors.red,
-                              child:
-                                  Icon(Icons.close, color: Colors.white, size: 40),
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 40,
+                              ),
                             ),
                           ),
                         ],
@@ -224,8 +233,10 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             : null,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          contentPadding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                         hint: const Text("Select species"),
                         items: speciesList.map((species) {
@@ -251,8 +262,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.warning_amber_rounded,
-                                color: Colors.orange.shade700, size: 18),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange.shade700,
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -284,12 +298,13 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             onPressed: selectedSpecies == null
                                 ? null
                                 : () => _confirmSpecies(
-                                      selectedSpecies!, context,
-                                    ),
+                                    selectedSpecies!,
+                                    context,
+                                  ),
                             child: const Text("Confirm"),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ],
                 ),
@@ -301,7 +316,10 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     );
   }
 
-  Future<void> _confirmSpecies(String species, BuildContext dialogContext) async {
+  Future<void> _confirmSpecies(
+    String species,
+    BuildContext dialogContext,
+  ) async {
     Navigator.of(dialogContext).pop();
 
     setState(() {
@@ -314,7 +332,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
 
       final notifier = ref.read(sightingNotifierProvider.notifier);
       await notifier.createSightingWithMatch(
-        imagePath: widget.imagePath,
+        imageUrl: _uploadedImageUrl!,
         latitude: position.latitude,
         longitude: position.longitude,
         detectedSpecies: species,
@@ -322,8 +340,8 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       );
 
       if (mounted) {
-        // Navigate to matching results screen
-        context.pushNamed('matching-results');
+        // 💡 ส่ง imagePath ต่อไปให้หน้า matching-results เพื่อให้โชว์รูปเราได้
+        context.pushNamed('matching-results', extra: widget.imagePath);
       }
     } catch (e) {
       setState(() {
@@ -350,8 +368,10 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                 children: [
                   CircularProgressIndicator(color: Colors.white),
                   SizedBox(height: 16),
-                  Text("AI is analyzing...",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                  Text(
+                    "AI is analyzing...",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ],
               ),
             ),
@@ -374,7 +394,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
               onPressed: () => context.pop(),
             ),
-          )
+          ),
         ],
       ),
     );

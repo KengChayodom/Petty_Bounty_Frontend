@@ -9,13 +9,10 @@ part of 'sighting_model.dart';
 _$SightingModelImpl _$$SightingModelImplFromJson(Map<String, dynamic> json) =>
     _$SightingModelImpl(
       id: json['id'] as String,
-      hunterId: json['hunterId'] as String,
+      hunterId: json['hunter_id'] as String,
       imageUrl: json['image_url'] as String,
       sightedLocation: json['sighted_location'] as String,
       detectedSpecies: json['detected_species'] as String,
-      featureVector: (json['feature_vector'] as List<dynamic>)
-          .map((e) => (e as num).toDouble())
-          .toList(),
       actionType: json['action_type'] as String,
       sightingStatus: json['sighting_status'] as String,
       createdAt: json['created_at'] as String,
@@ -26,11 +23,10 @@ _$SightingModelImpl _$$SightingModelImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$SightingModelImplToJson(_$SightingModelImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'hunterId': instance.hunterId,
+      'hunter_id': instance.hunterId,
       'image_url': instance.imageUrl,
       'sighted_location': instance.sightedLocation,
       'detected_species': instance.detectedSpecies,
-      'feature_vector': instance.featureVector,
       'action_type': instance.actionType,
       'sighting_status': instance.sightingStatus,
       'created_at': instance.createdAt,
@@ -41,7 +37,7 @@ Map<String, dynamic> _$$SightingModelImplToJson(_$SightingModelImpl instance) =>
 _$SightingCreateRequestImpl _$$SightingCreateRequestImplFromJson(
         Map<String, dynamic> json) =>
     _$SightingCreateRequestImpl(
-      hunterId: json['hunterId'] as String,
+      hunterId: json['hunter_id'] as String,
       imageUrl: json['image_url'] as String,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
@@ -55,7 +51,7 @@ _$SightingCreateRequestImpl _$$SightingCreateRequestImplFromJson(
 Map<String, dynamic> _$$SightingCreateRequestImplToJson(
         _$SightingCreateRequestImpl instance) =>
     <String, dynamic>{
-      'hunterId': instance.hunterId,
+      'hunter_id': instance.hunterId,
       'image_url': instance.imageUrl,
       'latitude': instance.latitude,
       'longitude': instance.longitude,
