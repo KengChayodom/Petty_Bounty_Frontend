@@ -294,6 +294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               mini: true, // ทำให้ปุ่มเล็กลงหน่อย จะได้ไม่เกะกะแผนที่
               backgroundColor: Colors.white,
               elevation: 4,
+              heroTag: 'recenter',
               onPressed: () {
                 final locState = ref.read(locationProvider);
                 if (locState.location != null) {
@@ -465,7 +466,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _buildNavIcon(
                 iconAsset: 'assets/user.png',
                 isActive: false,
-                onTap: () => _showComingSoon('Account'),
+                onTap: () => context.push('/profile'),
               ),
             ],
           ),
@@ -474,7 +475,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Positioned(
           top: -18,
           child: GestureDetector(
-            onTap: () => context.go('/camera'),
+            onTap: () => context.push('/camera'),
             child: Container(
               width: 70,
               height: 70,

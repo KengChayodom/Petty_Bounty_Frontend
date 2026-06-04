@@ -65,6 +65,20 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The sighting is already saved by the time this screen shows. Every back
+    // action — the on-screen buttons AND the Android system back / swipe — must
+    // return to the map, never to the verification/re-analyze screen (which
+    // would let the user re-submit and create a duplicate sighting).
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) context.go('/');
+      },
+      child: _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     final sightingState = ref.watch(sightingNotifierProvider);
     final matches = sightingState.matches;
 
@@ -141,7 +155,7 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
                         size: 28,
                         color: Colors.black87,
                       ),
-                      onPressed: () => context.pop(),
+                      onPressed: () => context.go('/'),
                     ),
                     const Text(
                       'MATCHING',
@@ -395,7 +409,7 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
                   child: Row(
                     children: [
                       InkWell(
-                        onTap: () => context.pop(),
+                        onTap: () => context.go('/'),
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(

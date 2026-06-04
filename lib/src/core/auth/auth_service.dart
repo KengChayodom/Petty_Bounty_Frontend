@@ -1,27 +1,59 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// AuthService - COMPLETE AUTH BYPASS FOR TESTING
+/// AuthService — Feature #6.
 ///
-/// ALL authentication logic is DISABLED.
-/// Hardcoded user ID is used everywhere.
-/// NO Supabase Auth integration.
-/// NO Authorization headers sent.
+/// Thin wrapper over Supabase Auth (the one Supabase service the client is
+/// allowed to call directly). Registration/login/logout happen here; every
+/// FastAPI call then carries the resulting JWT via [getAuthorizationHeader].
 class AuthService {
-  // Hardcoded test user ID - used throughout the app
-  static const String testUserId = '024dd692-8b4a-44b7-968c-f6f3ddac3f4c';
+  final GoTrueClient _auth = Supabase.instance.client.auth;
 
-  /// Bypass: Returns hardcoded user ID
-  String getCurrentUserId() => testUserId;
+  /// Register a new Pet Owner / Bounty Hunter. `display_name` and `phone` are
+  /// passed as user metadata; the DB trigger `handle_new_user` reads them to
+  /// populate the public.users profile row.
+  Future<AuthResponse> signUp({
+    required String email,
+    required String password,
+    required String displayName,
+    String? phone,
+  }) {
+    return _auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'display_name': displayName,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
+      },
+    );
+  }
 
-  /// Bypass: Always considered authenticated
-  bool get isAuthenticated => true;
+  /// Log in with email + password. Throws [AuthException] on bad credentials.
+  Future<AuthResponse> signInWithPassword({
+    required String email,
+    required String password,
+  }) {
+    return _auth.signInWithPassword(email: email, password: password);
+  }
 
-  /// Bypass: Sign out does nothing
-  Future<void> signOut() async {}
+  /// Log out and clear the persisted session.
+  Future<void> signOut() => _auth.signOut();
 
-  /// Bypass: Returns null - no auth headers sent
-  String? getAuthorizationHeader() => null;
+  /// The current user's id, or null if signed out.
+  String? getCurrentUserId() => _auth.currentUser?.id;
+
+  /// Whether a valid session exists.
+  bool get isAuthenticated => _auth.currentSession != null;
+
+  /// `Bearer <jwt>` header for FastAPI calls, or null when signed out.
+  ///
+  /// Read fresh each call so supabase_flutter's silent token refresh is always
+  /// honored (never a cached/expired token). Repositories already call this.
+  String? getAuthorizationHeader() {
+    final token = _auth.currentSession?.accessToken;
+    return token != null ? 'Bearer $token' : null;
+  }
 }
 
-/// Provider for AuthService
+/// Provider for AuthService.
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());

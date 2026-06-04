@@ -127,7 +127,7 @@ class _CameraScreenState extends State<CameraScreen> {
             left: 20,
             child: IconButton(
               icon: const Icon(Icons.close, color: Colors.white, size: 30),
-              onPressed: () => context.pop(),
+              onPressed: _backtohomepage,
             ),
           ),
 

@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'src/core/app_config.dart';
 import 'src/routing/app_router.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Supabase handles Auth (Feature #6), Storage and Realtime directly from the
+  // client. It persists and silently refreshes the session across app restarts.
+  await Supabase.initialize(
+    url: AppConfig.supabaseUrl,
+    anonKey: AppConfig.supabaseAnonKey,
+  );
+
   runApp(
-  
     const ProviderScope(
       child: PettyBountyApp(),
     ),
