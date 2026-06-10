@@ -11,6 +11,8 @@ import '../features/sightings/presentation/camera_screen.dart';
 import '../features/sightings/presentation/verification_screen.dart';
 import '../features/sightings/presentation/matching_results_screen.dart';
 import '../features/missions/presentation/active_missions_screen.dart';
+import '../features/home_map/presentation/missing_pet_detail_screen.dart';
+import 'root_navigator_key.dart';
 
 // Define route paths as constants to prevent typos
 class AppRoutes {
@@ -28,6 +30,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   final auth = Supabase.instance.client.auth;
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: true,
     // Re-run `redirect` whenever the session changes (login / logout / refresh).
@@ -103,6 +106,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.activeMissions,
         name: 'active-missions',
         builder: (context, state) => const ActiveMissionsScreen(),
+      ),
+
+      // Missing-pet detail — deep-link target for FCM push (SRS-FR-12).
+      GoRoute(
+        path: '/missing-pets/:petId',
+        name: 'missing-pet-detail',
+        builder: (context, state) =>
+            MissingPetDetailScreen(petId: state.pathParameters['petId']!),
       ),
     ],
   );

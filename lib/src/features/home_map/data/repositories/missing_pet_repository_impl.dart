@@ -41,7 +41,11 @@ class MissingPetRepositoryImpl {
     }
   }
 
-  /// Get a specific missing pet by ID
+  /// Get a specific missing pet by ID.
+  ///
+  /// The backend get_missing_pet_by_id RPC returns the same shape as
+  /// /nearby (numeric latitude/longitude projected from the geography,
+  /// numeric bounty_amount), so no client-side normalisation is needed.
   Future<MissingPetEntity> getMissingPet(String petId) async {
     final response = await http.get(Uri.parse('$baseUrl/missing-pets/$petId'));
 
