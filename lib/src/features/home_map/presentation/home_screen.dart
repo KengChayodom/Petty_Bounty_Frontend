@@ -10,6 +10,8 @@ import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../domain/providers/nearby_pets_providers.dart';
 import '../domain/providers/location_provider.dart'; // โหลด Provider ตัวใหม่ที่เราสร้าง
+import '../data/location_api.dart';
+import '../../../core/notifications/fcm_service.dart';
 import 'marker_helper.dart';
 import 'pet_detail_sheet.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -40,7 +42,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _lastFetchLocation = locState.location;
         _fetchNearbyPets(locState.location!);
       }
+      // Set up push AFTER the location permission flow settles, so the OS
+      // shows the location dialog first and the notification dialog second
+      // — never both at once. Home is only reachable when logged in (router
+      // guard), so this also keeps push init scoped to signed-in users.
+      _initPushAfterLocation();
     });
+  }
+
+  Future<void> _initPushAfterLocation() async {
+    await ref.read(locationProvider.notifier).ready;
+    if (!mounted) return;
+
+    // Publish our position so geo-targeted push can find us (SRS-FR-12).
+    // Skip the GPS-denied fallback so denied users don't pile up at one point.
+    final locState = ref.read(locationProvider);
+    if (locState.location != null && !locState.usedFallback) {
+      LocationApi().updateMyLocation(
+        locState.location!.latitude,
+        locState.location!.longitude,
+      );
+    }
+
+    await FcmService.instance.initForCurrentUser();
   }
 
   @override
@@ -294,6 +318,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               mini: true, // ทำให้ปุ่มเล็กลงหน่อย จะได้ไม่เกะกะแผนที่
               backgroundColor: Colors.white,
               elevation: 4,
+              heroTag: 'recenter',
               onPressed: () {
                 final locState = ref.read(locationProvider);
                 if (locState.location != null) {
@@ -465,7 +490,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _buildNavIcon(
                 iconAsset: 'assets/user.png',
                 isActive: false,
-                onTap: () => _showComingSoon('Account'),
+                onTap: () => context.push('/profile'),
               ),
             ],
           ),
@@ -474,7 +499,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Positioned(
           top: -18,
           child: GestureDetector(
-            onTap: () => context.go('/camera'),
+            onTap: () => context.push('/camera'),
             child: Container(
               width: 70,
               height: 70,

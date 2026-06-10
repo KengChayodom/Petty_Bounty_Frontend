@@ -91,7 +91,7 @@ class SightingRepository {
     final userId = _authService.getCurrentUserId();
 
     final body = SightingCreateRequest(
-      hunterId: userId,
+      hunterId: userId!,
       imageUrl: imageUrl,
       latitude: latitude,
       longitude: longitude,
