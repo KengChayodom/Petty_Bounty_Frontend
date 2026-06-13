@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
@@ -29,6 +30,12 @@ class FcmService {
   final AuthService _auth = AuthService();
   bool _initialized = false;
 
+  // Held so logout can tear them down — otherwise a logout→login on the same
+  // app run would stack duplicate listeners (double toasts, double deep-links).
+  StreamSubscription<RemoteMessage>? _onMessageSub;
+  StreamSubscription<RemoteMessage>? _onOpenedSub;
+  StreamSubscription<String>? _onTokenRefreshSub;
+
   String get _platform => Platform.isIOS ? 'ios' : 'android';
 
   /// Idempotent — safe to call on every navigation into Home; the heavy work
@@ -44,7 +51,7 @@ class FcmService {
     debugPrint('[FCM] permission: ${settings.authorizationStatus}');
 
     // 1) Foreground → in-app toast (the OS does NOT show a tray banner here).
-    FirebaseMessaging.onMessage.listen((message) {
+    _onMessageSub = FirebaseMessaging.onMessage.listen((message) {
       final n = message.notification;
       if (n != null) {
         Fluttertoast.showToast(
@@ -55,7 +62,7 @@ class FcmService {
     });
 
     // 2) Background tap → deep-link.
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleDeepLink);
+    _onOpenedSub = FirebaseMessaging.onMessageOpenedApp.listen(_handleDeepLink);
 
     // 3) Terminated: app cold-started by tapping the notification.
     final initial = await messaging.getInitialMessage();
@@ -76,10 +83,66 @@ class FcmService {
     }
 
     // Tokens rotate — re-register on refresh.
-    messaging.onTokenRefresh.listen((token) {
+    _onTokenRefreshSub = messaging.onTokenRefresh.listen((token) {
       debugPrint('[FCM] onTokenRefresh: $token');
       _registerToken(token);
     });
+  }
+
+  /// Tear down push for the user who is logging out (SRS-20).
+  ///
+  /// MUST be called BEFORE `auth.signOut()` so the backend delete still carries
+  /// a valid JWT. Order matters: drop the server row first, then invalidate the
+  /// token on-device so this handset stops receiving alerts entirely, then
+  /// cancel listeners and reset so the next login re-initialises cleanly.
+  Future<void> unregisterForCurrentUser() async {
+    final messaging = FirebaseMessaging.instance;
+    try {
+      final token = await messaging.getToken();
+      if (token != null) await _unregisterToken(token);
+    } catch (e) {
+      debugPrint('[FCM] getToken on logout failed: $e');
+    }
+
+    // Invalidate the FCM token on this device. After this the old token is dead
+    // server-side at FCM too, so a stray push can't reach the logged-out user.
+    try {
+      await messaging.deleteToken();
+    } catch (e) {
+      debugPrint('[FCM] deleteToken failed: $e');
+    }
+
+    await _onMessageSub?.cancel();
+    await _onOpenedSub?.cancel();
+    await _onTokenRefreshSub?.cancel();
+    _onMessageSub = null;
+    _onOpenedSub = null;
+    _onTokenRefreshSub = null;
+    _initialized = false;
+  }
+
+  /// DELETE the token row at FastAPI (JWT-protected). No-op if signed out.
+  Future<void> _unregisterToken(String token) async {
+    final authHeader = _auth.getAuthorizationHeader();
+    if (authHeader == null) {
+      debugPrint('[FCM] not signed in — skipping token unregister');
+      return;
+    }
+    try {
+      final res = await http.post(
+        Uri.parse('${AppConfig.apiBaseUrl}/devices/unregister'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+        },
+        body: jsonEncode({'fcm_token': token}),
+      );
+      if (res.statusCode != 200) {
+        debugPrint('[FCM] unregister failed: ${res.statusCode} ${res.body}');
+      }
+    } catch (e) {
+      debugPrint('[FCM] unregister error: $e');
+    }
   }
 
   /// POST the token to FastAPI (JWT-protected). No-op if signed out.

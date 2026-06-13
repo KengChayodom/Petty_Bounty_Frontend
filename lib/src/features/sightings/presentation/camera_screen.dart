@@ -4,7 +4,20 @@ import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 
 class CameraScreen extends StatefulWidget {
-  const CameraScreen({super.key});
+  /// When [targetPetId] is non-null the camera runs in TARGETED mode: the
+  /// hunter is reporting this specific lost pet, so the verification screen
+  /// skips AI analysis/matching and submits directly to the owner. When null
+  /// it runs in DISCOVERY mode (home FAB) — analyze + match.
+  const CameraScreen({
+    super.key,
+    this.targetPetId,
+    this.targetSpecies,
+    this.targetPetName,
+  });
+
+  final String? targetPetId;
+  final String? targetSpecies;
+  final String? targetPetName;
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
@@ -50,6 +63,15 @@ class _CameraScreenState extends State<CameraScreen> {
     super.dispose();
   }
 
+  /// Bundle the captured image path with the (optional) targeted-mode fields
+  /// so the verification screen knows which path to run.
+  Map<String, dynamic> _verificationArgs(String imagePath) => {
+    'imagePath': imagePath,
+    'targetPetId': widget.targetPetId,
+    'targetSpecies': widget.targetSpecies,
+    'targetPetName': widget.targetPetName,
+  };
+
   Future<void> _takePicture() async {
     if (!_cameraController!.value.isInitialized || _isProcessing) return;
 
@@ -60,7 +82,7 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final XFile photo = await _cameraController!.takePicture();
       if (mounted) {
-        context.pushNamed('verification', extra: photo.path);
+        context.pushNamed('verification', extra: _verificationArgs(photo.path));
       }
     } catch (e) {
       print('Error taking picture: $e');
@@ -88,7 +110,7 @@ class _CameraScreenState extends State<CameraScreen> {
       );
 
       if (photo != null && mounted) {
-        context.pushNamed('verification', extra: photo.path);
+        context.pushNamed('verification', extra: _verificationArgs(photo.path));
       }
     } catch (e) {
       print('Error picking from gallery: $e');

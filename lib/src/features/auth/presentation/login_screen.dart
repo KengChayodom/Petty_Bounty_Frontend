@@ -5,6 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/auth/auth_service.dart';
 import '../../../routing/app_router.dart';
+import 'widgets/auth_scaffold.dart';
+
+/// Real email validation (SRS-04) — replaces the old `contains('@')` check.
+final _emailRegExp = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -42,8 +46,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             password: _passwordController.text,
           );
       // The router's redirect (driven by the auth stream) takes us home.
-    } on AuthException catch (e) {
-      setState(() => _error = e.message);
+    } on AuthException catch (_) {
+      // SRS-12: fixed message — never reveal whether the email exists.
+      setState(() => _error = 'Invalid email or password');
     } catch (e) {
       setState(() => _error = 'Something went wrong. Please try again.');
     } finally {
@@ -53,78 +58,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Log in')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Petty Bounty',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) => (v == null || !v.contains('@'))
-                      ? 'Enter a valid email'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  autofillHints: const [AutofillHints.password],
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) => (v == null || v.isEmpty)
-                      ? 'Enter your password'
-                      : null,
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    _error!,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _loading ? null : _submit,
-                  child: _loading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Log in'),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: _loading
-                      ? null
-                      : () => context.push(AppRoutes.register),
-                  child: const Text("Don't have an account? Register"),
-                ),
-              ],
-            ),
-          ),
+    return AuthScaffold(
+      formKey: _formKey,
+      subtitle: 'Sign in to your account',
+      children: [
+        // Labelled "User name" to match the design; still bound to the email
+        // controller because Supabase auth logs in by email (the user types
+        // their email here), so SRS-03/04 email validation is preserved.
+        AuthField(
+          label: 'User name',
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return 'Email is required!';
+            if (!_emailRegExp.hasMatch(v.trim())) {
+              return 'Invalid email format';
+            }
+            return null;
+          },
         ),
-      ),
+        AuthField(
+          label: 'Password',
+          controller: _passwordController,
+          obscureText: true,
+          autofillHints: const [AutofillHints.password],
+          validator: (v) =>
+              (v == null || v.isEmpty) ? 'Enter your password' : null,
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 4),
+          AuthErrorText(_error!),
+        ],
+        const SizedBox(height: 6),
+        AuthPrimaryButton(
+          label: 'Sign in',
+          loading: _loading,
+          onPressed: _submit,
+        ),
+        const SizedBox(height: 24),
+        AuthFooterLink(
+          question: "Don't you have account ?",
+          action: 'Register here',
+          onTap: _loading ? null : () => context.push(AppRoutes.register),
+        ),
+      ],
     );
   }
 }

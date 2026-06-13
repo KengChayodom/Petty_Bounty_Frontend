@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../domain/entities/missing_pet_entity.dart';
@@ -389,13 +390,16 @@ class PetDetailView extends StatelessWidget {
       children: [
         FloatingActionButton(
           onPressed: () {
+            // TARGETED sighting: the hunter is looking at THIS pet and found
+            // it. Close the sheet, then open the camera in targeted mode
+            // carrying the pet's id/species/name so the verification screen
+            // submits straight to the owner (no AI analyze, no matching).
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Mission accepted: ${pet.petName}'),
-                backgroundColor: Colors.green,
-              ),
-            );
+            context.push('/camera', extra: {
+              'targetPetId': pet.id,
+              'species': pet.species,
+              'petName': pet.petName,
+            });
           },
           backgroundColor: Colors.blue[600],
           elevation: 0,

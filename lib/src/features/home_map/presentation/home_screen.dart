@@ -10,7 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../domain/providers/nearby_pets_providers.dart';
 import '../domain/providers/location_provider.dart'; // โหลด Provider ตัวใหม่ที่เราสร้าง
-import '../data/location_api.dart';
+import '../data/location_publisher.dart';
 import '../../../core/notifications/fcm_service.dart';
 import 'marker_helper.dart';
 import 'pet_detail_sheet.dart';
@@ -54,15 +54,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await ref.read(locationProvider.notifier).ready;
     if (!mounted) return;
 
-    // Publish our position so geo-targeted push can find us (SRS-FR-12).
-    // Skip the GPS-denied fallback so denied users don't pile up at one point.
-    final locState = ref.read(locationProvider);
-    if (locState.location != null && !locState.usedFallback) {
-      LocationApi().updateMyLocation(
-        locState.location!.latitude,
-        locState.location!.longitude,
-      );
-    }
+    // Keep our position fresh on the backend so geo-targeted push can find us
+    // (SRS-21/23). The publisher re-reads GPS each tick and skips the denied/
+    // fallback case itself, so denied users never pile up at one point.
+    LocationPublisher.instance.start();
 
     await FcmService.instance.initForCurrentUser();
   }

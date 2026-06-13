@@ -86,23 +86,32 @@ class SightingRepository {
     required double latitude,
     required double longitude,
     required String detectedSpecies,
+    String? targetPetId,
+    bool skipMatching = false,
     String? notes,
   }) async {
     final userId = _authService.getCurrentUserId();
 
-    final body = SightingCreateRequest(
-      hunterId: userId!,
-      imageUrl: imageUrl,
-      latitude: latitude,
-      longitude: longitude,
-      detectedSpecies: detectedSpecies,
-      notes: notes,
-    );
+    // Spread the existing Freezed request shape and append the two targeted-
+    // path fields. Done as a map (not new Freezed fields) so this change
+    // needs no build_runner run.
+    final body = <String, dynamic>{
+      ...SightingCreateRequest(
+        hunterId: userId!,
+        imageUrl: imageUrl,
+        latitude: latitude,
+        longitude: longitude,
+        detectedSpecies: detectedSpecies,
+        notes: notes,
+      ).toJson(),
+      'target_pet_id': ?targetPetId,
+      'skip_matching': skipMatching,
+    };
 
     final response = await http.post(
       Uri.parse('$baseUrl/sightings/'),
       headers: _headers,
-      body: jsonEncode(body.toJson()),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
