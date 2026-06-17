@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../domain/sighting_providers.dart';
 
 class MatchingResultsScreen extends ConsumerStatefulWidget {
@@ -21,11 +22,8 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
     // The sighting AND its AI matches are already persisted by POST /sightings/
     // (this screen just renders that response). There is no accept-mission
     // step — acknowledge and return to the map.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sighting submitted. The owner will be notified if it matches.'),
-        backgroundColor: Colors.green,
-      ),
+    context.showSuccessSnackBar(
+      'Sighting submitted. The owner will be notified if it matches.',
     );
     context.go('/');
   }
@@ -379,7 +377,6 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '${(match.similarity * 100).round()}% match · '
                                       '${(match.distanceMeters / 1000).toStringAsFixed(1)} km',
                                       style: const TextStyle(
                                         color: Colors.white70,

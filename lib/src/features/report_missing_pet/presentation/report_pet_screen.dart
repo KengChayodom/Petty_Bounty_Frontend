@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../domain/providers/report_form_provider.dart';
 import 'color_picker_widget.dart';
 import 'pattern_picker_widget.dart';
@@ -45,24 +46,14 @@ class _ReportPetScreenState extends ConsumerState<ReportPetScreen> {
     final formState = ref.read(reportFormProvider);
     if (!formState.isValid) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please fill in all required fields'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        context.showErrorSnackBar('Please fill in all required fields');
       }
       return;
     }
 
     // TODO: Implement API call to submit report
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Report submitted successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      context.showSuccessSnackBar('Report submitted successfully!');
       // Reset form
       ref.read(reportFormProvider.notifier).reset();
       _bountyController.clear();

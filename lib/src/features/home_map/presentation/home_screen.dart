@@ -25,7 +25,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final MapController _mapController = MapController();
-  static const double _defaultSearchRadiusKm = 5.0;
+  static const double _defaultSearchRadiusKm = 10.0;
   static const double _maxPanRadiusKm = 15.0;
   static const double _fetchThresholdKm = 3.0;
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../domain/mission_providers.dart';
 import '../data/models/mission_model.dart';
 
@@ -323,21 +324,11 @@ class _MissionCard extends ConsumerWidget {
                       : null,
                 );
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Mission completed'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  context.showSuccessSnackBar('Mission completed');
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to complete mission: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  context.showErrorSnackBar('Failed to complete mission: $e');
                 }
               }
             },

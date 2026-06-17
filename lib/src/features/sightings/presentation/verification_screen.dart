@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
+import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../data/sighting_repository.dart';
 import '../domain/sighting_providers.dart';
 
@@ -117,12 +118,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sighting sent to the owner.'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        context.showSuccessSnackBar('Sighting sent to the owner.');
         context.go('/');
       }
     } catch (e) {
