@@ -5,10 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/auth/auth_service.dart';
 import '../../../routing/app_router.dart';
+import '../domain/auth_validators.dart';
 import 'widgets/auth_scaffold.dart';
-
-/// Real email validation (SRS-04) — replaces the old `contains('@')` check.
-final _emailRegExp = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -70,21 +68,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
-          validator: (v) {
-            if (v == null || v.trim().isEmpty) return 'Email is required!';
-            if (!_emailRegExp.hasMatch(v.trim())) {
-              return 'Invalid email format';
-            }
-            return null;
-          },
+          validator: AuthValidators.email,
         ),
         AuthField(
           label: 'Password',
           controller: _passwordController,
           obscureText: true,
           autofillHints: const [AutofillHints.password],
-          validator: (v) =>
-              (v == null || v.isEmpty) ? 'Enter your password' : null,
+          validator: AuthValidators.loginPassword,
         ),
         if (_error != null) ...[
           const SizedBox(height: 4),

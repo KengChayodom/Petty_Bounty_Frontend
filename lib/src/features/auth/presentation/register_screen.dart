@@ -4,10 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/auth/auth_service.dart';
+import '../domain/auth_validators.dart';
 import 'widgets/auth_scaffold.dart';
-
-/// Real email validation (SRS-04) — replaces the old `contains('@')` check.
-final _emailRegExp = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -93,21 +91,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           label: 'User name',
           controller: _displayNameController,
           textCapitalization: TextCapitalization.words,
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Enter a display name' : null,
+          validator: AuthValidators.username,
         ),
         AuthField(
           label: 'Email',
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
-          validator: (v) {
-            if (v == null || v.trim().isEmpty) return 'Email is required!';
-            if (!_emailRegExp.hasMatch(v.trim())) {
-              return 'Invalid email format';
-            }
-            return null;
-          },
+          validator: AuthValidators.email,
         ),
         AuthField(
           label: 'Phone',
@@ -120,9 +111,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           controller: _passwordController,
           obscureText: true,
           autofillHints: const [AutofillHints.newPassword],
-          validator: (v) => (v == null || v.length < 6)
-              ? 'Password must be at least 6 characters'
-              : null,
+          validator: AuthValidators.password,
         ),
         AuthField(
           label: 'Confirm password',
@@ -130,7 +119,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           obscureText: true,
           autofillHints: const [AutofillHints.newPassword],
           validator: (v) =>
-              (v != _passwordController.text) ? 'Passwords must match' : null,
+              AuthValidators.confirmPassword(v, _passwordController.text),
         ),
         if (_error != null) ...[
           const SizedBox(height: 4),
