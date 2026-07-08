@@ -74,20 +74,34 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileScreen(),
       ),
 
-      // Camera Screen
+      // Camera Screen. `extra` is null for the home-FAB discovery path, or a
+      // {targetPetId, species, petName} map for the pet-detail targeted path.
       GoRoute(
         path: AppRoutes.camera,
         name: 'camera',
-        builder: (context, state) => const CameraScreen(),
+        builder: (context, state) {
+          final args = state.extra as Map<String, dynamic>?;
+          return CameraScreen(
+            targetPetId: args?['targetPetId'] as String?,
+            targetSpecies: args?['species'] as String?,
+            targetPetName: args?['petName'] as String?,
+          );
+        },
       ),
 
-      // Verification Screen (receives image path)
+      // Verification Screen. `extra` is a map carrying the captured image path
+      // plus the optional targeted-mode fields threaded from the camera.
       GoRoute(
         path: AppRoutes.verification,
         name: 'verification',
         builder: (context, state) {
-          final String imagePath = state.extra as String;
-          return VerificationScreen(imagePath: imagePath);
+          final args = state.extra as Map<String, dynamic>;
+          return VerificationScreen(
+            imagePath: args['imagePath'] as String,
+            targetPetId: args['targetPetId'] as String?,
+            targetSpecies: args['targetSpecies'] as String?,
+            targetPetName: args['targetPetName'] as String?,
+          );
         },
       ),
 

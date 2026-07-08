@@ -24,16 +24,10 @@ Future<void> main() async {
   // after the location permission flow settles, so the two native permission
   // dialogs never race (which made the OS drop the location one). See
   // FcmService + HomeScreen._initPushAfterLocation.
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  runApp(
-    const ProviderScope(
-      child: PettyBountyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: PettyBountyApp()));
 }
 
 class PettyBountyApp extends ConsumerWidget {
@@ -44,12 +38,13 @@ class PettyBountyApp extends ConsumerWidget {
     final goRouter = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       title: 'Petty Bounty',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      routerConfig: goRouter, 
+      routerConfig: goRouter,
       builder: (context, child) {
         return SafeArea(
           // You can disable SafeArea on specific edges if needed (e.g., for full-screen maps later)

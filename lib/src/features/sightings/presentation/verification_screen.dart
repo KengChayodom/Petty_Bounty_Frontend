@@ -3,12 +3,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
+import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../data/sighting_repository.dart';
 import '../domain/sighting_providers.dart';
 
 class VerificationScreen extends ConsumerStatefulWidget {
   final String imagePath;
-  const VerificationScreen({super.key, required this.imagePath});
+
+  /// Targeted mode (pet-detail entry): when [targetPetId] is non-null the
+  /// hunter is reporting this specific lost pet, so we SKIP AI analysis and
+  /// matching and submit the sighting straight to that pet's owner. When null
+  /// this is the discovery flow (home FAB) — analyze + confirm + match.
+  final String? targetPetId;
+  final String? targetSpecies;
+  final String? targetPetName;
+
+  const VerificationScreen({
+    super.key,
+    required this.imagePath,
+    this.targetPetId,
+    this.targetSpecies,
+    this.targetPetName,
+  });
+
+  bool get isTargeted => targetPetId != null;
 
   @override
   ConsumerState<VerificationScreen> createState() => _VerificationScreenState();
@@ -25,7 +43,90 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
   @override
   void initState() {
     super.initState();
-    _processAIAnalysis();
+    if (widget.isTargeted) {
+      _processTargetedSighting();
+    } else {
+      _processAIAnalysis();
+    }
+  }
+
+  /// Targeted path: no YOLO/CLIP, no matching. Upload the photo, ask a single
+  /// confirm, then submit the sighting straight to the chosen pet's owner.
+  Future<void> _processTargetedSighting() async {
+    try {
+      final repository = ref.read(sightingRepositoryProvider);
+      final String uploadedUrl = await repository.uploadImage(widget.imagePath);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _uploadedImageUrl = uploadedUrl;
+      });
+      _showTargetedConfirmDialog();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Connection error. Ensure backend is running.";
+        });
+      }
+    }
+  }
+
+  void _showTargetedConfirmDialog() {
+    final petName = widget.targetPetName ?? 'this pet';
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Send sighting?'),
+        content: Text(
+          "Report this photo directly to $petName's owner as a sighting?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              context.pop();
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => _submitTargetedSighting(dialogContext),
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitTargetedSighting(BuildContext dialogContext) async {
+    Navigator.of(dialogContext).pop();
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final position = await _getCurrentLocation();
+      _currentPosition = position;
+
+      await ref.read(sightingNotifierProvider.notifier).createTargetedSighting(
+        imageUrl: _uploadedImageUrl!,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        detectedSpecies: widget.targetSpecies ?? 'Other',
+        targetPetId: widget.targetPetId!,
+      );
+
+      if (mounted) {
+        context.showSuccessSnackBar('Sighting sent to the owner.');
+        context.go('/');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "Error: $e";
+      });
+    }
   }
 
   Future<void> _processAIAnalysis() async {
@@ -40,24 +141,37 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       }
 
       final analysisResult = await repository.analyzeImage(uploadedUrl);
+      if (!mounted) return;
 
-      if (mounted) {
+      // The backend returns 200 with status:"not_found" and data:null when YOLO
+      // finds no cat/dog/bird. Guard against that BEFORE dereferencing ['data'],
+      // otherwise a null-deref throws and the user wrongly sees the connection
+      // error below.
+      final status = analysisResult['status'];
+      final data = analysisResult['data'];
+      if (status == 'not_found' || data == null) {
         setState(() {
           _isLoading = false;
-          _detectedSpecies = analysisResult['data']['species'];
-          if (analysisResult['data']['bbox'] != null) {
-            _bbox = List<double>.from(
-              (analysisResult['data']['bbox'] as List).map((e) => e as double),
-            );
-          }
+          _errorMessage = "No target animal detected, please try again.";
         });
+        return;
       }
 
-      if (_detectedSpecies != 'Unknown') {
+      setState(() {
+        _isLoading = false;
+        _detectedSpecies = data['species'];
+        if (data['bbox'] != null) {
+          _bbox = List<double>.from(
+            (data['bbox'] as List).map((e) => e as double),
+          );
+        }
+      });
+
+      if (_detectedSpecies != null && _detectedSpecies != 'Unknown') {
         _showConfirmationDialog();
       } else {
         setState(() {
-          _errorMessage = "No target animal detected.";
+          _errorMessage = "No target animal detected, please try again.";
         });
       }
     } catch (e) {

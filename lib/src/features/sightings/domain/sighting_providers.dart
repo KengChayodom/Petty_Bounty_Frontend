@@ -78,6 +78,42 @@ class SightingNotifier extends StateNotifier<SightingState> {
     }
   }
 
+  /// Submit a TARGETED sighting against a specific missing pet.
+  ///
+  /// The hunter is looking at one known lost pet and reporting it directly to
+  /// its owner — no species detection, no AI matching. Goes through the
+  /// dedicated `POST /sightings/targeted` endpoint (via the repository's
+  /// [SightingRepository.createTargetedSighting]), which persists the row with
+  /// `initial_target_pet_id` set and skips the CLIP vector + match RPC
+  /// entirely. `matches` stays empty.
+  Future<void> createTargetedSighting({
+    required String imageUrl,
+    required double latitude,
+    required double longitude,
+    required String detectedSpecies,
+    required String targetPetId,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final result = await _repository.createTargetedSighting(
+        imageUrl: imageUrl,
+        latitude: latitude,
+        longitude: longitude,
+        detectedSpecies: detectedSpecies,
+        targetPetId: targetPetId,
+      );
+
+      state = state.copyWith(
+        sighting: result.sighting,
+        matches: result.matches,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
   /// Reset state
   void reset() {
     state = const SightingState();

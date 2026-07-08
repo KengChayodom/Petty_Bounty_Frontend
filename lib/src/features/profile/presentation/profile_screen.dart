@@ -3,11 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/auth/auth_service.dart';
+import '../../../core/notifications/fcm_service.dart';
+import '../../home_map/data/location_publisher.dart';
 
 /// Read-only account page (Feature #6). Profile editing is not yet supported;
 /// this screen just shows the signed-in user's basic info and hosts logout.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
+
+  /// Logout cleanup (SRS-16/17/20). Drop the FCM device token and stop location
+  /// publishing BEFORE signing out, so the backend deletes run while the JWT is
+  /// still valid; then end the session (the router redirects to Login).
+  Future<void> _logout(WidgetRef ref) async {
+    await FcmService.instance.unregisterForCurrentUser();
+    LocationPublisher.instance.stop();
+    await ref.read(authServiceProvider).signOut();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,7 +75,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
           OutlinedButton.icon(
-            onPressed: () => ref.read(authServiceProvider).signOut(),
+            onPressed: () => _logout(ref),
             icon: const Icon(Icons.logout, color: Colors.redAccent),
             label: const Text(
               'Log out',

@@ -74,13 +74,16 @@ class SightingRepository {
     }
   }
 
-  /// Create a new sighting report.
+  /// Create a DISCOVERY sighting report.
   ///
   /// The backend's `POST /sightings/` pulls the pre-computed CLIP vector
   /// from the analyze cache, INSERTs the row with the user-confirmed
   /// species, and runs the pgvector match RPC — all in one request. So
   /// this returns BOTH the saved sighting and the ranked matches; the
   /// follow-up `getMatches` call is no longer needed on the hot path.
+  ///
+  /// The pet-detail *targeted* flow uses [createTargetedSighting] instead —
+  /// a separate endpoint, not a flag on this one.
   Future<SightingSubmitResult> createSighting({
     required String imageUrl,
     required double latitude,
@@ -97,12 +100,12 @@ class SightingRepository {
       longitude: longitude,
       detectedSpecies: detectedSpecies,
       notes: notes,
-    );
+    ).toJson();
 
     final response = await http.post(
       Uri.parse('$baseUrl/sightings/'),
       headers: _headers,
-      body: jsonEncode(body.toJson()),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -111,6 +114,48 @@ class SightingRepository {
       return SightingSubmitResult.fromJson(data);
     } else {
       throw Exception('Failed to create sighting');
+    }
+  }
+
+  /// Create a TARGETED sighting report — the hunter is reporting one known
+  /// missing pet straight to its owner (from that pet's detail view).
+  ///
+  /// Hits the dedicated `POST /sightings/targeted` endpoint, which skips AI
+  /// species analysis and similarity matching entirely and persists the row
+  /// with `initial_target_pet_id` set. Returns the saved sighting with an
+  /// empty match list (same response shape as [createSighting]).
+  Future<SightingSubmitResult> createTargetedSighting({
+    required String imageUrl,
+    required double latitude,
+    required double longitude,
+    required String detectedSpecies,
+    required String targetPetId,
+    String? notes,
+  }) async {
+    final userId = _authService.getCurrentUserId();
+
+    final body = <String, dynamic>{
+      'hunter_id': userId!,
+      'image_url': imageUrl,
+      'latitude': latitude,
+      'longitude': longitude,
+      'detected_species': detectedSpecies,
+      'target_pet_id': targetPetId,
+      'notes': ?notes,
+    };
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/sightings/targeted'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['data'] as Map<String, dynamic>;
+      return SightingSubmitResult.fromJson(data);
+    } else {
+      throw Exception('Failed to create targeted sighting');
     }
   }
 

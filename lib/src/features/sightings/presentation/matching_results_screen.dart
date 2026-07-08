@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../domain/sighting_providers.dart';
-import '../../missions/data/mission_repository.dart';
 
 class MatchingResultsScreen extends ConsumerStatefulWidget {
   final String? imagePath; // รับ path รูปภาพที่เราถ่ายมาจากหน้า Verification
@@ -18,30 +18,14 @@ class MatchingResultsScreen extends ConsumerStatefulWidget {
 class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
   dynamic _selectedMatch;
 
-  Future<void> _confirmMatch(String sightingId) async {
-    try {
-      final missionRepo = ref.read(missionRepositoryProvider);
-      await missionRepo.acceptMission(sightingId);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Match Confirmed! Mission accepted.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        context.go('/');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to confirm match: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+  void _confirmMatch() {
+    // The sighting AND its AI matches are already persisted by POST /sightings/
+    // (this screen just renders that response). There is no accept-mission
+    // step — acknowledge and return to the map.
+    context.showSuccessSnackBar(
+      'Sighting submitted. The owner will be notified if it matches.',
+    );
+    context.go('/');
   }
 
   Widget _buildStars(double similarity) {
@@ -391,6 +375,14 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
                                         ),
                                       ],
                                     ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${(match.distanceMeters / 1000).toStringAsFixed(1)} km',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -426,11 +418,7 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
                       const SizedBox(width: 15),
                       Expanded(
                         child: InkWell(
-                          onTap: displayMatch == null
-                              ? null
-                              : () => _confirmMatch(
-                                  sightingState.sighting?.id ?? '',
-                                ),
+                          onTap: displayMatch == null ? null : _confirmMatch,
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
