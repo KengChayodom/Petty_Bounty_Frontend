@@ -48,11 +48,11 @@ app.*.map.json
 .env
 .env.*
 
-# Firebase platform config (FCM) — keep out of version control.
-# Note: lib/firebase_options.dart is safe to commit (no secrets).
-**/android/app/google-services.json
-**/ios/Runner/GoogleService-Info.plist
-**/ios/Runner/firebase_app_id_file.json
+# # Firebase platform config (FCM) — keep out of version control.
+# # Note: lib/firebase_options.dart is safe to commit (no secrets).
+# **/android/app/google-services.json
+# **/ios/Runner/GoogleService-Info.plist
+# **/ios/Runner/firebase_app_id_file.json
 
 # Flutter generated files
 **/ios/Flutter/Generated.xcconfig

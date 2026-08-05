@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "608409538141",
+    "project_id": "petty-bounty",
+    "storage_bucket": "petty-bounty.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608409538141:android:727102011266c9749bc7b4",
+        "android_client_info": {
+          "package_name": "com.pettybounty.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnguy_5pba9Rt1sTSQXgLqjXZbp9-LGgc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

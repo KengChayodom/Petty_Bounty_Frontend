@@ -23,8 +23,9 @@ class AuthValidators {
   }
 
   /// Sign-up password must be at least 6 characters (SRS-05).
-  static String? password(String? v) =>
-      (v == null || v.length < 6) ? 'Password must be at least 6 characters' : null;
+  static String? password(String? v) => (v == null || v.length < 6)
+      ? 'Password must be at least 6 characters'
+      : null;
 
   /// Confirm password must equal the original password (SRS-06).
   static String? confirmPassword(String? v, String original) =>

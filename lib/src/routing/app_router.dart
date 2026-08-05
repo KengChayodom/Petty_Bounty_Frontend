@@ -10,7 +10,6 @@ import '../features/profile/presentation/profile_screen.dart';
 import '../features/sightings/presentation/camera_screen.dart';
 import '../features/sightings/presentation/verification_screen.dart';
 import '../features/sightings/presentation/matching_results_screen.dart';
-import '../features/missions/presentation/active_missions_screen.dart';
 import '../features/home_map/presentation/missing_pet_detail_screen.dart';
 import 'root_navigator_key.dart';
 
@@ -23,7 +22,6 @@ class AppRoutes {
   static const String camera = '/camera';
   static const String verification = '/verification';
   static const String matchingResults = '/matching-results';
-  static const String activeMissions = '/active-missions';
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -113,13 +111,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final String imagePath = state.extra as String;
           return MatchingResultsScreen(imagePath: imagePath);
         },
-      ),
-
-      // Active Missions Screen
-      GoRoute(
-        path: AppRoutes.activeMissions,
-        name: 'active-missions',
-        builder: (context, state) => const ActiveMissionsScreen(),
       ),
 
       // Missing-pet detail — deep-link target for FCM push (SRS-FR-12).
