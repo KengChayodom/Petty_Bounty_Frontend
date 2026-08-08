@@ -56,6 +56,14 @@ class MissingPetEntity extends Equatable {
     if (characteristics['markings'] != null) {
       parts.add(characteristics['markings'].toString());
     }
+    if (characteristics['traits'] != null &&
+        characteristics['traits'].toString().trim().isNotEmpty) {
+      parts.add(characteristics['traits'].toString());
+    }
+    if (characteristics['description'] != null &&
+        characteristics['description'].toString().trim().isNotEmpty) {
+      parts.add(characteristics['description'].toString());
+    }
     return parts.join(' • ');
   }
 
