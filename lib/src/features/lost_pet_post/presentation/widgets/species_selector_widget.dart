@@ -16,25 +16,40 @@ class SpeciesSelectorWidget extends ConsumerWidget {
     );
     final notifier = ref.read(lostPetPostFormProvider.notifier);
 
-    return Row(
-      children: _species.map((s) {
-        final isSelected = selected == s;
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: ChoiceChip(
-              label: Center(child: Text(s)),
-              selected: isSelected,
-              onSelected: (_) => notifier.updateSpecies(s),
-              selectedColor: Colors.blue[100],
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.blue[800] : Colors.black87,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'SPECIES',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            letterSpacing: 1.0,
           ),
-        );
-      }).toList(),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: _species.map((s) {
+            final isSelected = selected == s;
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: ChoiceChip(
+                  label: Center(child: Text(s)),
+                  selected: isSelected,
+                  onSelected: (_) => notifier.updateSpecies(s),
+                  selectedColor: Colors.blue[100],
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.blue[800] : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }
