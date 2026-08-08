@@ -480,7 +480,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _buildNavIcon(
                 iconAsset: 'assets/post-pet.png',
                 isActive: false,
-                onTap: () => _showComingSoon('Post Lost Pet'),
+                onTap: () => context.push('/lost-pet-post'),
               ),
               _buildNavIcon(
                 iconAsset: 'assets/user.png',

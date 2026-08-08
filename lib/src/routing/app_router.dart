@@ -11,6 +11,7 @@ import '../features/sightings/presentation/camera_screen.dart';
 import '../features/sightings/presentation/verification_screen.dart';
 import '../features/sightings/presentation/matching_results_screen.dart';
 import '../features/home_map/presentation/missing_pet_detail_screen.dart';
+import '../features/lost_pet_post/presentation/lost_pet_post_screen.dart';
 import 'root_navigator_key.dart';
 
 // Define route paths as constants to prevent typos
@@ -22,6 +23,7 @@ class AppRoutes {
   static const String camera = '/camera';
   static const String verification = '/verification';
   static const String matchingResults = '/matching-results';
+  static const String lostPetPost = '/lost-pet-post';
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -36,8 +38,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final loggedIn = auth.currentSession != null;
       final loc = state.matchedLocation;
-      final onAuthPage =
-          loc == AppRoutes.login || loc == AppRoutes.register;
+      final onAuthPage = loc == AppRoutes.login || loc == AppRoutes.register;
 
       // Gate every protected screen behind a session.
       if (!loggedIn && !onAuthPage) return AppRoutes.login;
@@ -70,6 +71,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.profile,
         name: 'profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      // Lost pet post screen
+      GoRoute(
+        path: AppRoutes.lostPetPost,
+        name: 'lost-pet-post',
+        builder: (context, state) => const LostPetPostScreen(),
       ),
 
       // Camera Screen. `extra` is null for the home-FAB discovery path, or a
