@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/providers/lost_pet_post_form_provider.dart';
 
-/// "Collar Marker" section: primary color swatches, coat pattern dropdown,
-/// and the free-text "distinguishing traits" field.
+/// Primary color swatches + the free-text "distinguishing traits" field.
 class CollarMarkerWidget extends ConsumerWidget {
   const CollarMarkerWidget({super.key, required this.traitsController});
 
@@ -18,26 +17,10 @@ class CollarMarkerWidget extends ConsumerWidget {
     {"name": "Gray", "hex": "#808080"},
   ];
 
-  static const List<String> _availablePatterns = [
-    "solid",
-    "tabby",
-    "calico",
-    "tuxedo",
-    "spotted",
-    "striped",
-    "bicolor",
-    "tricolor",
-    "merle",
-    "brindle",
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColorHex = ref.watch(
       lostPetPostFormProvider.select((state) => state.primaryColorHex),
-    );
-    final patternId = ref.watch(
-      lostPetPostFormProvider.select((state) => state.patternId),
     );
     final notifier = ref.read(lostPetPostFormProvider.notifier);
 
@@ -59,7 +42,7 @@ class CollarMarkerWidget extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'COLLAR MARKER (PRIMARY COLOR)',
+            'PRIMARY COLOR',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -89,44 +72,6 @@ class CollarMarkerWidget extends ConsumerWidget {
                 ),
               );
             }).toList(),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'PATTERN ID',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-              letterSpacing: 1.0,
-            ),
-          ),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: patternId,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.grey[100],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-            ),
-            items: _availablePatterns.map((pattern) {
-              return DropdownMenuItem(
-                value: pattern,
-                child: Text(
-                  pattern.toUpperCase(),
-                  style: const TextStyle(fontSize: 13),
-                ),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) notifier.updatePattern(val);
-            },
           ),
           const SizedBox(height: 16),
           const Text(

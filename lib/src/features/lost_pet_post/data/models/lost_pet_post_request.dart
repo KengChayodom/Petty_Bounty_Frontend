@@ -12,7 +12,7 @@ class LostPetPostRequest {
   final DateTime lastSeenTime;
   final String imageUrl;
   final String? primaryColorHex;
-  final String patternId;
+  final String? patternId;
 
   const LostPetPostRequest({
     required this.petName,
@@ -24,7 +24,7 @@ class LostPetPostRequest {
     required this.lastSeenTime,
     required this.imageUrl,
     this.primaryColorHex,
-    required this.patternId,
+    this.patternId,
   });
 
   Map<String, dynamic> toJson() => {
