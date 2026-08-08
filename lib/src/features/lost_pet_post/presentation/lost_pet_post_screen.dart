@@ -67,24 +67,28 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
 
     setState(() => _isUploading = true);
 
-    final String imageUrl;
-    try {
-      // Upload the photo to Object Storage first — the backend's image_url
-      // field needs a public URL, not the on-device picker path.
-      imageUrl = await ref
-          .read(lostPetPostRepositoryProvider)
-          .uploadImage(formState.imagePath!);
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isUploading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to upload photo: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+    // The photo picker already uploads on pick (for the species-detection
+    // call) and stores the URL — reuse it instead of uploading again.
+    String imageUrl;
+    if (formState.imageUrl != null) {
+      imageUrl = formState.imageUrl!;
+    } else {
+      try {
+        imageUrl = await ref
+            .read(lostPetPostRepositoryProvider)
+            .uploadImage(formState.imagePath!);
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isUploading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to upload photo: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
       }
-      return;
     }
 
     if (!mounted) return;
@@ -105,12 +109,26 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
       lastSeenTime: formState.lastSeenTime,
       imageUrl: imageUrl,
       primaryColorHex: formState.primaryColorHex,
-      patternId: formState.patternId,
     );
 
-    // TODO: เรียกใช้งาน Repository เพื่อยิง POST /missing-pets/ ด้วย request นี้
-    print("Payload to send: ${request.toJson()}");
+    try {
+      await ref.read(lostPetPostRepositoryProvider).createLostPetPost(request);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit report: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      // Keep the form filled in on failure — the user shouldn't have to
+      // redo everything just to retry.
+      return;
+    }
 
+    if (!mounted) return;
     setState(() => _isUploading = false);
 
     ScaffoldMessenger.of(context).showSnackBar(

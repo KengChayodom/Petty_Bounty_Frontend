@@ -5,11 +5,14 @@ class LostPetPostFormState {
   final String petName;
   final String species;
   final String? primaryColorHex;
-  final String patternId;
   final String traits;
   final bool isBountyMode;
   final double bountyAmount;
   final String? imagePath;
+  // The uploaded photo's public URL, set as soon as picking finishes (so the
+  // AI-analyze call has something to hit) and reused at submit time to avoid
+  // uploading the same photo twice.
+  final String? imageUrl;
   // Deliberately nullable (no fallback default): unlike a placeholder value,
   // null lets the UI/submit flow tell "location not set yet" apart from "set
   // to some coordinate" without a fragile double comparison.
@@ -21,11 +24,11 @@ class LostPetPostFormState {
     this.petName = '',
     this.species = 'Dog',
     this.primaryColorHex = '#D4AF37',
-    this.patternId = 'solid',
     this.traits = '',
     this.isBountyMode = false,
     this.bountyAmount = 10000.0,
     this.imagePath,
+    this.imageUrl,
     this.latitude,
     this.longitude,
     required this.lastSeenTime,
@@ -35,16 +38,17 @@ class LostPetPostFormState {
     String? petName,
     String? species,
     String? primaryColorHex,
-    String? patternId,
     String? traits,
     bool? isBountyMode,
     double? bountyAmount,
     String? imagePath,
+    String? imageUrl,
     double? latitude,
     double? longitude,
     DateTime? lastSeenTime,
     bool clearPrimaryColorHex = false,
     bool clearImagePath = false,
+    bool clearImageUrl = false,
   }) {
     return LostPetPostFormState(
       petName: petName ?? this.petName,
@@ -52,11 +56,11 @@ class LostPetPostFormState {
       primaryColorHex: clearPrimaryColorHex
           ? null
           : (primaryColorHex ?? this.primaryColorHex),
-      patternId: patternId ?? this.patternId,
       traits: traits ?? this.traits,
       isBountyMode: isBountyMode ?? this.isBountyMode,
       bountyAmount: bountyAmount ?? this.bountyAmount,
       imagePath: clearImagePath ? null : (imagePath ?? this.imagePath),
+      imageUrl: clearImageUrl ? null : (imageUrl ?? this.imageUrl),
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       lastSeenTime: lastSeenTime ?? this.lastSeenTime,
@@ -75,9 +79,6 @@ class LostPetPostFormNotifier extends StateNotifier<LostPetPostFormState> {
   void updateColor(String hex) =>
       state = state.copyWith(primaryColorHex: hex);
 
-  void updatePattern(String patternId) =>
-      state = state.copyWith(patternId: patternId);
-
   void updateTraits(String value) => state = state.copyWith(traits: value);
 
   void updateBountyMode(bool isBountyMode) =>
@@ -86,8 +87,12 @@ class LostPetPostFormNotifier extends StateNotifier<LostPetPostFormState> {
   void updateImagePath(String path) =>
       state = state.copyWith(imagePath: path);
 
-  /// Clears a picked photo back to null (e.g. the file became unreadable).
-  void clearImagePath() => state = state.copyWith(clearImagePath: true);
+  void updateImageUrl(String url) => state = state.copyWith(imageUrl: url);
+
+  /// Clears the picked photo (local path + uploaded URL) back to null, e.g.
+  /// the file became unreadable or the user needs to re-pick.
+  void clearImage() =>
+      state = state.copyWith(clearImagePath: true, clearImageUrl: true);
 
   /// Clears the selected color back to null.
   void clearColor() => state = state.copyWith(clearPrimaryColorHex: true);
