@@ -193,6 +193,9 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                             ref
                                 .read(lostPetPostFormProvider.notifier)
                                 .updateSpecies(detectedSpecies);
+                            ref
+                                .read(lostPetPostFormProvider.notifier)
+                                .confirmPhoto();
                             Navigator.of(dialogContext).pop();
                           },
                         ),
@@ -232,7 +235,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: selectedSpecies,
+                    initialValue: selectedSpecies,
                     hint: const Text('Select species'),
                     items: _speciesOptions
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -258,7 +261,10 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  onPressed: () {
+                    ref.read(lostPetPostFormProvider.notifier).clearImage();
+                    Navigator.of(dialogContext).pop();
+                  },
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
@@ -268,6 +274,9 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                           ref
                               .read(lostPetPostFormProvider.notifier)
                               .updateSpecies(selectedSpecies!);
+                          ref
+                              .read(lostPetPostFormProvider.notifier)
+                              .confirmPhoto();
                           Navigator.of(dialogContext).pop();
                         },
                   child: const Text('Confirm'),

@@ -36,6 +36,20 @@ class LastSeenTimeWidget extends ConsumerWidget {
     ref.read(lostPetPostFormProvider.notifier).updateLastSeenTime(combined);
   }
 
+  String _formatDateTime(DateTime dt) {
+    final local = dt.toLocal();
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final day = local.day.toString().padLeft(2, '0');
+    final month = months[local.month - 1];
+    final year = local.year;
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$day $month $year, $hour:$minute';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lastSeenTime = ref.watch(
@@ -55,7 +69,7 @@ class LastSeenTimeWidget extends ConsumerWidget {
             const Icon(Icons.access_time, color: Colors.blue, size: 22),
             const SizedBox(width: 12),
             Text(
-              'Lost at: ${lastSeenTime.toLocal().toString().substring(0, 16)}',
+              'Lost at ${_formatDateTime(lastSeenTime)}',
               style: const TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.w500,

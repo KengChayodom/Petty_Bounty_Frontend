@@ -20,6 +20,8 @@ class LostPetPostFormState {
   final double? longitude;
   final DateTime lastSeenTime;
 
+  final bool isPhotoConfirmed;
+
   const LostPetPostFormState({
     this.petName = '',
     this.species = 'Dog',
@@ -29,6 +31,7 @@ class LostPetPostFormState {
     this.bountyAmount = 10000.0,
     this.imagePath,
     this.imageUrl,
+    this.isPhotoConfirmed = false,
     this.latitude,
     this.longitude,
     required this.lastSeenTime,
@@ -43,6 +46,7 @@ class LostPetPostFormState {
     double? bountyAmount,
     String? imagePath,
     String? imageUrl,
+    bool? isPhotoConfirmed,
     double? latitude,
     double? longitude,
     DateTime? lastSeenTime,
@@ -61,6 +65,7 @@ class LostPetPostFormState {
       bountyAmount: bountyAmount ?? this.bountyAmount,
       imagePath: clearImagePath ? null : (imagePath ?? this.imagePath),
       imageUrl: clearImageUrl ? null : (imageUrl ?? this.imageUrl),
+      isPhotoConfirmed: isPhotoConfirmed ?? this.isPhotoConfirmed,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       lastSeenTime: lastSeenTime ?? this.lastSeenTime,
@@ -85,14 +90,19 @@ class LostPetPostFormNotifier extends StateNotifier<LostPetPostFormState> {
       state = state.copyWith(isBountyMode: isBountyMode);
 
   void updateImagePath(String path) =>
-      state = state.copyWith(imagePath: path);
+      state = state.copyWith(imagePath: path, isPhotoConfirmed: false);
 
   void updateImageUrl(String url) => state = state.copyWith(imageUrl: url);
 
+  void confirmPhoto() => state = state.copyWith(isPhotoConfirmed: true);
+
   /// Clears the picked photo (local path + uploaded URL) back to null, e.g.
   /// the file became unreadable or the user needs to re-pick.
-  void clearImage() =>
-      state = state.copyWith(clearImagePath: true, clearImageUrl: true);
+  void clearImage() => state = state.copyWith(
+        clearImagePath: true,
+        clearImageUrl: true,
+        isPhotoConfirmed: false,
+      );
 
   /// Clears the selected color back to null.
   void clearColor() => state = state.copyWith(clearPrimaryColorHex: true);

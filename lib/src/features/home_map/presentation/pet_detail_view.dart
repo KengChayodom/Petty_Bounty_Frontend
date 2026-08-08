@@ -59,9 +59,15 @@ class PetDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String breed = pet.characteristics['breed'] ?? 'common';
-    final String description = pet.characteristicsText.isNotEmpty
-        ? pet.characteristicsText
-        : "Looking for this sweet ${pet.species}.";
+    final String traitsVal =
+        (pet.characteristics['traits'] ?? pet.characteristics['description'] ?? '')
+            .toString()
+            .trim();
+    final String description = traitsVal.isNotEmpty
+        ? traitsVal
+        : (pet.characteristicsText.isNotEmpty
+            ? pet.characteristicsText
+            : "Looking for this sweet ${pet.species}.");
 
     return SingleChildScrollView(
       controller: scrollController,

@@ -7,7 +7,7 @@ import '../../domain/providers/lost_pet_post_form_provider.dart';
 class SpeciesSelectorWidget extends ConsumerWidget {
   const SpeciesSelectorWidget({super.key});
 
-  static const _species = ['Dog', 'Cat', 'Bird', 'Other'];
+  static const _species = ['Cat', 'Dog', 'Bird', 'Other'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
