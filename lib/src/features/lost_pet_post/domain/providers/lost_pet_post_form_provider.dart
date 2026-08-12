@@ -5,6 +5,7 @@ class LostPetPostFormState {
   final String petName;
   final String species;
   final String? primaryColorHex;
+  final String? secondaryColorHex;
   final String traits;
   final bool isBountyMode;
   final double bountyAmount;
@@ -26,6 +27,7 @@ class LostPetPostFormState {
     this.petName = '',
     this.species = 'Dog',
     this.primaryColorHex = '#D4AF37',
+    this.secondaryColorHex,
     this.traits = '',
     this.isBountyMode = false,
     this.bountyAmount = 10000.0,
@@ -41,6 +43,7 @@ class LostPetPostFormState {
     String? petName,
     String? species,
     String? primaryColorHex,
+    String? secondaryColorHex,
     String? traits,
     bool? isBountyMode,
     double? bountyAmount,
@@ -51,6 +54,7 @@ class LostPetPostFormState {
     double? longitude,
     DateTime? lastSeenTime,
     bool clearPrimaryColorHex = false,
+    bool clearSecondaryColorHex = false,
     bool clearImagePath = false,
     bool clearImageUrl = false,
   }) {
@@ -60,6 +64,9 @@ class LostPetPostFormState {
       primaryColorHex: clearPrimaryColorHex
           ? null
           : (primaryColorHex ?? this.primaryColorHex),
+      secondaryColorHex: clearSecondaryColorHex
+          ? null
+          : (secondaryColorHex ?? this.secondaryColorHex),
       traits: traits ?? this.traits,
       isBountyMode: isBountyMode ?? this.isBountyMode,
       bountyAmount: bountyAmount ?? this.bountyAmount,
@@ -83,6 +90,12 @@ class LostPetPostFormNotifier extends StateNotifier<LostPetPostFormState> {
 
   void updateColor(String hex) =>
       state = state.copyWith(primaryColorHex: hex);
+
+  void updateSecondaryColor(String hex) =>
+      state = state.copyWith(secondaryColorHex: hex);
+
+  void clearSecondaryColor() =>
+      state = state.copyWith(clearSecondaryColorHex: true);
 
   void updateTraits(String value) => state = state.copyWith(traits: value);
 
