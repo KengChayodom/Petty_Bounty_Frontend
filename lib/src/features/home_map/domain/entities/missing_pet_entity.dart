@@ -49,12 +49,24 @@ class MissingPetEntity extends Equatable {
     if (primaryColorHex == null && characteristics['color'] != null) {
       parts.add(characteristics['color'].toString());
     }
+    if (characteristics['secondary_color'] != null &&
+        characteristics['secondary_color'].toString().trim().isNotEmpty) {
+      parts.add(characteristics['secondary_color'].toString());
+    }
 
     if (characteristics['size'] != null) {
       parts.add(characteristics['size'].toString());
     }
     if (characteristics['markings'] != null) {
       parts.add(characteristics['markings'].toString());
+    }
+    if (characteristics['traits'] != null &&
+        characteristics['traits'].toString().trim().isNotEmpty) {
+      parts.add(characteristics['traits'].toString());
+    }
+    if (characteristics['description'] != null &&
+        characteristics['description'].toString().trim().isNotEmpty) {
+      parts.add(characteristics['description'].toString());
     }
     return parts.join(' • ');
   }

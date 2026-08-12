@@ -23,7 +23,7 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   static const double _defaultSearchRadiusKm = 10.0;
   static const double _maxPanRadiusKm = 15.0;
@@ -31,6 +31,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Timer? _debounceTimer;
   LatLng? _lastFetchLocation;
+
+  void _animatedMapMove(LatLng destLocation, double destZoom, {VoidCallback? onComplete}) {
+    final latTween = Tween<double>(
+      begin: _mapController.camera.center.latitude,
+      end: destLocation.latitude,
+    );
+    final lngTween = Tween<double>(
+      begin: _mapController.camera.center.longitude,
+      end: destLocation.longitude,
+    );
+    final zoomTween = Tween<double>(
+      begin: _mapController.camera.zoom,
+      end: destZoom,
+    );
+
+    final controller = AnimationController(
+      duration: const Duration(milliseconds: 1400),
+      vsync: this,
+    );
+
+    final Animation<double> animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.fastOutSlowIn,
+    );
+
+    controller.addListener(() {
+      if (!mounted) return;
+      _mapController.move(
+        LatLng(
+          latTween.evaluate(animation),
+          lngTween.evaluate(animation),
+        ),
+        zoomTween.evaluate(animation),
+      );
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        controller.dispose();
+        if (onComplete != null) {
+          onComplete();
+        }
+      }
+    });
+
+    controller.forward();
+  }
 
   @override
   void initState() {
@@ -480,7 +527,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _buildNavIcon(
                 iconAsset: 'assets/post-pet.png',
                 isActive: false,
-                onTap: () => _showComingSoon('Post Lost Pet'),
+                onTap: () async {
+                  final result =
+                      await context.push<Map<String, dynamic>>('/lost-pet-post');
+                  if (result != null && mounted) {
+                    final location = result['location'] as LatLng?;
+                    final petId = result['petId'] as String?;
+                    if (location != null) {
+                      await _fetchNearbyPets(location);
+                      _animatedMapMove(location, 16.5, onComplete: () {
+                        if (petId != null && mounted) {
+                          ref.read(selectedPetIdProvider.notifier).state = petId;
+                          _showPetDetailBottomSheet();
+                        }
+                      });
+                    }
+                  }
+                },
               ),
               _buildNavIcon(
                 iconAsset: 'assets/user.png',
