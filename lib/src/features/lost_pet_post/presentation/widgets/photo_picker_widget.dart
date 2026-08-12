@@ -9,7 +9,7 @@ import '../../domain/providers/lost_pet_post_form_provider.dart';
 /// The four species options the backend accepts — shared with
 /// [SpeciesSelectorWidget]'s chip row (kept in sync manually since the two
 /// widgets are deliberately independent files).
-const _speciesOptions = ['Cat', 'Dog', 'Bird', 'Other'];
+const _speciesOptions = ['Cat', 'Dog', 'Bird'];
 
 /// Photo picker box (gallery or camera). Once a photo is picked it's
 /// uploaded immediately and sent to the same AI species-detection endpoint

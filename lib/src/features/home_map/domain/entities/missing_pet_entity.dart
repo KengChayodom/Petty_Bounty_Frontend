@@ -49,6 +49,10 @@ class MissingPetEntity extends Equatable {
     if (primaryColorHex == null && characteristics['color'] != null) {
       parts.add(characteristics['color'].toString());
     }
+    if (characteristics['secondary_color'] != null &&
+        characteristics['secondary_color'].toString().trim().isNotEmpty) {
+      parts.add(characteristics['secondary_color'].toString());
+    }
 
     if (characteristics['size'] != null) {
       parts.add(characteristics['size'].toString());
