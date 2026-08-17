@@ -11,6 +11,7 @@ import 'dart:async';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/sightings/presentation/camera_screen.dart';
 
@@ -32,10 +33,16 @@ Future<void> _pumpCamera(
   CameraPreviewBuilder? previewBuilder,
 }) async {
   await tester.pumpWidget(
-    MaterialApp(
-      home: CameraScreen(
-        initializer: initializer,
-        previewBuilder: previewBuilder,
+    // CameraScreen is a ConsumerStatefulWidget: it reads the sighting
+    // repository to start the photo upload on the shutter press. None of these
+    // tests press the shutter, so the default providers are enough — but the
+    // scope has to be there for the widget to build at all.
+    ProviderScope(
+      child: MaterialApp(
+        home: CameraScreen(
+          initializer: initializer,
+          previewBuilder: previewBuilder,
+        ),
       ),
     ),
   );

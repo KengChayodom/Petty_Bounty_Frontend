@@ -8,6 +8,7 @@ import '../features/auth/presentation/register_screen.dart';
 import '../features/home_map/presentation/home_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/sightings/presentation/camera_screen.dart';
+import '../features/sightings/domain/pending_upload.dart';
 import '../features/sightings/presentation/verification_screen.dart';
 import '../features/sightings/presentation/matching_results_screen.dart';
 import '../features/home_map/presentation/missing_pet_detail_screen.dart';
@@ -106,6 +107,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             targetPetId: args['targetPetId'] as String?,
             targetSpecies: args['targetSpecies'] as String?,
             targetPetName: args['targetPetName'] as String?,
+            // Upload started back at the shutter press so the transfer overlaps
+            // this navigation. Null when the caller didn't pre-start one, in
+            // which case the screen uploads on its own.
+            pendingUpload: args['pendingUpload'] as PendingUpload?,
           );
         },
       ),
