@@ -35,6 +35,7 @@ dependencies:
 
   mime: ^1.0.4
   http_parser: ^4.0.0  # สำหรับ MediaType
+  uuid: ^4.4.0         # object names for direct-to-Storage photo uploads
 
   camera: ^0.10.5+9
   freezed_annotation: ^2.4.1

@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../../../core/app_config.dart';
 import '../../../core/auth/auth_service.dart';
 import 'package:mime/mime.dart';
-import 'package:http_parser/http_parser.dart';
 import 'models/sighting_model.dart';
 import 'models/match_model.dart';
 
@@ -24,39 +25,44 @@ class SightingRepository {
     return headers;
   }
 
-  /// Upload pet image to Supabase Storage via FastAPI
-  Future<String> uploadImage(String filePath) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/upload/pet-image'),
-    );
+  /// Bucket the sighting/pet photos live in. Must match the bucket the
+  /// backend's `/upload/pet-image` writes to, because `POST /sightings/analyze`
+  /// fetches the resulting public URL server-side.
+  static const String _petImageBucket = 'pet-images';
 
-    // Add authorization header
-    final authToken = _authService.getAuthorizationHeader();
-    if (authToken != null) {
-      request.headers['Authorization'] = authToken;
-    }
+  /// Upload a photo straight to Supabase Storage and return its public URL.
+  ///
+  /// Storage is one of the three things Flutter is allowed to talk to directly
+  /// (Auth, Storage, Realtime) — the golden rule only forbids direct DB access,
+  /// and no table is touched here.
+  ///
+  /// This used to POST the bytes to FastAPI, which then re-uploaded them to
+  /// Storage. That made the photo cross the network twice on the way up and
+  /// stalled the API's event loop for the whole transfer, because
+  /// `supabase.storage.upload()` is a blocking call sitting inside an
+  /// `async def` route. Going direct removes both problems; the backend still
+  /// downloads the image once, during `/sightings/analyze`.
+  ///
+  /// NOTE: the `pet-images` bucket has no `file_size_limit` or
+  /// `allowed_mime_types` set, so the file-type/10 MB checks that
+  /// `/upload/pet-image` performed are NOT enforced on this path. Set those
+  /// two bucket properties to restore them — see the deploy note in
+  /// `Petty_Bounty_Brain/log.md`.
+  Future<String> uploadImage(String filePath) async {
+    final storage = Supabase.instance.client.storage.from(_petImageBucket);
 
     final mimeType = lookupMimeType(filePath) ?? 'image/jpeg';
-    final mimeTypeSplit = mimeType.split('/');
+    final extension = filePath.contains('.')
+        ? filePath.split('.').last.toLowerCase()
+        : 'jpg';
+    final objectName = '${const Uuid().v4()}.$extension';
 
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'file',
-        filePath,
-        contentType: MediaType(mimeTypeSplit[0], mimeTypeSplit[1]),
-      ),
+    await storage.upload(
+      objectName,
+      File(filePath),
+      fileOptions: FileOptions(contentType: mimeType),
     );
-
-    final response = await request.send();
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final responseData = await response.stream.bytesToString();
-      final json = jsonDecode(responseData) as Map<String, dynamic>;
-      return json['data']['image_url'] as String ?? json['image_url'] as String;
-    } else {
-      final error = await response.stream.bytesToString();
-      throw Exception('Failed to upload image: $error');
-    }
+    return storage.getPublicUrl(objectName);
   }
 
   /// Analyze image with AI to detect species
