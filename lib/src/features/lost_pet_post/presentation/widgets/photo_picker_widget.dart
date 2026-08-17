@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/app_config.dart';
 import '../../data/lost_pet_post_repository.dart';
 import '../../domain/providers/lost_pet_post_form_provider.dart';
 
@@ -59,6 +60,11 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
       final XFile? image = await picker.pickImage(
         source: source,
         imageQuality: 80,
+        // Ceiling only. This is the LOST-PET path, so the photo picked here
+        // becomes the seed vector every future sighting is matched against —
+        // see AppConfig.petImageMaxDimension before touching it.
+        maxWidth: AppConfig.petImageMaxDimension.toDouble(),
+        maxHeight: AppConfig.petImageMaxDimension.toDouble(),
       );
       if (image == null || !mounted) return;
 
