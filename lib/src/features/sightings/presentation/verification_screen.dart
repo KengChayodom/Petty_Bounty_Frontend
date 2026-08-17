@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:geolocator/geolocator.dart';
 import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../data/sighting_repository.dart';
+import '../domain/pending_upload.dart';
 import '../domain/sighting_providers.dart';
 
 class VerificationScreen extends ConsumerStatefulWidget {
@@ -18,12 +19,18 @@ class VerificationScreen extends ConsumerStatefulWidget {
   final String? targetSpecies;
   final String? targetPetName;
 
+  /// An upload for [imagePath] that the camera screen already kicked off at
+  /// the shutter press. When present this screen awaits it rather than
+  /// starting a second one; when null it uploads the file itself.
+  final PendingUpload? pendingUpload;
+
   const VerificationScreen({
     super.key,
     required this.imagePath,
     this.targetPetId,
     this.targetSpecies,
     this.targetPetName,
+    this.pendingUpload,
   });
 
   bool get isTargeted => targetPetId != null;
@@ -52,10 +59,18 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
 
   /// Targeted path: no YOLO/CLIP, no matching. Upload the photo, ask a single
   /// confirm, then submit the sighting straight to the chosen pet's owner.
+  /// The photo's Storage URL, awaiting the upload the camera screen started at
+  /// the shutter press when there is one. Falls back to uploading here for
+  /// callers that navigated straight to this screen without pre-starting one.
+  Future<String> _resolveUploadedUrl() {
+    final pending = widget.pendingUpload;
+    if (pending != null) return pending.url;
+    return ref.read(sightingRepositoryProvider).uploadImage(widget.imagePath);
+  }
+
   Future<void> _processTargetedSighting() async {
     try {
-      final repository = ref.read(sightingRepositoryProvider);
-      final String uploadedUrl = await repository.uploadImage(widget.imagePath);
+      final String uploadedUrl = await _resolveUploadedUrl();
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -133,7 +148,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     try {
       final repository = ref.read(sightingRepositoryProvider);
 
-      final String uploadedUrl = await repository.uploadImage(widget.imagePath);
+      final String uploadedUrl = await _resolveUploadedUrl();
       if (mounted) {
         setState(() {
           _uploadedImageUrl = uploadedUrl;

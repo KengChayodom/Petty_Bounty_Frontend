@@ -40,8 +40,17 @@ class LostPetPostRepository {
   }
 
   /// Upload the report photo to Object Storage via FastAPI and return its
-  /// public URL. Same generic `/upload/pet-image` endpoint the sightings
-  /// flow uses — mirrors `SightingRepository.uploadImage`.
+  /// public URL, using the generic `/upload/pet-image` endpoint.
+  ///
+  /// This path deliberately still goes THROUGH the backend, unlike
+  /// `SightingRepository.uploadImage`, which now writes to Supabase Storage
+  /// directly. The reason is validation: `/upload/pet-image` enforces the
+  /// extension / content-type / 10 MB checks, and the `pet-images` bucket
+  /// itself has no `file_size_limit` or `allowed_mime_types` to fall back on.
+  /// Posting a lost pet is a once-per-incident action where that extra
+  /// round-trip costs nothing noticeable, whereas reporting a sighting is the
+  /// hot path a hunter waits on. Move this one across too once the bucket
+  /// carries its own limits.
   Future<String> uploadImage(String filePath) async {
     final request = http.MultipartRequest(
       'POST',

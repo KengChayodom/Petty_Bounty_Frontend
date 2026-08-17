@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/app_config.dart';
+import '../data/sighting_repository.dart';
+import '../domain/pending_upload.dart';
 
 /// Outcome of trying to bring the camera up.
 ///
@@ -28,7 +33,7 @@ typedef CameraInitializer = Future<CameraSetupResult> Function();
 /// render the "ready" UI without a real platform-backed controller.
 typedef CameraPreviewBuilder = Widget Function(CameraController controller);
 
-class CameraScreen extends StatefulWidget {
+class CameraScreen extends ConsumerStatefulWidget {
   /// When [targetPetId] is non-null the camera runs in TARGETED mode: the
   /// hunter is reporting this specific lost pet, so the verification screen
   /// skips AI analysis/matching and submits directly to the owner. When null
@@ -53,10 +58,10 @@ class CameraScreen extends StatefulWidget {
   final CameraPreviewBuilder? previewBuilder;
 
   @override
-  State<CameraScreen> createState() => _CameraScreenState();
+  ConsumerState<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> {
+class _CameraScreenState extends ConsumerState<CameraScreen> {
   CameraController? _cameraController;
   CameraSetupStatus _status = CameraSetupStatus.initializing;
   bool _isProcessing = false;
@@ -88,7 +93,15 @@ class _CameraScreenState extends State<CameraScreen> {
 
       final controller = CameraController(
         cameras[0],
-        ResolutionPreset.high,
+        // veryHigh (1920x1080), NOT high (1280x720). The live-camera path
+        // feeds the same CLIP matcher as the gallery path, but gallery photos
+        // arrive at ~1536x2048 while `high` capped this one at 1280 on its
+        // long side — the exact width at which a measured re-encode of the
+        // seeded pets dropped one bird's self-similarity to 0.64 (its YOLO
+        // mask collapsed to a 174x262 crop). Matching quality depends on
+        // PIXELS ON THE ANIMAL, so a live capture must not arrive at a lower
+        // resolution than the seed photos it is compared against.
+        ResolutionPreset.veryHigh,
         enableAudio: false,
       );
       await controller.initialize();
@@ -122,12 +135,34 @@ class _CameraScreenState extends State<CameraScreen> {
 
   /// Bundle the captured image path with the (optional) targeted-mode fields
   /// so the verification screen knows which path to run.
-  Map<String, dynamic> _verificationArgs(String imagePath) => {
+  ///
+  /// [upload] is the already-running upload for this photo — see
+  /// [_startUpload]. The verification screen awaits it instead of starting its
+  /// own, and falls back to uploading itself if it is null.
+  Map<String, dynamic> _verificationArgs(
+    String imagePath, {
+    PendingUpload? upload,
+  }) => {
     'imagePath': imagePath,
     'targetPetId': widget.targetPetId,
     'targetSpecies': widget.targetSpecies,
     'targetPetName': widget.targetPetName,
+    'pendingUpload': upload,
   };
+
+  /// Begin uploading the photo the instant we have it, WITHOUT awaiting.
+  ///
+  /// The upload has to finish before `/sightings/analyze` can run (that
+  /// endpoint takes a URL), so it is on the critical path no matter what. What
+  /// we can control is when it starts: doing it here overlaps the transfer with
+  /// the route transition and the verification screen's first frame, and on the
+  /// targeted path with the whole confirm dialog. By the time the user has
+  /// finished reading, the photo is usually already in Storage.
+  PendingUpload _startUpload(String imagePath) {
+    return PendingUpload(
+      ref.read(sightingRepositoryProvider).uploadImage(imagePath),
+    );
+  }
 
   Future<void> _takePicture() async {
     final controller = _cameraController;
@@ -144,7 +179,13 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final XFile photo = await controller.takePicture();
       if (mounted) {
-        context.pushNamed('verification', extra: _verificationArgs(photo.path));
+        context.pushNamed(
+          'verification',
+          extra: _verificationArgs(
+            photo.path,
+            upload: _startUpload(photo.path),
+          ),
+        );
       }
     } catch (e) {
       print('Error taking picture: $e');
@@ -169,10 +210,20 @@ class _CameraScreenState extends State<CameraScreen> {
       final XFile? photo = await picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
+        // Ceiling only — see AppConfig.petImageMaxDimension for why it must
+        // not go below 2048 (CLIP matching reads the cropped animal).
+        maxWidth: AppConfig.petImageMaxDimension.toDouble(),
+        maxHeight: AppConfig.petImageMaxDimension.toDouble(),
       );
 
       if (photo != null && mounted) {
-        context.pushNamed('verification', extra: _verificationArgs(photo.path));
+        context.pushNamed(
+          'verification',
+          extra: _verificationArgs(
+            photo.path,
+            upload: _startUpload(photo.path),
+          ),
+        );
       }
     } catch (e) {
       print('Error picking from gallery: $e');

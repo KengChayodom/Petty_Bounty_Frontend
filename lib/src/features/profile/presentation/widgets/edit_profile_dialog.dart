@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/app_config.dart';
 import '../../domain/providers/profile_providers.dart';
 
 /// Modal dialog allowing user to edit Username (display_name) & Profile Picture.
@@ -53,6 +54,9 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
+      // Avatars never reach CLIP, so this one can be capped hard.
+      maxWidth: AppConfig.profileImageMaxDimension.toDouble(),
+      maxHeight: AppConfig.profileImageMaxDimension.toDouble(),
     );
     if (image == null || !mounted) return;
 
