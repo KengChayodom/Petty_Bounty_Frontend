@@ -134,8 +134,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.matchingResults,
         name: 'matching-results',
         builder: (context, state) {
-          final String imagePath = state.extra as String;
-          return MatchingResultsScreen(imagePath: imagePath);
+          final args = state.extra as Map<String, dynamic>?;
+          return MatchingResultsScreen(
+            imagePath: args?['imagePath'] as String?,
+            latitude: args?['latitude'] as double?,
+            longitude: args?['longitude'] as double?,
+          );
         },
       ),
 

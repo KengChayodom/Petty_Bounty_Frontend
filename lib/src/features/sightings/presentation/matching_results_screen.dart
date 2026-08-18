@@ -4,11 +4,20 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
+import '../data/models/match_model.dart';
 import '../domain/sighting_providers.dart';
+import 'final_review_screen.dart';
 
 class MatchingResultsScreen extends ConsumerStatefulWidget {
   final String? imagePath; // รับ path รูปภาพที่เราถ่ายมาจากหน้า Verification
-  const MatchingResultsScreen({super.key, this.imagePath});
+  final double? latitude; // พิกัดที่ถ่าย sighting (สำหรับหน้า Final Review)
+  final double? longitude;
+  const MatchingResultsScreen({
+    super.key,
+    this.imagePath,
+    this.latitude,
+    this.longitude,
+  });
 
   @override
   ConsumerState<MatchingResultsScreen> createState() =>
@@ -18,14 +27,28 @@ class MatchingResultsScreen extends ConsumerStatefulWidget {
 class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
   dynamic _selectedMatch;
 
-  void _confirmMatch() {
-    // The sighting AND its AI matches are already persisted by POST /sightings/
-    // (this screen just renders that response). There is no accept-mission
-    // step — acknowledge and return to the map.
-    context.showSuccessSnackBar(
-      'Sighting submitted. The owner will be notified if it matches.',
+  void _confirmMatch(dynamic match) {
+    // The sighting AND its AI matches are already persisted by POST /sightings/;
+    // confirming a match routes the hunter to Final Review before the sent
+    // acknowledgement. If we somehow have no coords, fall back to the old
+    // acknowledge-and-return behaviour rather than opening a broken map.
+    if (match == null || widget.latitude == null || widget.longitude == null) {
+      context.showSuccessSnackBar(
+        'Sighting submitted. The owner will be notified if it matches.',
+      );
+      context.go('/');
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FinalReviewScreen(
+          match: match as MatchModel,
+          imagePath: widget.imagePath,
+          latitude: widget.latitude!,
+          longitude: widget.longitude!,
+        ),
+      ),
     );
-    context.go('/');
   }
 
   Widget _buildStars(double similarity) {
@@ -418,7 +441,9 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
                       const SizedBox(width: 15),
                       Expanded(
                         child: InkWell(
-                          onTap: displayMatch == null ? null : _confirmMatch,
+                          onTap: displayMatch == null
+                              ? null
+                              : () => _confirmMatch(displayMatch),
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
