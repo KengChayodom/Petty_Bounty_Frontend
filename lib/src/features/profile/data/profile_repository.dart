@@ -43,6 +43,29 @@ class ProfileRepository {
     }
   }
 
+  /// Build a failure message that keeps the backend's own explanation.
+  ///
+  /// FastAPI puts the real cause in `detail` (e.g. "Failed to retrieve hunter
+  /// stats: [Errno 35] Resource temporarily unavailable"). Reporting only the
+  /// status code throws that away and makes every 500 look identical on
+  /// screen — which is exactly what made the last one hard to diagnose.
+  String _describeFailure(String what, http.Response response) {
+    String? detail;
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map<String, dynamic> && body['detail'] != null) {
+        final raw = body['detail'];
+        final text = raw is String ? raw : raw.toString();
+        if (text.isNotEmpty) detail = text;
+      }
+    } catch (_) {
+      // Non-JSON body (proxy error page, empty response) — status code only.
+    }
+    return detail == null
+        ? '$what (${response.statusCode}).'
+        : '$what (${response.statusCode}): $detail';
+  }
+
   /// Fetch user profile from Backend GET /auth/me. Falls back to the local
   /// Supabase session's own metadata (still the real signed-in user's own
   /// data, not placeholder content) if the backend is unreachable.
@@ -170,7 +193,7 @@ class ProfileRepository {
       final data = body['data'] as Map<String, dynamic>;
       return HunterStatsModel.fromJson(data);
     }
-    throw Exception('Failed to load hunter stats (${response.statusCode}).');
+    throw Exception(_describeFailure('Failed to load hunter stats', response));
   }
 
   /// Fetch Hunter Sighting History list from Backend GET /sightings/me.
@@ -186,7 +209,8 @@ class ProfileRepository {
     final url = Uri.parse('$_baseUrl/sightings/me');
     final response = await http.get(url, headers: _authHeaders);
     if (response.statusCode != 200) {
-      throw Exception('Failed to load sighting history (${response.statusCode}).');
+      throw Exception(
+          _describeFailure('Failed to load sighting history', response));
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -238,7 +262,7 @@ class ProfileRepository {
     final url = Uri.parse('$_baseUrl/missing-pets/$petId/sightings');
     final response = await http.get(url, headers: _authHeaders);
     if (response.statusCode != 200) {
-      throw Exception('Entry-count fetch failed (${response.statusCode}).');
+      throw Exception(_describeFailure('Entry-count fetch failed', response));
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final list = body['data'] as List<dynamic>? ?? const [];
