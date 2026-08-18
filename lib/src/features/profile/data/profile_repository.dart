@@ -204,7 +204,6 @@ class ProfileRepository {
       return HunterSightingHistoryItem(
         id: m['id'] as String? ?? '',
         detectedSpecies: species,
-        caseId: (m['id'] as String? ?? '00').substring(0, 2),
         petImageUrl: m['image_url'] as String?,
         status: status,
         points: (award?['points'] as num?)?.toInt(),
@@ -219,6 +218,19 @@ class ProfileRepository {
   /// like the rest of the client's Supabase table access) since there's no
   /// backend "my reports" endpoint yet, then a second query counts real
   /// sighting_matches per pet instead of a fixed placeholder count.
+  /// Number of sightings reported against [petId], via the backend union
+  /// endpoint (RLS-proof, identical to what the Status Tracker timeline shows).
+  Future<int> _fetchEntryCount(String petId) async {
+    final url = Uri.parse('$_baseUrl/missing-pets/$petId/sightings');
+    final response = await http.get(url, headers: _authHeaders);
+    if (response.statusCode != 200) {
+      throw Exception('Entry-count fetch failed (${response.statusCode}).');
+    }
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['data'] as List<dynamic>? ?? const [];
+    return list.length;
+  }
+
   Future<List<OwnerPostHistoryItem>> fetchOwnerPosts() async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) {
@@ -239,28 +251,27 @@ class ProfileRepository {
         .whereType<String>()
         .toList();
 
-    // Real "received entries" count per pet, instead of a fixed placeholder.
-    // Isolated in its own try/catch: this is an enrichment on top of the
-    // posts list above, not a precondition for it — a failure here (RLS,
-    // network) should degrade to "count unknown, shown as 0" rather than
-    // taking down the whole list the first query already fetched fine.
+    // Real "received entries" count per pet, sourced from the SAME backend
+    // endpoint the Status Tracker uses (`GET /missing-pets/{id}/sightings`).
+    // That endpoint runs server-side with the service role, so it bypasses RLS
+    // and returns the full UNION of AI-matched + targeted sightings — exactly
+    // the timeline the owner sees on the tracker.
+    //
+    // Earlier attempts read `sighting_matches`/`sightings` directly from the
+    // client: unreliable because (a) RLS/grants on those tables can silently
+    // return [] → a wrong 0, and (b) counting matches alone missed every
+    // targeted-only sighting. Going through the backend removes both problems.
+    //
+    // Fetched concurrently and best-effort per pet: a failure on one pet's
+    // count degrades that card to 0 rather than taking down the whole list.
     final entryCounts = <String, int>{};
-    if (petIds.isNotEmpty) {
+    await Future.wait(petIds.map((petId) async {
       try {
-        final matchRes = await _supabase
-            .from('sighting_matches')
-            .select('missing_pet_id')
-            .inFilter('missing_pet_id', petIds);
-        for (final row in matchRes as List<dynamic>) {
-          final petId = (row as Map<String, dynamic>)['missing_pet_id'] as String?;
-          if (petId != null) {
-            entryCounts[petId] = (entryCounts[petId] ?? 0) + 1;
-          }
-        }
+        entryCounts[petId] = await _fetchEntryCount(petId);
       } catch (_) {
-        // entryCounts stays empty — every post falls back to 0 below.
+        // leave unset → falls back to 0 below.
       }
-    }
+    }));
 
     return list.map<OwnerPostHistoryItem>((json) {
       final m = json as Map<String, dynamic>;
@@ -286,7 +297,6 @@ class ProfileRepository {
       return OwnerPostHistoryItem(
         id: id,
         petName: m['pet_name'] as String? ?? 'Pet',
-        caseId: id.isNotEmpty ? id.substring(0, 2) : '00',
         petImageUrl: m['image_url'] as String?,
         status: status,
         bountyReward: (m['bounty_amount'] as num?)?.toDouble() ?? 0,
