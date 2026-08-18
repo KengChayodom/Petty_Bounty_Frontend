@@ -469,8 +469,16 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       );
 
       if (mounted) {
-        // 💡 ส่ง imagePath ต่อไปให้หน้า matching-results เพื่อให้โชว์รูปเราได้
-        context.pushNamed('matching-results', extra: widget.imagePath);
+        // ส่ง imagePath + พิกัดที่ถ่ายไปให้ matching-results เพื่อโชว์รูปเรา
+        // และให้หน้า Final Review ปักหมุดตำแหน่ง sighting ได้
+        context.pushNamed(
+          'matching-results',
+          extra: {
+            'imagePath': widget.imagePath,
+            'latitude': position.latitude,
+            'longitude': position.longitude,
+          },
+        );
       }
     } catch (e) {
       setState(() {
