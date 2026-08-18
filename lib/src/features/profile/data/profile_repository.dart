@@ -31,6 +31,18 @@ class ProfileRepository {
     };
   }
 
+  /// Guard for endpoints that are meaningless without a session.
+  ///
+  /// Without it a signed-out call still goes out — just with no `Authorization`
+  /// header — and comes back as an opaque backend 401 that surfaces to the user
+  /// as "Failed to load ... (401)". Failing fast here keeps the message honest
+  /// and saves a pointless round trip.
+  void _requireAuthenticatedSession() {
+    if (_supabase.auth.currentSession == null) {
+      throw Exception('User is not authenticated.');
+    }
+  }
+
   /// Fetch user profile from Backend GET /auth/me. Falls back to the local
   /// Supabase session's own metadata (still the real signed-in user's own
   /// data, not placeholder content) if the backend is unreachable.
@@ -150,6 +162,7 @@ class ProfileRepository {
   /// zeros, and a genuine failure should surface as an error, not a fake
   /// (and suspiciously good-looking) stat line.
   Future<HunterStatsModel> fetchHunterStats() async {
+    _requireAuthenticatedSession();
     final url = Uri.parse('$_baseUrl/hunters/me/score');
     final response = await http.get(url, headers: _authHeaders);
     if (response.statusCode == 200) {
@@ -169,6 +182,7 @@ class ProfileRepository {
   /// there's no reverse-geocoded location anywhere in this app yet, so
   /// neither is invented here.
   Future<List<HunterSightingHistoryItem>> fetchHunterHistory() async {
+    _requireAuthenticatedSession();
     final url = Uri.parse('$_baseUrl/sightings/me');
     final response = await http.get(url, headers: _authHeaders);
     if (response.statusCode != 200) {

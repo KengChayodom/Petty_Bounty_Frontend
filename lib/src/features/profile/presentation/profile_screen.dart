@@ -29,13 +29,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     await FcmService.instance.unregisterForCurrentUser();
     LocationPublisher.instance.stop();
     await ref.read(authServiceProvider).signOut();
-    // Drop cached profile data so a different account logging in on the same
-    // app session (no full restart) can't briefly show the previous user's
-    // profile/stats/history before a fresh fetch replaces it.
-    ref.invalidate(userProfileProvider);
-    ref.invalidate(hunterStatsProvider);
-    ref.invalidate(hunterHistoryProvider);
-    ref.invalidate(ownerPostsProvider);
+    // Deliberately NO ref.invalidate here. Invalidating after signOut made the
+    // providers refetch immediately in a signed-out state (no access token ->
+    // backend 401), and because they were cached at root scope those errors
+    // were still there when the next account opened this screen. The providers
+    // are autoDispose instead: the router redirects to /login, this screen
+    // unmounts, and the cache is dropped for free.
   }
 
   void _openEditProfileDialog(String currentName, String? currentPhoto) {
