@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_service.dart';
 import '../../../core/notifications/fcm_service.dart';
+import '../../../routing/app_router.dart';
 import '../../home_map/data/location_publisher.dart';
 import '../domain/models/profile_models.dart';
 import '../domain/providers/profile_providers.dart';
@@ -268,10 +269,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       recoversCount: recoversCount,
       postItems: postItems,
       onViewSightingsPressed: (item) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Viewing sightings for Case #${item.caseId}'),
-          ),
+        context.push(
+          '${AppRoutes.statusTracker}/${item.id}',
+          extra: {
+            'petName': item.petName,
+            'petImageUrl': item.petImageUrl,
+            'isResolved': item.status == PostStatus.rescued,
+          },
         );
       },
     );
