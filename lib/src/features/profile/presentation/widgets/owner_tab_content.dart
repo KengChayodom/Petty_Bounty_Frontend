@@ -47,8 +47,8 @@ class OwnerTabContent extends StatelessWidget {
           children: [
             Expanded(
               child: ProfileStatCard(
-                backgroundColor: const Color(0xFFFFAB91),
-                icon: Icons.article_rounded,
+                backgroundColor: const Color(0xFFEE6D33),
+                icon: Icons.description_outlined,
                 iconColor: Colors.white,
                 numberText: '$postsCount',
                 numberColor: Colors.white,
@@ -59,13 +59,13 @@ class OwnerTabContent extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: ProfileStatCard(
-                backgroundColor: const Color(0xFFE0F2F1),
+                backgroundColor: const Color(0xFF10B981),
                 icon: Icons.volunteer_activism_rounded,
-                iconColor: const Color(0xFF00BFA5),
+                iconColor: Colors.white,
                 numberText: '$recoversCount',
-                numberColor: const Color(0xFF00BFA5),
+                numberColor: Colors.white,
                 label: 'RECOVERS',
-                labelColor: const Color(0xFF00BFA5),
+                labelColor: Colors.white,
               ),
             ),
           ],

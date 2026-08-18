@@ -97,6 +97,10 @@ class OwnerPostCard extends StatelessWidget {
         break;
     }
 
+    final bool isActive = item.status == PostStatus.activeSearch;
+    final Color buttonBgColor =
+        isActive ? const Color(0xFFEE6D33) : const Color(0xFF555555);
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -135,15 +139,6 @@ class OwnerPostCard extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
                         color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'CASE ID : ${item.caseId}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
                       ),
                     ),
                   ],
@@ -217,30 +212,37 @@ class OwnerPostCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
-                    color: Colors.redAccent,
+                    color: Color(0xFFFF0000),
+                    letterSpacing: 0.5,
                   ),
                 ),
                 const Spacer(),
-                OutlinedButton.icon(
+                ElevatedButton.icon(
                   onPressed: onViewSightingsPressed,
-                  icon: const Icon(Icons.visibility_outlined,
-                      size: 14, color: Color(0xFFFF7A00)),
+                  icon: const Icon(
+                    Icons.visibility_outlined,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                   label: const Text(
                     'VIEW SIGHTING',
                     style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFFF7A00),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: buttonBgColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    side: const BorderSide(color: Color(0xFFFF7A00)),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
