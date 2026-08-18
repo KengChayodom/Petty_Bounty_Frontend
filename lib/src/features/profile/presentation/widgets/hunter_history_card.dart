@@ -129,15 +129,6 @@ class HunterHistoryCard extends StatelessWidget {
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'CASE ID : ${item.caseId}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
                   ],
                 ),
                 const Spacer(),
