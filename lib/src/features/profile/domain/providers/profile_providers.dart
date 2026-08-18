@@ -10,17 +10,24 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
 });
 
 /// AsyncNotifier provider for managing user profile state.
+///
+/// autoDispose: leaving the Profile screen drops the cache, so a different
+/// account signing in during the same app session can never be served the
+/// previous user's profile — nor a stale error cached at the moment of logout.
 final userProfileProvider =
-    AsyncNotifierProvider<UserProfileNotifier, ProfileUserModel>(
+    AsyncNotifierProvider.autoDispose<UserProfileNotifier, ProfileUserModel>(
         UserProfileNotifier.new);
 
-class UserProfileNotifier extends AsyncNotifier<ProfileUserModel> {
-  late final ProfileRepository _repository;
+class UserProfileNotifier extends AutoDisposeAsyncNotifier<ProfileUserModel> {
+  // Deliberately a getter, NOT a `late final` field assigned inside build():
+  // Riverpod reuses the same notifier instance across rebuilds (invalidate,
+  // pull-to-refresh), so a second build() would re-assign the field and throw
+  // `LateInitializationError: Field '_repository' has already been initialized`.
+  ProfileRepository get _repository => ref.read(profileRepositoryProvider);
 
   @override
   Future<ProfileUserModel> build() async {
-    _repository = ref.watch(profileRepositoryProvider);
-    return await _repository.fetchProfile();
+    return await ref.watch(profileRepositoryProvider).fetchProfile();
   }
 
   Future<void> updateProfile({
@@ -44,21 +51,22 @@ class UserProfileNotifier extends AsyncNotifier<ProfileUserModel> {
 }
 
 /// Provider for Hunter Stats (Earned points, Sighting count, Rescues count)
-final hunterStatsProvider = FutureProvider<HunterStatsModel>((ref) async {
+final hunterStatsProvider =
+    FutureProvider.autoDispose<HunterStatsModel>((ref) async {
   final repo = ref.watch(profileRepositoryProvider);
   return await repo.fetchHunterStats();
 });
 
 /// Provider for Hunter Sighting Sent History list
 final hunterHistoryProvider =
-    FutureProvider<List<HunterSightingHistoryItem>>((ref) async {
+    FutureProvider.autoDispose<List<HunterSightingHistoryItem>>((ref) async {
   final repo = ref.watch(profileRepositoryProvider);
   return await repo.fetchHunterHistory();
 });
 
 /// Provider for Pet Owner Posted Pets list
 final ownerPostsProvider =
-    FutureProvider<List<OwnerPostHistoryItem>>((ref) async {
+    FutureProvider.autoDispose<List<OwnerPostHistoryItem>>((ref) async {
   final repo = ref.watch(profileRepositoryProvider);
   return await repo.fetchOwnerPosts();
 });
