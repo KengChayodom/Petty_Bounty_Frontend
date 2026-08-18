@@ -12,7 +12,6 @@ class HunterSightingHistoryItem {
   // missing_pets row, which /sightings/me doesn't embed) — the AI-detected
   // species is the real, honest label available for this list.
   final String detectedSpecies;
-  final String caseId;
   final String? petImageUrl;
   final SightingStatus status;
   // Null until a score_award exists for this sighting (i.e. not yet
@@ -23,7 +22,6 @@ class HunterSightingHistoryItem {
   const HunterSightingHistoryItem({
     required this.id,
     required this.detectedSpecies,
-    required this.caseId,
     required this.petImageUrl,
     required this.status,
     required this.points,
@@ -34,7 +32,6 @@ class HunterSightingHistoryItem {
 class OwnerPostHistoryItem {
   final String id;
   final String petName;
-  final String caseId;
   final String? petImageUrl;
   final PostStatus status;
   final double bountyReward;
@@ -44,7 +41,6 @@ class OwnerPostHistoryItem {
   const OwnerPostHistoryItem({
     required this.id,
     required this.petName,
-    required this.caseId,
     required this.petImageUrl,
     required this.status,
     required this.bountyReward,
