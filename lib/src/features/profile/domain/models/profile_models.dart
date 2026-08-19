@@ -14,16 +14,23 @@ class HunterSightingHistoryItem {
   final String detectedSpecies;
   final String? petImageUrl;
   final SightingStatus status;
+  // The hunter's declared action: 'Spotted' (just saw it) or 'Caught'
+  // (rescued it — shown as "RESCUE"). Only 'Caught' + Verified is bounty-
+  // eligible, so it's worth surfacing per sighting.
+  final String actionType;
   // Null until a score_award exists for this sighting (i.e. not yet
   // verified/resolved) — shown as "Pending", never a made-up number.
   final int? points;
   final String sentAtFormatted;
+
+  bool get isCaught => actionType.toLowerCase() == 'caught';
 
   const HunterSightingHistoryItem({
     required this.id,
     required this.detectedSpecies,
     required this.petImageUrl,
     required this.status,
+    required this.actionType,
     required this.points,
     required this.sentAtFormatted,
   });

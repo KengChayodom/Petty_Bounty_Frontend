@@ -129,6 +129,35 @@ class HunterHistoryCard extends StatelessWidget {
                         color: Colors.black87,
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    // The hunter's action: SPOTTED (just saw it) vs RESCUE
+                    // (caught it — the bounty-eligible action).
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          item.isCaught
+                              ? Icons.volunteer_activism_rounded
+                              : Icons.visibility_rounded,
+                          size: 13,
+                          color: item.isCaught
+                              ? const Color(0xFF2E7D5B)
+                              : const Color(0xFFEE6D33),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          item.isCaught ? 'RESCUE' : 'SPOTTED',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                            color: item.isCaught
+                                ? const Color(0xFF2E7D5B)
+                                : const Color(0xFFEE6D33),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const Spacer(),

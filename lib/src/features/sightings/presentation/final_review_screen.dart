@@ -3,22 +3,25 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../data/models/match_model.dart';
+import '../data/sighting_repository.dart';
 import 'report_sent_screen.dart';
 
 /// Final review before a discovery sighting is reported to the matched pet's
 /// owner. The sighting itself was already persisted upstream (at species
 /// confirmation); this screen lets the hunter pick the action type and confirm
-/// before the "sent" acknowledgement.
-class FinalReviewScreen extends StatefulWidget {
+/// it via `PATCH /sightings/{id}/action` before the "sent" acknowledgement.
+class FinalReviewScreen extends ConsumerStatefulWidget {
   const FinalReviewScreen({
     super.key,
     required this.match,
     required this.imagePath,
     required this.latitude,
     required this.longitude,
+    this.sightingId,
   });
 
   final MatchModel match;
@@ -26,17 +29,22 @@ class FinalReviewScreen extends StatefulWidget {
   final double latitude;
   final double longitude;
 
+  /// Id of the sighting created upstream (at species confirmation). Needed to
+  /// PATCH its action_type. Null falls back to navigating without persisting.
+  final String? sightingId;
+
   @override
-  State<FinalReviewScreen> createState() => _FinalReviewScreenState();
+  ConsumerState<FinalReviewScreen> createState() => _FinalReviewScreenState();
 }
 
-class _FinalReviewScreenState extends State<FinalReviewScreen> {
+class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
   static const _orange = Color(0xFFEE6D33);
 
   // 'Spotted' (just saw it) or 'Caught' (rescued it). Defaults to Spotted,
-  // matching the value the sighting was created with. NOTE: choosing Rescue
-  // is not yet persisted — it needs a backend PATCH for action_type.
+  // matching the value the sighting was created with. Sending writes the
+  // chosen value to the backend via PATCH /sightings/{id}/action.
   String _actionType = 'Spotted';
+  bool _isSending = false;
 
   @override
   Widget build(BuildContext context) {
@@ -289,11 +297,20 @@ class _FinalReviewScreenState extends State<FinalReviewScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: _send,
-        icon: const Icon(Icons.send_rounded, size: 18),
-        label: const Text(
-          'CONFIRM & SEND REPORT',
-          style: TextStyle(
+        onPressed: _isSending ? null : _send,
+        icon: _isSending
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Icon(Icons.send_rounded, size: 18),
+        label: Text(
+          _isSending ? 'SENDING...' : 'CONFIRM & SEND REPORT',
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.5,
@@ -312,10 +329,28 @@ class _FinalReviewScreenState extends State<FinalReviewScreen> {
     );
   }
 
-  void _send() {
-    // The sighting is already persisted; this just acknowledges and shows the
-    // sent confirmation. (Persisting a Rescue action_type is a later backend
-    // step.)
+  Future<void> _send() async {
+    // Persist the Spotted/Rescue choice to the sighting created upstream. The
+    // sighting row itself already exists, so this write is the only thing the
+    // "send" button changes; on success we move to the sent acknowledgement.
+    final id = widget.sightingId;
+    if (id != null) {
+      setState(() => _isSending = true);
+      try {
+        await ref
+            .read(sightingRepositoryProvider)
+            .confirmSightingAction(sightingId: id, actionType: _actionType);
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isSending = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ReportSentScreen(
