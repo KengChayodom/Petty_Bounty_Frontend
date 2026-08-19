@@ -160,6 +160,32 @@ class SightingRepository {
   }
 
   /// Get matching missing pets for a sighting
+  /// Persist the hunter's final-review choice — 'Spotted' (just saw it) or
+  /// 'Caught'/'Rescue' — via `PATCH /sightings/{id}/action`. The backend
+  /// normalises UI wording ("Rescue" -> "Caught") itself, so we can pass the
+  /// chosen value straight through. Called from the Final Review screen after
+  /// the match is confirmed.
+  Future<void> confirmSightingAction({
+    required String sightingId,
+    required String actionType,
+  }) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/sightings/$sightingId/action'),
+      headers: _headers,
+      body: jsonEncode({'action_type': actionType}),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      String detail =
+          'Failed to confirm report status (${response.statusCode}).';
+      try {
+        final err = jsonDecode(response.body) as Map<String, dynamic>;
+        if (err['detail'] != null) detail = err['detail'].toString();
+      } catch (_) {}
+      throw Exception(detail);
+    }
+  }
+
   Future<List<MatchModel>> getMatches({
     required String sightingId,
     int limit = 5,
