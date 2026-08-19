@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../../core/ui/skeleton/skeleton.dart';
 import '../../data/models/sighting_activity.dart';
 
 /// One node in the "RECENT ACTIVITY" timeline: a colored status dot on the
@@ -234,15 +235,7 @@ class ActivityCard extends StatelessWidget {
                             elevation: 0,
                           ),
                           child: isConfirming
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
-                                  ),
-                                )
+                              ? const BusyButtonLabel(width: 84, height: 12)
                               : const Text(
                                   'CONFIRM',
                                   style: TextStyle(

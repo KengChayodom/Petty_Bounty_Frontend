@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
 import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
+import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/sighting_repository.dart';
 import '../domain/pending_upload.dart';
 import '../domain/sighting_providers.dart';
@@ -498,18 +499,10 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
           Image.file(File(widget.imagePath), fit: BoxFit.cover),
 
           if (_isLoading)
-            Container(
-              color: Colors.black54,
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(color: Colors.white),
-                  SizedBox(height: 16),
-                  Text(
-                    "AI is analyzing...",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ],
+            const Positioned.fill(
+              child: SkeletonAnalysisOverlay(
+                label: 'AI is analyzing...',
+                subLabel: 'Detecting the species in your photo',
               ),
             ),
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../data/models/sighting_activity.dart';
 import '../domain/providers/status_tracker_providers.dart';
 import 'widgets/activity_card.dart';
+import 'widgets/activity_timeline_skeleton.dart';
 import 'widgets/full_image_view.dart';
 import 'widgets/sighting_map_view.dart';
 import 'widgets/status_stepper.dart';
@@ -200,7 +201,9 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
         ),
         centerTitle: true,
       ),
-      body: RefreshIndicator(
+      // `.noSpinner`: the pull gesture stays, the progress arc goes. The
+      // timeline dropping to its skeleton is the refresh feedback.
+      body: RefreshIndicator.noSpinner(
         onRefresh: () async {
           ref.invalidate(sightingTimelineProvider(widget.petId));
           ref.invalidate(petStatusProvider(widget.petId));
@@ -224,12 +227,10 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             ),
             const SizedBox(height: 16),
             timelineAsync.when(
+              skipLoadingOnRefresh: false,
               // Use the reject-filtered `items`, not the raw provider data.
               data: (_) => _buildTimeline(items, resolved),
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              loading: () => const ActivityTimelineSkeleton(),
               error: (err, _) => _timelineError(err),
             ),
           ],
