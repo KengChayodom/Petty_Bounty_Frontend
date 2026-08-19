@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/app_config.dart';
+import '../../../../core/ui/skeleton/skeleton.dart';
 import '../../domain/providers/profile_providers.dart';
 
 /// Modal dialog allowing user to edit Username (display_name) & Profile Picture.
@@ -159,14 +160,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
                       const Positioned.fill(
                         child: CircleAvatar(
                           backgroundColor: Colors.black45,
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: BusyCircle(size: 34),
                         ),
                       ),
                     Positioned(
@@ -229,14 +223,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
             ),
           ),
           child: _isSaving
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
+              ? const BusyButtonLabel(width: 92, height: 12)
               : const Text('Save Changes'),
         ),
       ],

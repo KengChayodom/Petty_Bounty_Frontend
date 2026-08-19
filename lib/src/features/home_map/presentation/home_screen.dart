@@ -12,6 +12,8 @@ import '../domain/providers/nearby_pets_providers.dart';
 import '../domain/providers/location_provider.dart'; // โหลด Provider ตัวใหม่ที่เราสร้าง
 import '../data/location_publisher.dart';
 import '../../../core/notifications/fcm_service.dart';
+import '../../../core/ui/skeleton/skeleton.dart';
+import 'home_map_skeleton.dart';
 import 'marker_helper.dart';
 import 'pet_detail_sheet.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -219,22 +221,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     final petsState = ref.watch(nearbyPetsProvider);
 
     // ถ้า Riverpod ยังไม่มีพิกัด (เปิดแอปครั้งแรก) ถึงจะโชว์จอโหลด
+    // Skeleton of the map screen's chrome — no spinner. See HomeMapSkeleton.
     if (locState.isLoading || locState.location == null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text(
-                'Finding your location...',
-                style: TextStyle(color: Colors.grey[600], fontSize: 16),
-              ),
-            ],
-          ),
-        ),
-      );
+      return const HomeMapSkeleton();
     }
 
     // คำนวณขอบเขตแผนที่
@@ -415,12 +404,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                 ],
               ),
             ),
-            // ถ้ากำลังโหลด ให้โชว์วงกลมหมุนๆ เล็กๆ แทนตัวเลข
+            // ถ้ากำลังโหลด ให้โชว์โครงร่างป้ายตัวเลข (ไม่ใช้วงกลมหมุนๆ)
+            // A bone the size of the count pill, so the card keeps its width
+            // while a new area is fetched.
             if (state.isLoading)
-              const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
+              const Skeletonizer.zone(
+                child: Bone(width: 44, height: 28, uniRadius: 14),
               )
             // ถ้าไม่โหลดและมีข้อมูล ให้โชว์ตัวเลขสีส้มปกติ
             else if (state.pets.isNotEmpty)

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/auth/auth_service.dart';
+import '../../../core/notifications/fcm_service.dart';
 import '../../../routing/app_router.dart';
 import '../domain/auth_validators.dart';
 import 'widgets/auth_scaffold.dart';
@@ -43,6 +46,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
+
+      // Register this device against the account that just signed in. Home
+      // also does this, but only after the location-permission flow settles —
+      // a user who never reaches Home, or whose location flow stalls, would
+      // otherwise never get a `device_tokens` row and could never be pushed.
+      // Deliberately not awaited: the router redirect should not wait on a
+      // network round-trip, and syncToken swallows its own failures.
+      unawaited(FcmService.instance.syncToken());
+
       // The router's redirect (driven by the auth stream) takes us home.
     } on AuthException catch (_) {
       // SRS-12: fixed message — never reveal whether the email exists.
