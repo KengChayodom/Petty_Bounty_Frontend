@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/app_config.dart';
+import '../../../../core/ui/skeleton/skeleton.dart';
 import '../../data/lost_pet_post_repository.dart';
 import '../../domain/providers/lost_pet_post_form_provider.dart';
 
@@ -394,24 +395,10 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                 ),
               if (_isAnalyzing)
                 Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black45,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(color: Colors.white),
-                          SizedBox(height: 8),
-                          Text(
-                            'AI is analyzing...',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: SkeletonAnalysisOverlay(
+                    label: 'AI is analyzing...',
+                    borderRadius: BorderRadius.circular(16),
+                    compact: true,
                   ),
                 ),
             ],

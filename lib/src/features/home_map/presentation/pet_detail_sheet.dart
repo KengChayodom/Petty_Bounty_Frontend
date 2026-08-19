@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/providers/nearby_pets_providers.dart';
 import 'pet_detail_resolver.dart';
+import 'pet_detail_skeleton.dart';
 import 'pet_detail_view.dart';
 
 /// Bottom-sheet presentation of the pet detail — the map-pin entry point.
@@ -35,11 +36,10 @@ class PetDetailSheet extends ConsumerWidget {
             children: [
               PetDetailResolver(
                 petId: selectedPetId,
-                loadingBuilder: (_) => const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(40),
-                    child: CircularProgressIndicator(),
-                  ),
+                // The skeleton takes the sheet's scroll controller too, so
+                // the placeholder drags exactly like the loaded content.
+                loadingBuilder: (_) => PetDetailSkeleton(
+                  scrollController: scrollController,
                 ),
                 builder: (context, pet) => PetDetailView(
                   pet: pet,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/ui/skeleton/skeleton.dart';
+
 /// Full-screen viewer for a sighting photo: the image shown in full
 /// (pinch-to-zoom) on a black backdrop, with a close (X) button.
 class FullImageView extends StatelessWidget {
@@ -23,8 +25,15 @@ class FullImageView extends StatelessWidget {
                   fit: BoxFit.contain,
                   loadingBuilder: (context, child, progress) => progress == null
                       ? child
-                      : const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
+                      // No progress bar even though `progress` carries byte
+                      // counts — a shimmering frame on the black backdrop.
+                      : const Skeletonizer.zone(
+                          effect: AppSkeletons.onDark,
+                          child: Bone(
+                            width: 240,
+                            height: 320,
+                            uniRadius: 12,
+                          ),
                         ),
                   errorBuilder: (_, _, _) => const Center(
                     child: Icon(Icons.broken_image,

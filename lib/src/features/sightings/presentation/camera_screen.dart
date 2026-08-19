@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/app_config.dart';
 import '../data/sighting_repository.dart';
 import '../domain/pending_upload.dart';
+import 'widgets/camera_skeletons.dart';
 
 /// Outcome of trying to bring the camera up.
 ///
@@ -279,7 +280,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
       left: 0,
       right: 0,
       child: _isProcessing
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          ? const Center(child: CameraBusyBar())
           : Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Row(
@@ -365,10 +366,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
       case CameraSetupStatus.unavailable:
         return _buildNoCameraScreen();
       case CameraSetupStatus.initializing:
-        return const Scaffold(
-          backgroundColor: Colors.black,
-          body: Center(child: CircularProgressIndicator(color: Colors.white)),
-        );
+        return const CameraInitializingSkeleton();
       case CameraSetupStatus.ready:
         break;
     }
@@ -392,9 +390,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
             left: 0,
             right: 0,
             child: _isProcessing
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  )
+                ? const Center(child: CameraBusyBar())
                 : Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 30.0),
                     child: Row(

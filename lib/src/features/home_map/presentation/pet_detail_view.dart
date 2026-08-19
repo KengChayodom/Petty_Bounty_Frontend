@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/ui/skeleton/skeleton.dart';
 import '../domain/entities/missing_pet_entity.dart';
 
 Color _parseColor(String? hexColor) {
@@ -116,10 +117,10 @@ class PetDetailView extends StatelessWidget {
               height: 320,
               width: double.infinity,
               fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                height: 320,
-                color: Colors.grey[200],
-                child: const Center(child: CircularProgressIndicator()),
+              // Skeleton, not a spinner: the bone occupies the exact 320px
+              // the decoded image will take, so nothing reflows on arrival.
+              placeholder: (context, url) => const Skeletonizer.zone(
+                child: Bone(height: 320),
               ),
               errorWidget: (context, url, error) => Container(
                 height: 320,
