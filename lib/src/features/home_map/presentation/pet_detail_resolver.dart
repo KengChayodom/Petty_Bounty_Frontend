@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/missing_pet_repository_impl.dart';
 import '../domain/entities/missing_pet_entity.dart';
 import '../domain/providers/nearby_pets_providers.dart';
+import 'pet_detail_skeleton.dart';
 
 /// Resolves a pet for the detail UI using ONE shared rule, used by both the
 /// map bottom sheet and the push deep-link page:
@@ -51,7 +52,7 @@ class _PetDetailResolverState extends ConsumerState<PetDetailResolver> {
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return widget.loadingBuilder?.call(context) ??
-              const Center(child: CircularProgressIndicator());
+              const PetDetailSkeleton();
         }
         if (snapshot.hasError || !snapshot.hasData) {
           final error = snapshot.error ?? 'Pet not found';

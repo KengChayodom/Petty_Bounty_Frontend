@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
+import '../../../core/ui/skeleton/skeleton.dart';
 import '../domain/providers/report_form_provider.dart';
 import 'color_picker_widget.dart';
 import 'pattern_picker_widget.dart';
@@ -200,14 +201,7 @@ class _ReportPetScreenState extends ConsumerState<ReportPetScreen> {
                 ),
               ),
               child: formState.isSubmitting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
+                  ? const BusyButtonLabel(width: 118)
                   : const Text(
                       'Submit Report',
                       style: TextStyle(

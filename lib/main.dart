@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
 import 'src/core/app_config.dart';
 import 'src/core/notifications/fcm_service.dart';
+import 'src/core/ui/skeleton/skeleton.dart';
 import 'src/routing/app_router.dart';
 
 Future<void> main() async {
@@ -30,11 +31,49 @@ Future<void> main() async {
   runApp(const ProviderScope(child: PettyBountyApp()));
 }
 
-class PettyBountyApp extends ConsumerWidget {
+class PettyBountyApp extends ConsumerStatefulWidget {
   const PettyBountyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PettyBountyApp> createState() => _PettyBountyAppState();
+}
+
+class _PettyBountyAppState extends ConsumerState<PettyBountyApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // App startup: a user whose session was restored from disk is already
+    // signed in here and may never pass through the login screen again, so
+    // this is the only place their token gets refreshed on a normal launch.
+    // `syncToken` no-ops while signed out and never prompts for permission,
+    // so it cannot race the location dialog (the permission prompt itself
+    // still lives in HomeScreen, after the location flow — see FcmService).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FcmService.instance.syncToken();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // FCM can rotate a token while the app is backgrounded, and onTokenRefresh
+    // only fires for a live isolate. Re-syncing on resume closes that window;
+    // an unchanged token costs nothing (syncToken memoises what it registered).
+    if (state == AppLifecycleState.resumed) {
+      FcmService.instance.syncToken();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final goRouter = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
@@ -43,6 +82,11 @@ class PettyBountyApp extends ConsumerWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        // Skeleton loading is the app's only pending-state affordance (there
+        // are no spinners / progress indicators anywhere). Registering the
+        // config here means a bare `Skeletonizer(child: ...)` in any feature
+        // inherits the shared shimmer instead of restating it.
+        extensions: const <ThemeExtension<dynamic>>[AppSkeletons.config],
       ),
       routerConfig: goRouter,
       builder: (context, child) {

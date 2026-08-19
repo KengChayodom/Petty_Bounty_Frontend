@@ -12,6 +12,7 @@ import 'widgets/edit_profile_dialog.dart';
 import 'widgets/hunter_tab_content.dart';
 import 'widgets/owner_tab_content.dart';
 import 'widgets/profile_header_widget.dart';
+import 'widgets/profile_skeletons.dart';
 import 'widgets/role_tab_toggle_widget.dart';
 
 /// Full Dual-Mode Profile Screen connected to real Backend APIs & Riverpod state.
@@ -117,7 +118,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
+      // `.noSpinner` keeps the pull-to-refresh gesture but draws no progress
+      // arc — the refresh is signalled by the sections dropping back to their
+      // skeletons instead (see `skipLoadingOnRefresh: false` below).
+      body: RefreshIndicator.noSpinner(
         onRefresh: () async {
           ref.invalidate(userProfileProvider);
           ref.invalidate(hunterStatsProvider);
@@ -130,6 +134,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               // USER INFO HEADER WIDGET WITH REAL DATA
               profileAsync.when(
+                // Show the skeleton on a pull-to-refresh too, not just the
+                // first load: with no spinner it is the only refresh feedback.
+                skipLoadingOnRefresh: false,
                 data: (profile) => ProfileHeaderWidget(
                   displayName: profile.displayName,
                   phone: profile.phone ?? '',
@@ -140,10 +147,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     profile.profileImageUrl,
                   ),
                 ),
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+                loading: () => const ProfileHeaderSkeleton(),
                 error: (err, stack) => Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
@@ -184,6 +188,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ref.invalidate(hunterStatsProvider);
                           ref.invalidate(hunterHistoryProvider);
                         },
+                        skeleton: const HunterTabSkeleton(),
                         content: () =>
                             _buildHunterTab(hunterStatsAsync, hunterHistoryAsync),
                       )
@@ -191,6 +196,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         loading: ownerPostsAsync.isLoading,
                         error: ownerPostsAsync.error,
                         onRetry: () => ref.invalidate(ownerPostsProvider),
+                        skeleton: const OwnerTabSkeleton(),
                         content: () => _buildOwnerTab(ownerPostsAsync),
                       ),
               ),
@@ -209,13 +215,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required bool loading,
     required Object? error,
     required VoidCallback onRetry,
+    required Widget skeleton,
     required Widget Function() content,
   }) {
     if (loading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 40),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      // A skeleton of THIS tab's real layout, so the stats row and history
+      // cards don't jump into place once the providers resolve.
+      return skeleton;
     }
     if (error != null) {
       return Padding(

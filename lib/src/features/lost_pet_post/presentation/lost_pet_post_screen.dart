@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/lost_pet_post_repository.dart';
 import '../data/models/lost_pet_post_request.dart';
 import '../domain/providers/lost_pet_post_form_provider.dart';
 import 'widgets/bounty_section_widget.dart';
+import 'widgets/broadcast_progress_dialog.dart';
 import 'widgets/collar_marker_widget.dart';
 import 'widgets/location_tile_widget.dart';
 import 'widgets/last_seen_time_widget.dart';
@@ -100,44 +102,13 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
 
     setState(() => _isUploading = true);
 
-    // Show modal loading dialog
+    // Modal skeleton of the poster being built — no spinner. Dismissed with
+    // `Navigator.of(context, rootNavigator: true).pop()` on every exit path
+    // below, exactly as before.
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(
-                  color: Color(0xFF0022FF),
-                  strokeWidth: 3,
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Broadcasting missing pet report...',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'Please wait while AI processes your poster',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (dialogContext) => const BroadcastProgressDialog(),
     );
 
     String imageUrl;
@@ -529,14 +500,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                     elevation: 0,
                   ),
                   child: _isUploading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
+                      ? const BusyButtonLabel(width: 140)
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/ui/skeleton/skeleton.dart';
+
 /// Shared visual shell + form controls for the Login / Register screens.
 ///
 /// Presentation-only: these widgets hold NO auth logic. The screens keep their
@@ -226,15 +228,9 @@ class AuthPrimaryButton extends StatelessWidget {
           elevation: 0,
           shape: const StadiumBorder(),
         ),
+        // Pending state is a shimmering label bone, never a spinner.
         child: loading
-            ? const SizedBox(
-                height: 22,
-                width: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: Colors.white,
-                ),
-              )
+            ? const BusyButtonLabel(width: 110)
             : Text(
                 label,
                 style: const TextStyle(
