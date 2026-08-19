@@ -2,6 +2,7 @@
 //   - has camera        -> live preview + shutter button
 //   - no camera         -> "ไม่พบกล้อง" fallback (e.g. iOS Simulator)
 //   - permission denied -> "ไม่ได้รับสิทธิ์ใช้กล้อง" fallback
+//   - initializing      -> skeleton (the app ships no loading indicators)
 //
 // We never touch a real camera: CameraScreen exposes an [initializer] seam that
 // returns a CameraSetupResult, and a [previewBuilder] seam so the "ready" UI can
@@ -14,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/sightings/presentation/camera_screen.dart';
+import 'package:petty_bounty/src/features/sightings/presentation/widgets/camera_skeletons.dart';
 
 // A controller that is never initialize()'d — its dispose() does not call the
 // platform, so it is safe to construct and tear down in a widget test.
@@ -114,7 +116,9 @@ void main() {
       },
     );
 
-    testWidgets('while initializing -> shows a spinner', (tester) async {
+    testWidgets('while initializing -> shows a skeleton, never a spinner', (
+      tester,
+    ) async {
       // An initializer that never completes keeps us in the initializing state.
       await tester.pumpWidget(
         MaterialApp(
@@ -125,7 +129,11 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      // The app renders no loading indicators anywhere: the initializing
+      // branch shows CameraInitializingSkeleton (shimmering bones over the
+      // black camera surface) instead.
+      expect(find.byType(CameraInitializingSkeleton), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.text('ไม่พบกล้อง'), findsNothing);
     });
   });
