@@ -39,6 +39,9 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
       context.go('/');
       return;
     }
+    // Id of the sighting created upstream (POST /sightings/), so Final Review
+    // can PATCH its action_type (Spotted/Rescue).
+    final sightingId = ref.read(sightingNotifierProvider).sighting?.id;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => FinalReviewScreen(
@@ -46,6 +49,7 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
           imagePath: widget.imagePath,
           latitude: widget.latitude!,
           longitude: widget.longitude!,
+          sightingId: sightingId,
         ),
       ),
     );

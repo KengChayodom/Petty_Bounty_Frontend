@@ -244,6 +244,7 @@ class ProfileRepository {
         detectedSpecies: species,
         petImageUrl: m['image_url'] as String?,
         status: status,
+        actionType: (m['action_type'] as String?) ?? 'Spotted',
         points: (award?['points'] as num?)?.toInt(),
         sentAtFormatted: formattedDate,
       );
