@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/models/sighting_activity.dart';
+import '../data/status_tracker_repository.dart';
 import '../domain/providers/status_tracker_providers.dart';
 import 'widgets/activity_card.dart';
 import 'widgets/activity_timeline_skeleton.dart';
@@ -44,10 +45,9 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   // a full re-fetch round-trip.
   bool _locallyResolved = false;
 
-  // Sightings the owner marked "not a match" this session. Optimistic and
-  // local-only for now — persisting a rejection needs the backend owner_status
-  // endpoint (Part B), so these reappear on a refresh until that exists.
-  final Set<String> _rejectedIds = <String>{};
+  // The card a decision is currently in flight for, so only that card's
+  // buttons go busy rather than every card at once.
+  String? _decidingId;
 
   /// Whether the report is resolved. `_locallyResolved` (this session's own
   /// end-search tap) always wins; otherwise the authoritative fetched status
@@ -83,14 +83,112 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
     return TrackerStage.pending;
   }
 
+  /// The one card the owner may act on: the OLDEST still-undecided card.
+  ///
+  /// The list arrives newest-first, so that is the last Pending entry in it.
+  /// The rule is enforced by the backend (409) — this only keeps the screen
+  /// from offering a button that would be refused. Its purpose is that nobody
+  /// who helped is skipped over on the way to closing the case: scoring counts
+  /// confirmed cards only, so a card left Pending earns its hunter nothing.
+  SightingActivity? _nextCard(List<SightingActivity> items) {
+    for (final item in items.reversed) {
+      if (!item.isDecided) return item;
+    }
+    return null;
+  }
+
+  Future<void> _decide(SightingActivity item, String decision) async {
+    // Confirming a catch is the irreversible one: it ends the search and moves
+    // every point the case will ever pay. Merely confirming a sighting is not,
+    // so it goes through without a prompt.
+    if (item.isCaught && decision == 'Confirmed') {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Confirm rescue?'),
+          content: const Text(
+            'This confirms your pet is home. The search ends and reward points '
+            'are shared out to everyone whose sighting you confirmed. '
+            'You can\'t undo this.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4CAF7D),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+
+    setState(() => _decidingId = item.id);
+    try {
+      final result = await ref
+          .read(statusTrackerRepositoryProvider)
+          .decideSighting(widget.petId, item.id, decision);
+      if (!mounted) return;
+
+      final closed = result['search_closed'] == true;
+      final awards = (result['awards'] as List<dynamic>? ?? const []).length;
+      setState(() {
+        _decidingId = null;
+        if (closed) _locallyResolved = true;
+      });
+      _refresh();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            closed
+                ? 'Search ended — $awards hunter(s) rewarded. '
+                    'Glad your pet is home!'
+                : decision == 'Confirmed'
+                    ? 'Sighting confirmed.'
+                    : 'Marked as not a match.',
+          ),
+          backgroundColor: const Color(0xFF4CAF7D),
+        ),
+      );
+    } on SightingQueueConflict catch (e) {
+      // Their copy of the queue is stale, not wrong. Re-read it and say so
+      // plainly instead of showing a red failure they cannot act on.
+      if (!mounted) return;
+      setState(() => _decidingId = null);
+      _refresh();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _decidingId = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _refresh() {
+    ref.invalidate(sightingTimelineProvider(widget.petId));
+    ref.invalidate(petStatusProvider(widget.petId));
+  }
+
   Future<void> _confirmRescue() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('End search?'),
         content: const Text(
-          'This marks your pet as found and ends the active search. '
-          'You can\'t undo this from here.',
+          'Use this when your pet came back on its own. It ends the search '
+          'without rewarding anyone — to reward the hunters who helped, '
+          'confirm their sightings instead. You can\'t undo this.',
         ),
         actions: [
           TextButton(
@@ -137,16 +235,6 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
         SnackBar(content: Text('$e'), backgroundColor: Colors.red),
       );
     }
-  }
-
-  void _rejectSighting(SightingActivity item) {
-    // Optimistic local hide. Persisting this (sighting_matches.owner_status =
-    // Rejected) requires the Part B backend endpoint — until then it won't
-    // survive a refresh.
-    setState(() => _rejectedIds.add(item.id));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Marked as not a match.')),
-    );
   }
 
   /// Flag a sighting for moderator review. Opens a reason sheet, then POSTs the
@@ -225,11 +313,10 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   Widget build(BuildContext context) {
     final timelineAsync = ref.watch(sightingTimelineProvider(widget.petId));
     final realStatus = ref.watch(petStatusProvider(widget.petId)).value;
-    // Locally-rejected sightings drop out of both the timeline and the stepper
-    // derivation, so rejecting the only sighting falls back to PENDING.
-    final items = (timelineAsync.value ?? const <SightingActivity>[])
-        .where((s) => !_rejectedIds.contains(s.id))
-        .toList();
+    // Rejected cards stay on the timeline, wearing their badge: the owner said
+    // "not mine", which is a decision worth showing back to them, not an
+    // entry to hide. Hiding it would also make the queue's order unreadable.
+    final items = timelineAsync.value ?? const <SightingActivity>[];
     final resolved = _isResolved(realStatus);
 
     return Scaffold(
@@ -257,10 +344,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       // `.noSpinner`: the pull gesture stays, the progress arc goes. The
       // timeline dropping to its skeleton is the refresh feedback.
       body: RefreshIndicator.noSpinner(
-        onRefresh: () async {
-          ref.invalidate(sightingTimelineProvider(widget.petId));
-          ref.invalidate(petStatusProvider(widget.petId));
-        },
+        onRefresh: () async => _refresh(),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -268,6 +352,10 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             _petHeader(),
             const SizedBox(height: 24),
             StatusStepper(current: _deriveStage(realStatus, items)),
+            if (!resolved) ...[
+              const SizedBox(height: 16),
+              _selfCloseButton(),
+            ],
             const SizedBox(height: 28),
             const Text(
               'RECENT ACTIVITY',
@@ -356,6 +444,8 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       );
     }
 
+    final next = resolved ? null : _nextCard(items);
+
     return Column(
       children: [
         for (var i = 0; i < items.length; i++)
@@ -363,14 +453,18 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             item: items[i],
             isFirst: i == 0,
             isLast: i == items.length - 1,
-            // A single reported sighting is enough to offer ending the search;
-            // the action lives on the most-recent (top) card while still open.
-            showConfirmButton: !resolved && i == 0,
-            isConfirming: _isConfirming,
-            onConfirm: _confirmRescue,
-            onReject: (!resolved && i == 0)
-                ? () => _rejectSighting(items[i])
+            // Exactly one card is actionable at a time — the oldest undecided
+            // one. Everything above it waits its turn; everything decided
+            // wears a badge instead of buttons.
+            showConfirmButton: items[i].id == next?.id,
+            isConfirming: _decidingId == items[i].id,
+            onConfirm: () => _decide(items[i], 'Confirmed'),
+            onReject: items[i].id == next?.id
+                ? () => _decide(items[i], 'Rejected')
                 : null,
+            isLocked: next != null &&
+                !items[i].isDecided &&
+                items[i].id != next.id,
             onViewMap: items[i].hasLocation ? () => _openMap(items[i]) : null,
             onTapImage: items[i].imageUrl != null
                 ? () => _openImage(items[i].imageUrl!)
@@ -378,6 +472,31 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             onReport: () => _reportSighting(items[i]),
           ),
       ],
+    );
+  }
+
+  /// "My pet came back on its own" — the only way to close a report nobody
+  /// else's sighting can close. Deliberately quiet (an outlined button, not the
+  /// green one) because it rewards nobody: the loud path is confirming the
+  /// hunter who actually brought the animal home.
+  Widget _selfCloseButton() {
+    return OutlinedButton.icon(
+      onPressed: _isConfirming ? null : _confirmRescue,
+      icon: const Icon(Icons.home_rounded, size: 18),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: const Color(0xFF4CAF7D),
+        side: const BorderSide(color: Color(0xFF4CAF7D)),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: const StadiumBorder(),
+      ),
+      label: const Text(
+        'MY PET CAME HOME ON ITS OWN',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
+        ),
+      ),
     );
   }
 
