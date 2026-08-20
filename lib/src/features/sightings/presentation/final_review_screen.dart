@@ -354,7 +354,9 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ReportSentScreen(
-          match: widget.match,
+          petName: widget.match.petName,
+          petImageUrl: widget.match.imageUrl,
+          bounty: widget.match.bountyAmount,
           sentAt: DateTime.now(),
         ),
       ),
