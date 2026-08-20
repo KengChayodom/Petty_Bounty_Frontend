@@ -3,13 +3,16 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/app_config.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/network/app_http_client.dart';
 import 'models/missing_pet_model.dart';
 
 class MissingPetRepository {
   final String baseUrl = AppConfig.apiBaseUrl;
   final AuthService _authService;
+  final http.Client _client;
 
-  MissingPetRepository(this._authService);
+  MissingPetRepository(this._authService, {http.Client? client})
+      : _client = client ?? AppHttpClient.instance;
 
   Map<String, String> get _headers {
     final authToken = _authService.getAuthorizationHeader();
@@ -26,7 +29,7 @@ class MissingPetRepository {
     required double longitude,
     double radiusKm = 10.0,
   }) async {
-    final response = await http.get(
+    final response = await _client.get(
       Uri.parse(
         '$baseUrl/missing-pets/nearby'
         '?latitude=$latitude&longitude=$longitude&radius_km=$radiusKm',
@@ -47,7 +50,7 @@ class MissingPetRepository {
 
   /// Get a missing pet by ID
   Future<MissingPetModel> getMissingPet(String petId) async {
-    final response = await http.get(
+    final response = await _client.get(
       Uri.parse('$baseUrl/missing-pets/$petId'),
       headers: _headers,
     );

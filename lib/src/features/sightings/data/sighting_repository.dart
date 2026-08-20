@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/app_config.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/network/app_http_client.dart';
 import 'package:mime/mime.dart';
 import 'models/sighting_model.dart';
 import 'models/match_model.dart';
@@ -13,8 +14,10 @@ import 'models/match_model.dart';
 class SightingRepository {
   final String baseUrl = AppConfig.apiBaseUrl;
   final AuthService _authService;
+  final http.Client _client;
 
-  SightingRepository(this._authService);
+  SightingRepository(this._authService, {http.Client? client})
+      : _client = client ?? AppHttpClient.instance;
 
   Map<String, String> get _headers {
     final authToken = _authService.getAuthorizationHeader();
@@ -67,7 +70,7 @@ class SightingRepository {
 
   /// Analyze image with AI to detect species
   Future<Map<String, dynamic>> analyzeImage(String imageUrl) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/sightings/analyze'),
       headers: _headers,
       body: jsonEncode({'image_url': imageUrl}),
@@ -108,7 +111,7 @@ class SightingRepository {
       notes: notes,
     ).toJson();
 
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/sightings/'),
       headers: _headers,
       body: jsonEncode(body),
@@ -150,7 +153,7 @@ class SightingRepository {
       'notes': ?notes,
     };
 
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/sightings/targeted'),
       headers: _headers,
       body: jsonEncode(body),
@@ -175,7 +178,7 @@ class SightingRepository {
     required String sightingId,
     required String actionType,
   }) async {
-    final response = await http.patch(
+    final response = await _client.patch(
       Uri.parse('$baseUrl/sightings/$sightingId/action'),
       headers: _headers,
       body: jsonEncode({'action_type': actionType}),
@@ -198,7 +201,7 @@ class SightingRepository {
     double radiusKm = 10.0,
     double threshold = 0.7,
   }) async {
-    final response = await http.get(
+    final response = await _client.get(
       Uri.parse(
         '$baseUrl/sightings/$sightingId/matches'
         '?limit=$limit&radius_km=$radiusKm&threshold=$threshold',
@@ -219,7 +222,7 @@ class SightingRepository {
 
   /// Get a sighting by ID
   Future<SightingModel> getSighting(String sightingId) async {
-    final response = await http.get(
+    final response = await _client.get(
       Uri.parse('$baseUrl/sightings/$sightingId'),
       headers: _headers,
     );
