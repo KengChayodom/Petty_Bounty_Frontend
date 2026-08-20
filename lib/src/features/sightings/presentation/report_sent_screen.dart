@@ -3,18 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../data/models/match_model.dart';
-
 /// Success acknowledgement after a sighting report is sent to a pet's owner.
+///
+/// Takes plain pet fields (not a MatchModel) so both the discovery flow — which
+/// has the full matched pet — and the targeted flow — which only knows the pet
+/// it was reporting to — can reuse it. [bounty]/[petImageUrl] are optional; the
+/// reward row and photo degrade gracefully when they aren't available.
 class ReportSentScreen extends StatelessWidget {
   const ReportSentScreen({
     super.key,
-    required this.match,
+    required this.petName,
     required this.sentAt,
+    this.petImageUrl,
+    this.bounty,
   });
 
-  final MatchModel match;
+  final String petName;
   final DateTime sentAt;
+  final String? petImageUrl;
+  final double? bounty;
 
   static const _orange = Color(0xFFEE6D33);
   static const _blue = Color(0xFF3B5BFE);
@@ -142,16 +149,17 @@ class ReportSentScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: Colors.grey[200],
-                  backgroundImage: match.imageUrl.isNotEmpty
-                      ? CachedNetworkImageProvider(match.imageUrl)
-                      : null,
-                  child: match.imageUrl.isEmpty
+                  backgroundImage:
+                      (petImageUrl != null && petImageUrl!.isNotEmpty)
+                          ? CachedNetworkImageProvider(petImageUrl!)
+                          : null,
+                  child: (petImageUrl == null || petImageUrl!.isEmpty)
                       ? const Icon(Icons.pets, color: Colors.grey)
                       : null,
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  match.petName,
+                  petName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -166,28 +174,32 @@ class ReportSentScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'EXPECTED REWARD',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
+                // Only shown when a bounty is known (discovery flow). The
+                // targeted flow doesn't carry it, so the row is dropped.
+                if (bounty != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'EXPECTED REWARD',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '฿${NumberFormat('#,##0', 'en_US').format(match.bountyAmount)}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: _orange,
+                      Text(
+                        '฿${NumberFormat('#,##0', 'en_US').format(bounty)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: _orange,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Row(
                   children: [
                     const Text(
