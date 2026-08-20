@@ -15,8 +15,9 @@ class HunterSightingHistoryItem {
   final String? petImageUrl;
   final SightingStatus status;
   // The hunter's declared action: 'Spotted' (just saw it) or 'Caught'
-  // (rescued it — shown as "RESCUE"). Only 'Caught' + Verified is bounty-
-  // eligible, so it's worth surfacing per sighting.
+  // (rescued it — shown as "RESCUE"). Since 2026-08-21 bounty eligibility is
+  // 'Caught' + the OWNER confirming it (sighting_matches.owner_status), not an
+  // administrator's verification_status — so it's worth surfacing per sighting.
   final String actionType;
   // Null until a score_award exists for this sighting (i.e. not yet
   // verified/resolved) — shown as "Pending", never a made-up number.

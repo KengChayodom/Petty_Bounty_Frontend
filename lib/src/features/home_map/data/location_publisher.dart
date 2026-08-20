@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../../core/location/current_fix.dart';
 import 'location_api.dart';
 
 /// Keeps the hunter's `last_location` fresh on the backend while the app is in
@@ -55,15 +56,15 @@ class LocationPublisher {
           permission == LocationPermission.deniedForever) {
         return;
       }
-      // `medium` (100 m) not `high` (10 m), with a hard time limit. The
-      // consumer is `get_nearby_hunters`, a radius query against a 24 h
-      // freshness window — 10 m precision buys it nothing and costs a
-      // satellite lock every five minutes. The timeout matters more than it
-      // looks: geolocator sets none by default, so a fix that never resolves
-      // would leave this future pending while the next tick starts another,
-      // stacking one dangling CoreLocation request every 5 minutes.
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
+      // The hard time limit matters more than it looks: geolocator sets none
+      // by default, so a fix that never resolves would leave this future
+      // pending while the next tick starts another, stacking one dangling
+      // request every 5 minutes. `getCurrentFix` also falls back to the OS's
+      // cached fix on timeout — still a real position of this hunter's, and
+      // publishing a slightly stale point is what keeps `get_nearby_hunters`
+      // able to see them at all. See `currentFixAccuracy` for why the accuracy
+      // asked for is platform-split.
+      final position = await getCurrentFix(
         timeLimit: const Duration(seconds: 15),
       );
       await _api.updateMyLocation(position.latitude, position.longitude);

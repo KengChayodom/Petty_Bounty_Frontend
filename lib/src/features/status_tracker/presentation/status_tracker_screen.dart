@@ -38,6 +38,14 @@ class StatusTrackerScreen extends ConsumerStatefulWidget {
       _StatusTrackerScreenState();
 }
 
+/// `post_status` values as the backend spells them, lower-cased for comparison.
+/// See `app/services/pet_logic.py` — that module owns the rule; these are only
+/// the four words it can answer with.
+const String _postStatusPending = 'pending';
+const String _postStatusSpotted = 'spotted';
+const String _postStatusExpired = 'expired';
+const String _postStatusRescued = 'rescued';
+
 class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   bool _isConfirming = false;
   // Flips to true once the owner ends the search from this screen, so the
@@ -50,37 +58,56 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   String? _decidingId;
 
   /// Whether the report is resolved. `_locallyResolved` (this session's own
-  /// end-search tap) always wins; otherwise the authoritative fetched status
+  /// end-search tap) always wins; otherwise the backend's derived badge
   /// decides, falling back to the seed passed in only while it's still loading.
-  bool _isResolved(String? realStatus) {
+  ///
+  /// "Rescued" covers BOTH ways a search ends — the owner closing it (`Found`)
+  /// and the administrator settling the bounty afterwards (`Resolved`). This
+  /// used to test the raw column for `found` alone, so a case whose money had
+  /// moved reopened itself on screen.
+  bool _isResolved(String? postStatus) {
     if (_locallyResolved) return true;
-    if (realStatus == null) return widget.isResolved;
-    return realStatus.toLowerCase() == 'found';
+    if (postStatus == null) return widget.isResolved;
+    return postStatus.toLowerCase() == _postStatusRescued;
   }
 
-  /// Stepper stage:
-  ///   RESCUE  — the search has been ended (owner confirmed / backend "Found").
-  ///   SPOTTED — at least one sighting has been reported against the pet.
-  ///   PENDING — the post is live but no sighting has come in yet (waiting).
+  /// Stepper stage, mapped 1:1 from the backend's `post_status`:
+  ///   RESCUE  — "Rescued": the search has ended (owner closed it, or the
+  ///             bounty was settled afterwards).
+  ///   SPOTTED — "Spotted": at least one sighting counts towards this pet.
+  ///   PENDING — "Pending" or "Expired": nothing has come in. An expired post
+  ///             has made no progress by definition, so it sits on the same
+  ///             step; the EXPIRED wording belongs on the report card, not on a
+  ///             progress bar.
   ///   LOST    — the base step; always lit beneath whichever is current, so it
   ///             is never returned as the "current" stage (a post always
   ///             exists once this screen is open).
   ///
-  /// `realStatus` is null only while the backend fetch is in flight; the seed
-  /// passed in covers that window so the stepper doesn't flash.
-  TrackerStage _deriveStage(String? realStatus, List<SightingActivity> items) {
+  /// The rule behind those words lives in `pet_logic.derive_post_status` and is
+  /// deliberately NOT reimplemented here — this screen used to own a second
+  /// copy that counted raw timeline entries, which double-counted a sighting
+  /// that was both AI-matched and hunter-targeted and still counted matches the
+  /// owner had rejected.
+  ///
+  /// `postStatus` is null only while the backend fetch is in flight (or if the
+  /// backend is older than the field); the seed and the timeline cover that
+  /// window so the stepper doesn't flash.
+  TrackerStage _deriveStage(String? postStatus, List<SightingActivity> items) {
     if (_locallyResolved) return TrackerStage.rescue;
-    if (realStatus != null) {
-      if (realStatus.toLowerCase() == 'found') return TrackerStage.rescue;
-    } else if (widget.isResolved) {
-      return TrackerStage.rescue;
+
+    switch (postStatus?.toLowerCase()) {
+      case _postStatusRescued:
+        return TrackerStage.rescue;
+      case _postStatusSpotted:
+        return TrackerStage.spotted;
+      case _postStatusPending:
+      case _postStatusExpired:
+        return TrackerStage.pending;
     }
 
-    // Any reported sighting means the pet has been spotted; none yet → waiting.
-    if (items.isNotEmpty || realStatus?.toLowerCase() == 'spotted') {
-      return TrackerStage.spotted;
-    }
-    return TrackerStage.pending;
+    // Nothing authoritative yet — hold the seed rather than flashing a stage.
+    if (widget.isResolved) return TrackerStage.rescue;
+    return items.isNotEmpty ? TrackerStage.spotted : TrackerStage.pending;
   }
 
   /// The one card the owner may act on: the OLDEST still-undecided card.
@@ -177,7 +204,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
 
   void _refresh() {
     ref.invalidate(sightingTimelineProvider(widget.petId));
-    ref.invalidate(petStatusProvider(widget.petId));
+    ref.invalidate(petPostStatusProvider(widget.petId));
   }
 
   Future<void> _confirmRescue() async {
@@ -221,7 +248,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       ref.invalidate(sightingTimelineProvider(widget.petId));
       // Re-fetch the authoritative status too so the stepper's RESCUE state
       // is backed by the real DB value, not only the local flag.
-      ref.invalidate(petStatusProvider(widget.petId));
+      ref.invalidate(petPostStatusProvider(widget.petId));
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Search ended — glad your pet is home!'),
@@ -312,12 +339,13 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   @override
   Widget build(BuildContext context) {
     final timelineAsync = ref.watch(sightingTimelineProvider(widget.petId));
-    final realStatus = ref.watch(petStatusProvider(widget.petId)).value;
+    final postStatus =
+        ref.watch(petPostStatusProvider(widget.petId)).value;
     // Rejected cards stay on the timeline, wearing their badge: the owner said
     // "not mine", which is a decision worth showing back to them, not an
     // entry to hide. Hiding it would also make the queue's order unreadable.
     final items = timelineAsync.value ?? const <SightingActivity>[];
-    final resolved = _isResolved(realStatus);
+    final resolved = _isResolved(postStatus);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -351,7 +379,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
           children: [
             _petHeader(),
             const SizedBox(height: 24),
-            StatusStepper(current: _deriveStage(realStatus, items)),
+            StatusStepper(current: _deriveStage(postStatus, items)),
             if (!resolved) ...[
               const SizedBox(height: 16),
               _selfCloseButton(),

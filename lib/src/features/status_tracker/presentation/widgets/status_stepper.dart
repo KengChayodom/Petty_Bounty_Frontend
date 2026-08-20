@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 /// The four visual stages of a search, in order. This is a UI abstraction over
-/// the backend `pet_status` / sighting activity — not a 1:1 enum mirror:
-///   lost    -> report just filed (pet_status "Searching")
-///   pending -> at least one sighting is awaiting verification
-///   spotted -> a sighting was verified / the pet was seen for real
-///   rescue  -> the pet was caught / the report is resolved ("Found")
+/// the backend's derived `post_status` — not a mirror of the `pet_status`
+/// storage column, which uses different words for different things:
+///   lost    -> the base step; a report exists
+///   pending -> no sighting has come in yet (post_status "Pending"/"Expired")
+///   spotted -> at least one sighting counts for this pet ("Spotted")
+///   rescue  -> the search has ended ("Rescued" — i.e. Found or Resolved)
+///
+/// The mapping lives in `StatusTrackerScreen._deriveStage`; the rule behind
+/// those words lives in `app/services/pet_logic.py`.
 enum TrackerStage { lost, pending, spotted, rescue }
 
 /// Horizontal 4-step progress indicator (LOST → PENDING → SPOTTED → RESCUE).

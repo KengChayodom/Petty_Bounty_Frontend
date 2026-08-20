@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../../core/location/current_fix.dart';
+
 class LocationState {
   final bool isLoading;
   final LatLng? location;
@@ -40,14 +42,6 @@ class LocationNotifier extends StateNotifier<LocationState> {
   /// catch below never runs, and `_ready` never completes (which also stalls
   /// FCM setup and LocationPublisher, both of which await it).
   static const Duration _fixTimeout = Duration(seconds: 10);
-
-  /// 100 m on iOS, balanced-power on Android — deliberately NOT `high` (10 m).
-  ///
-  /// This position feeds a 10 km radius search (`_defaultSearchRadiusKm`, and
-  /// `ST_DWithin` server-side), so 10 m versus 100 m cannot change a single
-  /// result. What it does change is the wait: `medium` lets CoreLocation answer
-  /// from WiFi/cell towers instead of holding out for a satellite lock.
-  static const LocationAccuracy _accuracy = LocationAccuracy.medium;
 
   Future<void> _initLocation() async {
     try {
@@ -87,10 +81,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       // Stage 2 — refine in the background. HomeScreen's ref.listen re-centres
       // the map on this, and re-fetches nearby pets if it lands far from the
       // cached point.
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: _accuracy,
-        timeLimit: _fixTimeout,
-      );
+      final position = await getCurrentFix(timeLimit: _fixTimeout);
       state = LocationState(
         isLoading: false,
         location: LatLng(position.latitude, position.longitude),

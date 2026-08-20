@@ -286,13 +286,28 @@ class ProfileRepository {
 
     return list.map<OwnerPostHistoryItem>((json) {
       final m = json as Map<String, dynamic>;
+      // `post_status` is the backend's derived badge (pet_logic.py), not the
+      // raw `status` column. The two use different words for the same states,
+      // and this mapper used to read the column: it matched 'expired' against
+      // it, which `pet_status` has never had a value for — expiry is a 7-day
+      // predicate (SRS-91), never stored — so the EXPIRED badge below was
+      // unreachable. Falls back to the column only for a backend older than
+      // 2026-08-21, where 'expired' genuinely cannot occur.
+      final derived = (m['post_status'] as String?)?.toLowerCase();
       final rawStatus = (m['status'] as String? ?? '').toLowerCase();
 
-      PostStatus status = PostStatus.activeSearch;
-      if (rawStatus.contains('found') || rawStatus.contains('resolved')) {
-        status = PostStatus.rescued;
-      } else if (rawStatus.contains('expired')) {
-        status = PostStatus.expired;
+      PostStatus status;
+      switch (derived ?? rawStatus) {
+        case 'rescued':
+        case 'found':
+        case 'resolved':
+          status = PostStatus.rescued;
+          break;
+        case 'expired':
+          status = PostStatus.expired;
+          break;
+        default:
+          status = PostStatus.activeSearch;
       }
 
       final createdAtRaw = m['created_at'] as String?;
