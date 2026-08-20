@@ -21,6 +21,7 @@ class ActivityCard extends StatelessWidget {
     this.onReject,
     this.onViewMap,
     this.onTapImage,
+    this.onReport,
   });
 
   final SightingActivity item;
@@ -43,6 +44,9 @@ class ActivityCard extends StatelessWidget {
 
   /// Opens the sighting photo full-screen. Non-null only when there's a photo.
   final VoidCallback? onTapImage;
+
+  /// Flags this sighting for moderator review (overflow menu on the photo).
+  final VoidCallback? onReport;
 
   static const _orange = Color(0xFFF57C3A);
   static const _green = Color(0xFF4CAF7D);
@@ -122,9 +126,11 @@ class ActivityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Hero image of the sighting (tap to open full-screen). The map
-          // affordance now lives at the bottom of the card, not on the image.
-          GestureDetector(
+          // Hero image (tap = full-screen) with the report (⋮) overflow
+          // overlaid top-right; the map affordance sits at the card's bottom.
+          Stack(
+            children: [
+              GestureDetector(
             onTap: onTapImage,
             child: SizedBox(
               height: 180,
@@ -152,7 +158,15 @@ class ActivityCard extends StatelessWidget {
                       ),
                     )
                   : _imageFallback(),
-            ),
+                ),
+              ),
+              if (onReport != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: _reportButton(),
+                ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.all(12),
@@ -368,4 +382,21 @@ class ActivityCard extends StatelessWidget {
           child: Icon(Icons.pets, size: 48, color: Colors.grey),
         ),
       );
+
+  /// Red-flag button overlaid on the photo — opens the report menu.
+  Widget _reportButton() {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.9),
+      shape: const CircleBorder(),
+      elevation: 1,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onReport,
+        child: const Padding(
+          padding: EdgeInsets.all(6),
+          child: Icon(Icons.flag_rounded, size: 20, color: _red),
+        ),
+      ),
+    );
+  }
 }

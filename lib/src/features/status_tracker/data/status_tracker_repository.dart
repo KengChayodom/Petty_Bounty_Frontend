@@ -97,4 +97,26 @@ class StatusTrackerRepository {
       throw Exception(detail);
     }
   }
+
+  /// Flag a sighting for moderator review via `POST /reports`. [reason] is one
+  /// of "Spam" / "Not a pet" / "Inappropriate image" — the backend normalises
+  /// the wording onto its `report_reason` enum. The reporter is taken from the
+  /// JWT server-side, never sent by the client.
+  Future<void> flagSighting(String sightingId, String reason) async {
+    final url = Uri.parse('$_baseUrl/reports');
+    final response = await _client.post(
+      url,
+      headers: _authHeaders,
+      body: jsonEncode({'sighting_id': sightingId, 'reason': reason}),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      String detail = 'Failed to report sighting (${response.statusCode}).';
+      try {
+        final err = jsonDecode(response.body) as Map<String, dynamic>;
+        if (err['detail'] != null) detail = err['detail'].toString();
+      } catch (_) {}
+      throw Exception(detail);
+    }
+  }
 }

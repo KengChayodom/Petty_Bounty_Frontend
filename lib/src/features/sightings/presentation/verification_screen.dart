@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
-import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/sighting_repository.dart';
 import '../domain/pending_upload.dart';
 import '../domain/sighting_providers.dart';
+import 'report_sent_screen.dart';
 
 class VerificationScreen extends ConsumerStatefulWidget {
   final String imagePath;
@@ -134,8 +134,17 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       );
 
       if (mounted) {
-        context.showSuccessSnackBar('Sighting sent to the owner.');
-        context.go('/');
+        // Show the sent acknowledgement instead of a snackbar. The targeted
+        // flow knows the pet's name but not its bounty/photo, so those are left
+        // for ReportSentScreen to degrade gracefully.
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => ReportSentScreen(
+              petName: widget.targetPetName ?? 'the pet',
+              sentAt: DateTime.now(),
+            ),
+          ),
+        );
       }
     } catch (e) {
       setState(() {
