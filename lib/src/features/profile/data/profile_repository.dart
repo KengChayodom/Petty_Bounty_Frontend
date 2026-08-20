@@ -6,6 +6,7 @@ import 'package:mime/mime.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_config.dart';
+import '../../../core/network/app_http_client.dart';
 import '../domain/models/profile_models.dart';
 import 'models/profile_models.dart';
 
@@ -13,11 +14,14 @@ import 'models/profile_models.dart';
 class ProfileRepository {
   final SupabaseClient _supabase;
   final String _baseUrl;
+  final http.Client _client;
 
   ProfileRepository({
     SupabaseClient? supabase,
     String? baseUrl,
+    http.Client? client,
   })  : _supabase = supabase ?? Supabase.instance.client,
+        _client = client ?? AppHttpClient.instance,
         // Same base URL every other repository in the app uses (handles the
         // Android-emulator-needs-10.0.2.2-not-localhost case) — a hardcoded
         // 'localhost' here would silently fail to connect on Android.
@@ -77,7 +81,7 @@ class ProfileRepository {
 
     final url = Uri.parse('$_baseUrl/auth/me');
     try {
-      final response = await http.get(url, headers: _authHeaders);
+      final response = await _client.get(url, headers: _authHeaders);
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
         final data = body['data'] as Map<String, dynamic>;
@@ -142,7 +146,7 @@ class ProfileRepository {
       ),
     );
 
-    final response = await request.send();
+    final response = await _client.send(request);
     if (response.statusCode == 200 || response.statusCode == 201) {
       final responseData = await response.stream.bytesToString();
       final json = jsonDecode(responseData) as Map<String, dynamic>;
@@ -164,7 +168,7 @@ class ProfileRepository {
       'photo_url': ?photoUrl,
     };
 
-    final response = await http.patch(
+    final response = await _client.patch(
       url,
       headers: _authHeaders,
       body: jsonEncode(payload),
@@ -187,7 +191,7 @@ class ProfileRepository {
   Future<HunterStatsModel> fetchHunterStats() async {
     _requireAuthenticatedSession();
     final url = Uri.parse('$_baseUrl/hunters/me/score');
-    final response = await http.get(url, headers: _authHeaders);
+    final response = await _client.get(url, headers: _authHeaders);
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final data = body['data'] as Map<String, dynamic>;
@@ -207,7 +211,7 @@ class ProfileRepository {
   Future<List<HunterSightingHistoryItem>> fetchHunterHistory() async {
     _requireAuthenticatedSession();
     final url = Uri.parse('$_baseUrl/sightings/me');
-    final response = await http.get(url, headers: _authHeaders);
+    final response = await _client.get(url, headers: _authHeaders);
     if (response.statusCode != 200) {
       throw Exception(
           _describeFailure('Failed to load sighting history', response));
@@ -253,68 +257,35 @@ class ProfileRepository {
 
   /// Fetch Pet Owner Posted Pets list, filtered to the caller's own reports.
   ///
-  /// Reads `missing_pets` directly via Supabase (RLS-scoped to the caller
-  /// like the rest of the client's Supabase table access) since there's no
-  /// backend "my reports" endpoint yet, then a second query counts real
-  /// sighting_matches per pet instead of a fixed placeholder count.
-  /// Number of sightings reported against [petId], via the backend union
-  /// endpoint (RLS-proof, identical to what the Status Tracker timeline shows).
-  Future<int> _fetchEntryCount(String petId) async {
-    final url = Uri.parse('$_baseUrl/missing-pets/$petId/sightings');
-    final response = await http.get(url, headers: _authHeaders);
+  /// One request: `GET /missing-pets/me` returns the caller's reports (scoped
+  /// by the JWT, newest first) with `sighting_count` already attached.
+  ///
+  /// This used to read `missing_pets` straight from Supabase and then fan out
+  /// one `GET /missing-pets/{id}/sightings` PER PET just to `.length` the
+  /// result — 11 round trips for 10 reports, each downloading a full sighting
+  /// timeline that was thrown away. Two things were wrong with that beyond the
+  /// cost:
+  ///
+  ///  * the direct table read broke the golden rule (Flutter never touches the
+  ///    DB — see CLAUDE.md); and
+  ///  * `.length` of the timeline is not the product's definition of an entry.
+  ///    The backend's `count_sightings` de-duplicates a sighting that is both
+  ///    AI-matched and hunter-targeted, and drops matches the owner Rejected.
+  ///    Counting client-side quietly over-reported both cases.
+  Future<List<OwnerPostHistoryItem>> fetchOwnerPosts() async {
+    _requireAuthenticatedSession();
+
+    final url = Uri.parse('$_baseUrl/missing-pets/me');
+    final response = await _client.get(url, headers: _authHeaders);
     if (response.statusCode != 200) {
-      throw Exception(_describeFailure('Entry-count fetch failed', response));
+      throw Exception(_describeFailure('Failed to load your reports', response));
     }
+
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final list = body['data'] as List<dynamic>? ?? const [];
-    return list.length;
-  }
-
-  Future<List<OwnerPostHistoryItem>> fetchOwnerPosts() async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) {
-      throw Exception('User is not authenticated.');
-    }
-
-    final res = await _supabase
-        .from('missing_pets')
-        .select()
-        .eq('owner_id', userId)
-        .order('created_at', ascending: false);
-
-    final list = res as List<dynamic>;
-    if (list.isEmpty) return [];
-
-    final petIds = list
-        .map((json) => (json as Map<String, dynamic>)['id'] as String?)
-        .whereType<String>()
-        .toList();
-
-    // Real "received entries" count per pet, sourced from the SAME backend
-    // endpoint the Status Tracker uses (`GET /missing-pets/{id}/sightings`).
-    // That endpoint runs server-side with the service role, so it bypasses RLS
-    // and returns the full UNION of AI-matched + targeted sightings — exactly
-    // the timeline the owner sees on the tracker.
-    //
-    // Earlier attempts read `sighting_matches`/`sightings` directly from the
-    // client: unreliable because (a) RLS/grants on those tables can silently
-    // return [] → a wrong 0, and (b) counting matches alone missed every
-    // targeted-only sighting. Going through the backend removes both problems.
-    //
-    // Fetched concurrently and best-effort per pet: a failure on one pet's
-    // count degrades that card to 0 rather than taking down the whole list.
-    final entryCounts = <String, int>{};
-    await Future.wait(petIds.map((petId) async {
-      try {
-        entryCounts[petId] = await _fetchEntryCount(petId);
-      } catch (_) {
-        // leave unset → falls back to 0 below.
-      }
-    }));
 
     return list.map<OwnerPostHistoryItem>((json) {
       final m = json as Map<String, dynamic>;
-      final id = m['id'] as String? ?? '';
       final rawStatus = (m['status'] as String? ?? '').toLowerCase();
 
       PostStatus status = PostStatus.activeSearch;
@@ -334,13 +305,13 @@ class ProfileRepository {
       }
 
       return OwnerPostHistoryItem(
-        id: id,
+        id: m['id'] as String? ?? '',
         petName: m['pet_name'] as String? ?? 'Pet',
         petImageUrl: m['image_url'] as String?,
         status: status,
         bountyReward: (m['bounty_amount'] as num?)?.toDouble() ?? 0,
         postedAtFormatted: formattedDate,
-        receivedEntriesCount: entryCounts[id] ?? 0,
+        receivedEntriesCount: (m['sighting_count'] as num?)?.toInt() ?? 0,
       );
     }).toList();
   }

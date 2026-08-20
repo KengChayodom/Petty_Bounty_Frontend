@@ -8,9 +8,11 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
+import '../domain/entities/missing_pet_entity.dart';
 import '../domain/providers/nearby_pets_providers.dart';
 import '../domain/providers/location_provider.dart'; // โหลด Provider ตัวใหม่ที่เราสร้าง
 import '../data/location_publisher.dart';
+import '../../../core/map/cached_tile_provider.dart';
 import '../../../core/notifications/fcm_service.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import 'home_map_skeleton.dart';
@@ -25,7 +27,8 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   static const double _defaultSearchRadiusKm = 10.0;
   static const double _maxPanRadiusKm = 15.0;
@@ -34,7 +37,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
   Timer? _debounceTimer;
   LatLng? _lastFetchLocation;
 
-  void _animatedMapMove(LatLng destLocation, double destZoom, {VoidCallback? onComplete}) {
+  void _animatedMapMove(
+    LatLng destLocation,
+    double destZoom, {
+    VoidCallback? onComplete,
+  }) {
     final latTween = Tween<double>(
       begin: _mapController.camera.center.latitude,
       end: destLocation.latitude,
@@ -61,10 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     controller.addListener(() {
       if (!mounted) return;
       _mapController.move(
-        LatLng(
-          latTween.evaluate(animation),
-          lngTween.evaluate(animation),
-        ),
+        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
         zoomTween.evaluate(animation),
       );
     });
@@ -143,9 +147,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
 
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(seconds: 1), () {
-      setState(() {
-        _lastFetchLocation = currentCenter;
-      });
+      // Plain assignment, NOT setState: `_lastFetchLocation` is only ever read
+      // back here and in initState — build() never touches it. The setState
+      // this replaces rebuilt the entire map subtree (and with it every marker
+      // and the whole cluster tree) for a value nothing on screen displays.
+      _lastFetchLocation = currentCenter;
       _fetchNearbyPets(currentCenter);
     });
   }
@@ -177,10 +183,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     );
   }
 
-  List<CircleMarker> _getCircleMarkers(
-    NearbyPetsState state,
-    LatLng? myLocation,
-  ) {
+  List<CircleMarker> _getCircleMarkers(LatLng? myLocation) {
     final markers = <CircleMarker>[];
     if (myLocation != null) {
       markers.add(
@@ -198,8 +201,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     return [MarkerHelper.createUserMarker(myLocation)];
   }
 
-  List<Marker> _getPetMarkers(NearbyPetsState state) {
-    return MarkerHelper.createPetMarkers(state.pets, _onMarkerTap);
+  // Memoised marker list, keyed on the identity of the pets list it was built
+  // from.
+  //
+  // MarkerClusterLayer decides whether to rebuild with
+  // `oldWidget.options.markers != widget.options.markers`, and `!=` on a Dart
+  // List is IDENTITY, not contents — so handing it a fresh `.toList()` made it
+  // throw away and re-derive the entire cluster tree on every single build,
+  // even when the same pets were on screen. Returning the identical list when
+  // nothing changed is what lets that check short-circuit.
+  List<MissingPetEntity>? _markerSource;
+  List<Marker>? _markerCache;
+
+  List<Marker> _petMarkersFor(List<MissingPetEntity> pets) {
+    if (identical(pets, _markerSource) && _markerCache != null) {
+      return _markerCache!;
+    }
+    _markerSource = pets;
+    return _markerCache = MarkerHelper.createPetMarkers(pets, _onMarkerTap);
   }
 
   @override
@@ -213,12 +232,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
           _fetchNearbyPets(next.location!);
         } else if (previous?.location != next.location) {
           _mapController.move(next.location!, _mapController.camera.zoom);
+
+          // The first emission can be the OS's CACHED fix (see
+          // LocationNotifier stage 1), and the pets above were fetched for it.
+          // If the accurate fix then lands far away — the user travelled since
+          // the app last ran — that list is for the wrong area, and a
+          // programmatic `move` emits no MapEventMoveEnd, so `_onMapEvent`
+          // will not notice. Re-fetch on the same threshold panning uses.
+          final movedMeters = Geolocator.distanceBetween(
+            previous!.location!.latitude,
+            previous.location!.longitude,
+            next.location!.latitude,
+            next.location!.longitude,
+          );
+          if (movedMeters > _fetchThresholdKm * 1000) {
+            _lastFetchLocation = next.location;
+            _fetchNearbyPets(next.location!);
+          }
         }
       }
     });
 
     final locState = ref.watch(locationProvider);
-    final petsState = ref.watch(nearbyPetsProvider);
+    // Deliberately NOT `ref.watch(nearbyPetsProvider)` here. Watching the whole
+    // state object at the root meant an `isLoading` flip — which only the
+    // search bar renders — rebuilt the map, its layers and every marker. The
+    // two things that actually depend on it now subscribe individually below.
 
     // ถ้า Riverpod ยังไม่มีพิกัด (เปิดแอปครั้งแรก) ถึงจะโชว์จอโหลด
     // Skeleton of the map screen's chrome — no spinner. See HomeMapSkeleton.
@@ -250,85 +289,101 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                 urlTemplate:
                     'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
                 userAgentPackageName: 'com.pettybounty.app',
+                // Disk-backed, so a returning user's map paints from local
+                // storage instead of re-downloading every tile. See
+                // MapTileCache for why tiles get their own cache store.
+                tileProvider: CachedTileProvider(),
               ),
-              CircleLayer(
-                circles: _getCircleMarkers(petsState, locState.location),
-              ),
+              CircleLayer(circles: _getCircleMarkers(locState.location)),
               // 1. หมุดตำแหน่งของเรา (อยู่เดี่ยวๆ)
               MarkerLayer(markers: _getUserMarker(locState.location)),
 
-              MarkerClusterLayerWidget(
-                options: MarkerClusterLayerOptions(
-                  maxClusterRadius: 120, // รวบหมุดในระยะ 120 พิกเซล
-                  size: const Size(
-                    55,
-                    55,
-                  ), // ขนาดกล่องเพื่อให้มีที่วางตัวเลขมุมขวาบน
-                  markers: _getPetMarkers(petsState),
-                  polygonOptions: const PolygonOptions(
-                    borderColor: Colors.blueAccent,
-                    color: Colors.black12,
-                    borderStrokeWidth: 3,
-                  ),
-                  builder: (context, markers) {
-                    return Stack(
-                      clipBehavior: Clip.none, // ยอมให้ป้ายตัวเลขล้นขอบได้
-                      alignment: Alignment.center,
-                      children: [
-                        // ✅ ส่วนฐาน: วงกลมสีส้มและไอคอนอุ้งเท้า (ไม่ใช่รูป Me แล้ว!)
-                        Container(
-                          width: 45,
-                          height: 45,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFED7645), // สีส้มธีมแอป
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+              // Scoped to `pets` alone via select(): NearbyPetsState.copyWith
+              // passes the same List instance through when only isLoading
+              // changes, so this subtree does not rebuild while a fetch is in
+              // flight — only when the pets themselves actually change.
+              Consumer(
+                builder: (context, ref, _) {
+                  final pets = ref.watch(
+                    nearbyPetsProvider.select((s) => s.pets),
+                  );
+                  return MarkerClusterLayerWidget(
+                    options: MarkerClusterLayerOptions(
+                      maxClusterRadius: 120, // รวบหมุดในระยะ 120 พิกเซล
+                      size: const Size(
+                        55,
+                        55,
+                      ), // ขนาดกล่องเพื่อให้มีที่วางตัวเลขมุมขวาบน
+                      markers: _petMarkersFor(pets),
+                      polygonOptions: const PolygonOptions(
+                        borderColor: Colors.blueAccent,
+                        color: Colors.black12,
+                        borderStrokeWidth: 3,
+                      ),
+                      builder: (context, markers) {
+                        return Stack(
+                          clipBehavior: Clip.none, // ยอมให้ป้ายตัวเลขล้นขอบได้
+                          alignment: Alignment.center,
+                          children: [
+                            // ✅ ส่วนฐาน: วงกลมสีส้มและไอคอนอุ้งเท้า (ไม่ใช่รูป Me แล้ว!)
+                            Container(
+                              width: 45,
+                              height: 45,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFED7645), // สีส้มธีมแอป
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.pets, // เปลี่ยนเป็นรูปอุ้งเท้า
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        // ✅ ส่วนป้ายแจ้งเตือน (มุมขวาบน): วงกลมสีแดงพร้อมตัวเลข
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              color: Colors
-                                  .redAccent, // ใช้สีแดงให้ตัวเลขเด้งสะดุดตา
-                              shape: BoxShape.circle,
-                              border: Border.all(
+                              child: const Icon(
+                                Icons.pets, // เปลี่ยนเป็นรูปอุ้งเท้า
                                 color: Colors.white,
-                                width: 1.5,
+                                size: 24,
                               ),
                             ),
-                            child: Center(
-                              child: Text(
-                                '${markers.length}', // จำนวนแมวที่ทับกัน
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
+                            // ✅ ส่วนป้ายแจ้งเตือน (มุมขวาบน): วงกลมสีแดงพร้อมตัวเลข
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: Colors
+                                      .redAccent, // ใช้สีแดงให้ตัวเลขเด้งสะดุดตา
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${markers.length}', // จำนวนแมวที่ทับกัน
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -337,7 +392,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
             top: MediaQuery.of(context).padding.top + 16,
             left: 16,
             right: 16,
-            child: _buildSearchBar(petsState),
+            // The only widget that renders `isLoading`. Subscribing here
+            // rather than at the root is what keeps a fetch from rebuilding
+            // the map underneath it.
+            child: Consumer(
+              builder: (context, ref, _) =>
+                  _buildSearchBar(ref.watch(nearbyPetsProvider)),
+            ),
           ),
 
           Positioned(
@@ -517,19 +578,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                 iconAsset: 'assets/post-pet.png',
                 isActive: false,
                 onTap: () async {
-                  final result =
-                      await context.push<Map<String, dynamic>>('/lost-pet-post');
+                  final result = await context.push<Map<String, dynamic>>(
+                    '/lost-pet-post',
+                  );
                   if (result != null && mounted) {
                     final location = result['location'] as LatLng?;
                     final petId = result['petId'] as String?;
                     if (location != null) {
                       await _fetchNearbyPets(location);
-                      _animatedMapMove(location, 16.5, onComplete: () {
-                        if (petId != null && mounted) {
-                          ref.read(selectedPetIdProvider.notifier).state = petId;
-                          _showPetDetailBottomSheet();
-                        }
-                      });
+                      _animatedMapMove(
+                        location,
+                        16.5,
+                        onComplete: () {
+                          if (petId != null && mounted) {
+                            ref.read(selectedPetIdProvider.notifier).state =
+                                petId;
+                            _showPetDetailBottomSheet();
+                          }
+                        },
+                      );
                     }
                   }
                 },

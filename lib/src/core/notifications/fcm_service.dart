@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 
 import '../app_config.dart';
 import '../auth/auth_service.dart';
+import '../network/app_http_client.dart';
 import '../../routing/root_navigator_key.dart';
 
 /// Background / terminated message handler (top-level, vm:entry-point so it
@@ -28,6 +29,10 @@ class FcmService {
   static final FcmService instance = FcmService._();
 
   final AuthService _auth = AuthService();
+
+  /// Shared with every repository — keeps the TLS connection to the
+  /// backend warm instead of handshaking again per token sync.
+  final http.Client _client = AppHttpClient.instance;
 
   /// Guards the ONE-TIME half of setup (permission prompt + stream listeners).
   /// Deliberately NOT a guard on token registration — see [syncToken].
@@ -179,7 +184,7 @@ class FcmService {
       return;
     }
     try {
-      final res = await http.post(
+      final res = await _client.post(
         Uri.parse('${AppConfig.apiBaseUrl}/devices/unregister'),
         headers: {
           'Content-Type': 'application/json',
@@ -204,7 +209,7 @@ class FcmService {
       return false;
     }
     try {
-      final res = await http.post(
+      final res = await _client.post(
         Uri.parse('${AppConfig.apiBaseUrl}/devices/register'),
         headers: {
           'Content-Type': 'application/json',

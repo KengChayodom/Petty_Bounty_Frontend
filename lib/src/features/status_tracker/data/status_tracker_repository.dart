@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_config.dart';
+import '../../../core/network/app_http_client.dart';
 import 'models/sighting_activity.dart';
 
 /// Repository for the Status Tracker screen — reads the sighting timeline for
@@ -11,11 +12,14 @@ import 'models/sighting_activity.dart';
 class StatusTrackerRepository {
   final SupabaseClient _supabase;
   final String _baseUrl;
+  final http.Client _client;
 
   StatusTrackerRepository({
     SupabaseClient? supabase,
     String? baseUrl,
+    http.Client? client,
   })  : _supabase = supabase ?? Supabase.instance.client,
+        _client = client ?? AppHttpClient.instance,
         // Same env-aware base URL every other repository uses (handles the
         // Android-emulator-needs-10.0.2.2 case) — never hardcode localhost.
         _baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
@@ -34,7 +38,7 @@ class StatusTrackerRepository {
   /// server-side), so no client-side sorting/filtering is needed.
   Future<List<SightingActivity>> fetchSightingTimeline(String petId) async {
     final url = Uri.parse('$_baseUrl/missing-pets/$petId/sightings');
-    final response = await http.get(url, headers: _authHeaders);
+    final response = await _client.get(url, headers: _authHeaders);
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -58,7 +62,7 @@ class StatusTrackerRepository {
   /// from the sighting timeline. Returns null if the row carries no status.
   Future<String?> fetchPetStatus(String petId) async {
     final url = Uri.parse('$_baseUrl/missing-pets/$petId');
-    final response = await http.get(url, headers: _authHeaders);
+    final response = await _client.get(url, headers: _authHeaders);
 
     if (response.statusCode != 200) {
       throw Exception('Failed to load pet status (${response.statusCode}).');
@@ -78,7 +82,7 @@ class StatusTrackerRepository {
   /// before treating this as a full "case closed with reward paid".
   Future<void> confirmRescue(String petId) async {
     final url = Uri.parse('$_baseUrl/missing-pets/$petId');
-    final response = await http.patch(
+    final response = await _client.patch(
       url,
       headers: _authHeaders,
       body: jsonEncode({'status': 'Found'}),
