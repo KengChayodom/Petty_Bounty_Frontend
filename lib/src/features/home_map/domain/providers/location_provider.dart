@@ -32,6 +32,23 @@ class LocationNotifier extends StateNotifier<LocationState> {
   final Completer<void> _ready = Completer<void>();
   Future<void> get ready => _ready.future;
 
+  /// How long to wait for a fresh fix before giving up on it.
+  ///
+  /// geolocator configures NO time limit by default, and "the GPS never got a
+  /// lock" is not an exception — it is an `await` that simply never completes.
+  /// Without this the screen sits on "Finding your location..." forever, the
+  /// catch below never runs, and `_ready` never completes (which also stalls
+  /// FCM setup and LocationPublisher, both of which await it).
+  static const Duration _fixTimeout = Duration(seconds: 10);
+
+  /// 100 m on iOS, balanced-power on Android — deliberately NOT `high` (10 m).
+  ///
+  /// This position feeds a 10 km radius search (`_defaultSearchRadiusKm`, and
+  /// `ST_DWithin` server-side), so 10 m versus 100 m cannot change a single
+  /// result. What it does change is the wait: `medium` lets CoreLocation answer
+  /// from WiFi/cell towers instead of holding out for a satellite lock.
+  static const LocationAccuracy _accuracy = LocationAccuracy.medium;
+
   Future<void> _initLocation() async {
     try {
       if (state.location != null) return;
@@ -48,15 +65,48 @@ class LocationNotifier extends StateNotifier<LocationState> {
         throw Exception('Permission denied');
       }
 
-      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      state = LocationState(isLoading: false, location: LatLng(position.latitude, position.longitude));
-    } catch (e) {
-      // ถ้าหา GPS ไม่ได้ ให้โผล่ที่ตำแหน่ง Default
+      // Stage 1 — the position the OS already has. This is the plugin's own
+      // documented pattern ("call getLastKnownPosition to receive a cached
+      // position and update it with the result of getCurrentPosition"), and it
+      // is what turns a cold start from a multi-second wait into an instant
+      // map. Note this is a REAL fix of the user's, just an older one, so
+      // `usedFallback` stays false — LocationPublisher may publish it.
+      final cached = await Geolocator.getLastKnownPosition();
+      if (cached != null) {
+        state = LocationState(
+          isLoading: false,
+          location: LatLng(cached.latitude, cached.longitude),
+        );
+        // Release the gate now rather than after stage 2: push registration and
+        // the location publisher have no reason to wait on extra precision, and
+        // the location permission dialog (the thing the gate actually orders)
+        // has already been answered above.
+        if (!_ready.isCompleted) _ready.complete();
+      }
+
+      // Stage 2 — refine in the background. HomeScreen's ref.listen re-centres
+      // the map on this, and re-fetches nearby pets if it lands far from the
+      // cached point.
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: _accuracy,
+        timeLimit: _fixTimeout,
+      );
       state = LocationState(
         isLoading: false,
-        location: const LatLng(13.7563, 100.5018),
-        usedFallback: true,
+        location: LatLng(position.latitude, position.longitude),
       );
+    } catch (e) {
+      // Only fall back when we have NOTHING. Overwriting unconditionally would
+      // throw away a good stage-1 position the moment stage 2 timed out, and
+      // teleport a real user to the middle of Bangkok.
+      if (state.location == null) {
+        // ถ้าหา GPS ไม่ได้ ให้โผล่ที่ตำแหน่ง Default
+        state = LocationState(
+          isLoading: false,
+          location: const LatLng(13.7563, 100.5018),
+          usedFallback: true,
+        );
+      }
     } finally {
       // Always release the gate, so a denial/fallback never blocks push setup.
       if (!_ready.isCompleted) _ready.complete();
