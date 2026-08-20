@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+
+import '../../../../core/network/app_http_client.dart';
 import '../../../../core/app_config.dart';
 import '../../domain/entities/missing_pet_entity.dart';
 import '../models/missing_pet_model.dart';
@@ -10,7 +12,7 @@ class MissingPetRepositoryImpl {
   final http.Client _client;
 
   MissingPetRepositoryImpl({http.Client? client})
-    : _client = client ?? http.Client();
+    : _client = client ?? AppHttpClient.instance;
 
   /// Fetch nearby missing pets within a radius
   Future<List<MissingPetEntity>> getNearbyMissingPets({
@@ -18,7 +20,7 @@ class MissingPetRepositoryImpl {
     required double longitude,
     double radiusKm = 5.0,
   }) async {
-    final response = await http.get(
+    final response = await _client.get(
       Uri.parse(
         '$baseUrl/missing-pets/nearby'
         '?latitude=$latitude&longitude=$longitude&radius_km=$radiusKm',
@@ -47,7 +49,7 @@ class MissingPetRepositoryImpl {
   /// /nearby (numeric latitude/longitude projected from the geography,
   /// numeric bounty_amount), so no client-side normalisation is needed.
   Future<MissingPetEntity> getMissingPet(String petId) async {
-    final response = await http.get(Uri.parse('$baseUrl/missing-pets/$petId'));
+    final response = await _client.get(Uri.parse('$baseUrl/missing-pets/$petId'));
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
