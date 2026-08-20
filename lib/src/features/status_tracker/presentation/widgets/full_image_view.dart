@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/ui/skeleton/skeleton.dart';
@@ -20,22 +21,24 @@ class FullImageView extends StatelessWidget {
               minScale: 0.8,
               maxScale: 4.0,
               child: Center(
-                child: Image.network(
-                  imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
                   fit: BoxFit.contain,
-                  loadingBuilder: (context, child, progress) => progress == null
-                      ? child
-                      // No progress bar even though `progress` carries byte
-                      // counts — a shimmering frame on the black backdrop.
-                      : const Skeletonizer.zone(
-                          effect: AppSkeletons.onDark,
-                          child: Bone(
-                            width: 240,
-                            height: 320,
-                            uniRadius: 12,
-                          ),
-                        ),
-                  errorBuilder: (_, _, _) => const Center(
+                  // Deliberately NO memCacheWidth here, unlike the header and
+                  // the timeline card: this view zooms to 4x, so it is the one
+                  // place that genuinely needs every pixel. The bytes come off
+                  // the same disk-cached file those two already downloaded.
+                  // No progress bar even though bytes are known — a shimmering
+                  // frame on the black backdrop, per the app's no-spinner rule.
+                  placeholder: (_, _) => const Skeletonizer.zone(
+                    effect: AppSkeletons.onDark,
+                    child: Bone(
+                      width: 240,
+                      height: 320,
+                      uniRadius: 12,
+                    ),
+                  ),
+                  errorWidget: (_, _, _) => const Center(
                     child: Icon(Icons.broken_image,
                         color: Colors.white54, size: 64),
                   ),

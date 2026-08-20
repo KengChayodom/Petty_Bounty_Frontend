@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/models/sighting_activity.dart';
 import '../domain/providers/status_tracker_providers.dart';
 import 'widgets/activity_card.dart';
@@ -248,10 +250,20 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             width: 96,
             height: 96,
             child: widget.petImageUrl != null
-                ? Image.network(
-                    widget.petImageUrl!,
+                ? CachedNetworkImage(
+                    imageUrl: widget.petImageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => _headerFallback(),
+                    // Decode to the size actually painted. Image.network
+                    // decoded the full 2048px upload into a 96pt box, which
+                    // cost ~12 MB of raster cache per photo — about eight of
+                    // them filled Flutter's whole 100 MB ImageCache and
+                    // started evicting (and re-decoding) on every scroll.
+                    memCacheWidth:
+                        (96 * MediaQuery.devicePixelRatioOf(context)).round(),
+                    placeholder: (_, _) => const Skeletonizer.zone(
+                      child: Bone(width: 96, height: 96),
+                    ),
+                    errorWidget: (_, _, _) => _headerFallback(),
                   )
                 : _headerFallback(),
           ),

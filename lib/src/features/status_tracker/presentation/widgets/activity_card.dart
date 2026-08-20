@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -129,10 +130,26 @@ class ActivityCard extends StatelessWidget {
               height: 180,
               width: double.infinity,
               child: item.imageUrl != null
-                  ? Image.network(
-                      item.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _imageFallback(),
+                  // LayoutBuilder purely to size the decode: the card's own
+                  // width is a tighter ceiling than the screen's, and _card()
+                  // has no BuildContext of its own.
+                  ? LayoutBuilder(
+                      builder: (context, constraints) => CachedNetworkImage(
+                        imageUrl: item.imageUrl!,
+                        fit: BoxFit.cover,
+                        // Decode to the width actually painted. Full-resolution
+                        // decodes of a 2048px upload cost ~12 MB of raster
+                        // cache each, so a handful of timeline cards filled
+                        // Flutter's whole 100 MB ImageCache and it began
+                        // evicting — then re-decoding — while scrolling.
+                        memCacheWidth: (constraints.maxWidth *
+                                MediaQuery.devicePixelRatioOf(context))
+                            .round(),
+                        placeholder: (_, _) => const Skeletonizer.zone(
+                          child: Bone(width: double.infinity, height: 180),
+                        ),
+                        errorWidget: (_, _, _) => _imageFallback(),
+                      ),
                     )
                   : _imageFallback(),
             ),

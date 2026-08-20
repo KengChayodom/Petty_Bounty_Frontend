@@ -57,6 +57,7 @@ class HunterTabSkeleton extends StatelessWidget {
             // must never kick off a network image fetch.
             petImageUrl: null,
             status: SightingStatus.waitingVerified,
+            actionType: 'Spotted',
             points: 40,
             sentAtFormatted: BoneMock.date,
           ),
