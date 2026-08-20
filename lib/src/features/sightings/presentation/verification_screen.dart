@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
+import '../../../core/location/current_fix.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/sighting_repository.dart';
 import '../domain/pending_upload.dart';
@@ -209,6 +210,10 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     }
   }
 
+  /// Matches `LocationNotifier._fixTimeout` — this is the same acquisition,
+  /// just on the submit path.
+  static const Duration _fixTimeout = Duration(seconds: 10);
+
   Future<Position> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -230,9 +235,13 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       return Future.error('Location permissions are permanently denied.');
     }
 
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    // Time-limited, and platform-split on accuracy — see `currentFixAccuracy`.
+    // Without the limit this `await` never returns when no fix arrives, and
+    // the hunter sits on the "AI is analyzing..." overlay forever instead of
+    // seeing an error; `getCurrentFix` falls back to the OS's cached fix
+    // before giving up, which for a sighting reported where you are standing
+    // is the right answer anyway.
+    return await getCurrentFix(timeLimit: _fixTimeout);
   }
 
   void _showConfirmationDialog() {

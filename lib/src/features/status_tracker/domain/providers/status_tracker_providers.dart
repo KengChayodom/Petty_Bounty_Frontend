@@ -18,12 +18,13 @@ final sightingTimelineProvider = FutureProvider.autoDispose
   return repo.fetchSightingTimeline(petId);
 });
 
-/// Authoritative report status ("Searching" | "Spotted" | "Found") for a pet,
-/// keyed by its id. This — not the timeline — is the source of truth for the
-/// stepper's current stage. autoDispose + invalidated after an end-search so
-/// the stepper reflects the real DB value rather than a local guess.
-final petStatusProvider =
+/// The backend's derived badge for a report ("Pending" | "Spotted" |
+/// "Expired" | "Rescued"), keyed by pet id. This — not the timeline, and not
+/// the raw `status` column — is the source of truth for the stepper's current
+/// stage. autoDispose + invalidated after an end-search so the stepper
+/// reflects the server's answer rather than a local guess.
+final petPostStatusProvider =
     FutureProvider.autoDispose.family<String?, String>((ref, petId) async {
   final repo = ref.watch(statusTrackerRepositoryProvider);
-  return repo.fetchPetStatus(petId);
+  return repo.fetchPostStatus(petId);
 });
