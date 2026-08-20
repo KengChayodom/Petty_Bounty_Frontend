@@ -9,7 +9,8 @@ import 'package:intl/intl.dart';
 /// The RPC row shape is:
 ///   id, hunter_id, hunter_display_name, image_url, detected_species,
 ///   action_type ('Spotted' | 'Caught'), sighting_status, verification_status,
-///   sighted_location (free text), created_at, similarity_score, match_source.
+///   owner_status, sighted_location (free text), created_at, similarity_score,
+///   match_source.
 ///
 /// Note: the hunter's phone number is NOT part of this RPC (the `phone` column
 /// exists on `users` but isn't joined), so [hunterPhone] stays null until the
@@ -26,7 +27,15 @@ class SightingActivity {
   final String actionType;
 
   /// 'Pending' | 'Verified' | 'Dismissed' (owner never receives Dismissed).
+  /// This is the ADMINISTRATOR's moderation ruling, not the owner's — see
+  /// [ownerStatus] for the verdict this screen writes.
   final String verificationStatus;
+
+  /// The OWNER's own verdict on this card: 'Pending' | 'Confirmed' |
+  /// 'Rejected'. Since 2026-08-21 this is what scoring reads, and it is what
+  /// drives the queue: cards are decided oldest-first, one at a time, and
+  /// confirming a 'Caught' card ends the search and pays everybody.
+  final String ownerStatus;
 
   /// Sighting coordinates, parsed from the `sighted_location` PostGIS point
   /// (which the backend RPC returns as WKT `POINT(lng lat)` via ST_AsText).
@@ -45,6 +54,7 @@ class SightingActivity {
     required this.detectedSpecies,
     required this.actionType,
     required this.verificationStatus,
+    this.ownerStatus = 'Pending',
     this.latitude,
     this.longitude,
     this.createdAt,
@@ -55,6 +65,14 @@ class SightingActivity {
   bool get isCaught => actionType.toLowerCase() == 'caught';
 
   bool get hasLocation => latitude != null && longitude != null;
+
+  /// True once the owner has ruled on this card. A decided card shows a badge
+  /// and offers no buttons — the backend refuses a second verdict (409).
+  bool get isDecided => ownerStatus.toLowerCase() != 'pending';
+
+  bool get isConfirmed => ownerStatus.toLowerCase() == 'confirmed';
+
+  bool get isRejected => ownerStatus.toLowerCase() == 'rejected';
 
   /// Parse `POINT(lng lat)` WKT into (lat, lng). Note the coordinate order:
   /// WKT/PostGIS write X (longitude) first, then Y (latitude).
@@ -101,6 +119,9 @@ class SightingActivity {
       detectedSpecies: (json['detected_species'] as String?) ?? 'Unknown',
       actionType: (json['action_type'] as String?) ?? 'Spotted',
       verificationStatus: (json['verification_status'] as String?) ?? 'Pending',
+      // Absent reads as Pending, matching the column's NOT NULL DEFAULT: an
+      // undecided card is the state every card starts in.
+      ownerStatus: (json['owner_status'] as String?) ?? 'Pending',
       latitude: point.lat,
       longitude: point.lng,
       createdAt: created,
