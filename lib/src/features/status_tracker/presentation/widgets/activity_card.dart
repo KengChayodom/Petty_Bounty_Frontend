@@ -16,6 +16,7 @@ class ActivityCard extends StatelessWidget {
     required this.isFirst,
     required this.isLast,
     this.showConfirmButton = false,
+    this.isLocked = false,
     this.isConfirming = false,
     this.onConfirm,
     this.onReject,
@@ -28,9 +29,16 @@ class ActivityCard extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
 
-  /// Whether to render the green "CONFIRM & END SEARCH" action inside this card
-  /// (only the most-recent catch qualifies).
+  /// Whether this card is the one the owner may act on. Exactly one card is,
+  /// at any moment: the oldest still-undecided one.
   final bool showConfirmButton;
+
+  /// This card is undecided but not yet its turn — an older card is still
+  /// waiting. Drawn dimmed with a note saying so, rather than with buttons that
+  /// the backend would refuse (409). Ruling oldest-first is what stops an owner
+  /// from closing the case with the people who helped still unconfirmed, and
+  /// therefore unpaid.
+  final bool isLocked;
   final bool isConfirming;
   final VoidCallback? onConfirm;
 
@@ -51,6 +59,7 @@ class ActivityCard extends StatelessWidget {
   static const _orange = Color(0xFFF57C3A);
   static const _green = Color(0xFF4CAF7D);
   static const _red = Color(0xFFE5372A);
+  static const _grey = Color(0xFF9AA0A6);
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +68,15 @@ class ActivityCard extends StatelessWidget {
         ? Icons.volunteer_activism_rounded
         : Icons.visibility_rounded;
 
+    // A card awaiting its turn is dimmed as a whole: the photo, the text and
+    // the missing buttons then say the same thing at once.
+    return Opacity(
+      opacity: isLocked ? 0.45 : 1.0,
+      child: _timelineRow(nodeColor, nodeIcon),
+    );
+  }
+
+  Widget _timelineRow(Color nodeColor, IconData nodeIcon) {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -251,6 +269,30 @@ class ActivityCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   _mapPreview(),
                 ],
+                if (item.isDecided) ...[
+                  const SizedBox(height: 12),
+                  _verdictBadge(),
+                ],
+                if (isLocked) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.lock_outline_rounded,
+                          size: 14, color: _grey),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Review the earlier sightings first.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 if (showConfirmButton) ...[
                   const SizedBox(height: 14),
                   Row(
@@ -267,9 +309,15 @@ class ActivityCard extends StatelessWidget {
                           ),
                           child: isConfirming
                               ? const BusyButtonLabel(width: 84, height: 12)
-                              : const Text(
-                                  'CONFIRM',
-                                  style: TextStyle(
+                              // Confirming a catch ends the search and pays
+                              // everyone out; confirming a sighting only says
+                              // "yes, that is my pet". Two different acts, so
+                              // two different words on the button.
+                              : Text(
+                                  item.isCaught
+                                      ? 'CONFIRM RESCUE'
+                                      : 'THAT\'S MY PET',
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.5,
@@ -290,7 +338,7 @@ class ActivityCard extends StatelessWidget {
                               elevation: 0,
                             ),
                             child: const Text(
-                              'REJECT',
+                              'NOT MINE',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w900,
@@ -304,6 +352,41 @@ class ActivityCard extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The owner's own verdict, shown back to them once a card is decided. It
+  /// replaces the buttons: the backend refuses a second verdict on the same
+  /// card, so offering one would only produce a 409.
+  Widget _verdictBadge() {
+    final confirmed = item.isConfirmed;
+    final color = confirmed ? _green : _grey;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            confirmed ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            confirmed ? 'YOU CONFIRMED THIS' : 'YOU SAID NOT MINE',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+              color: color,
             ),
           ),
         ],

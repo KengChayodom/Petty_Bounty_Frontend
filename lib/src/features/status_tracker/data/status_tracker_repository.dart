@@ -7,6 +7,20 @@ import '../../../core/app_config.dart';
 import '../../../core/network/app_http_client.dart';
 import 'models/sighting_activity.dart';
 
+/// The queue moved underneath the owner — the backend's 409.
+///
+/// A separate type because the recovery is different from every other failure:
+/// nothing is wrong with what the owner asked for, their copy of the timeline
+/// is simply stale, so the screen re-reads it instead of showing an error.
+class SightingQueueConflict implements Exception {
+  const SightingQueueConflict(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 /// Repository for the Status Tracker screen — reads the sighting timeline for
 /// a single missing pet the caller owns.
 class StatusTrackerRepository {
@@ -96,6 +110,46 @@ class StatusTrackerRepository {
       } catch (_) {}
       throw Exception(detail);
     }
+  }
+
+  /// The owner's verdict on one card of their pet's queue, via
+  /// `PATCH /missing-pets/{petId}/sightings/{sightingId}`.
+  ///
+  /// [decision] is 'Confirmed' or 'Rejected'. Confirming a card whose
+  /// `action_type` is 'Caught' does far more than record a verdict: it ends the
+  /// search and distributes every clue score for the pet. The response says
+  /// which happened — `search_closed` and `awards` — so the caller redraws
+  /// without a second round-trip.
+  ///
+  /// Throws [SightingQueueConflict] on 409. That is not a failure the owner
+  /// caused: it means the queue moved underneath them (a card was already
+  /// decided, an older one is still waiting, or someone closed the search from
+  /// another device), and the only sane response is to re-read the timeline.
+  Future<Map<String, dynamic>> decideSighting(
+    String petId,
+    String sightingId,
+    String decision,
+  ) async {
+    final url = Uri.parse('$_baseUrl/missing-pets/$petId/sightings/$sightingId');
+    final response = await _client.patch(
+      url,
+      headers: _authHeaders,
+      body: jsonEncode({'decision': decision}),
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return (body['data'] as Map<String, dynamic>?) ?? const {};
+    }
+
+    String detail = 'Failed to record decision (${response.statusCode}).';
+    try {
+      final err = jsonDecode(response.body) as Map<String, dynamic>;
+      if (err['detail'] != null) detail = err['detail'].toString();
+    } catch (_) {}
+
+    if (response.statusCode == 409) throw SightingQueueConflict(detail);
+    throw Exception(detail);
   }
 
   /// Flag a sighting for moderator review via `POST /reports`. [reason] is one
