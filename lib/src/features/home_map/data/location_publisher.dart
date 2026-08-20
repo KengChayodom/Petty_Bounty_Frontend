@@ -55,8 +55,16 @@ class LocationPublisher {
           permission == LocationPermission.deniedForever) {
         return;
       }
+      // `medium` (100 m) not `high` (10 m), with a hard time limit. The
+      // consumer is `get_nearby_hunters`, a radius query against a 24 h
+      // freshness window — 10 m precision buys it nothing and costs a
+      // satellite lock every five minutes. The timeout matters more than it
+      // looks: geolocator sets none by default, so a fix that never resolves
+      // would leave this future pending while the next tick starts another,
+      // stacking one dangling CoreLocation request every 5 minutes.
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 15),
       );
       await _api.updateMyLocation(position.latitude, position.longitude);
     } catch (e) {

@@ -5,13 +5,16 @@ import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import '../../../core/app_config.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/network/app_http_client.dart';
 import 'models/lost_pet_post_request.dart';
 
 class LostPetPostRepository {
   final String baseUrl = AppConfig.apiBaseUrl;
   final AuthService _authService;
+  final http.Client _client;
 
-  LostPetPostRepository(this._authService);
+  LostPetPostRepository(this._authService, {http.Client? client})
+      : _client = client ?? AppHttpClient.instance;
 
   Map<String, String> get _headers {
     final authToken = _authService.getAuthorizationHeader();
@@ -26,7 +29,7 @@ class LostPetPostRepository {
   /// Same endpoint the sightings/camera flow uses — returns the raw decoded
   /// response (`{status, message, data: {species, confidence, bbox}}`).
   Future<Map<String, dynamic>> analyzeImage(String imageUrl) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/sightings/analyze'),
       headers: _headers,
       body: jsonEncode({'image_url': imageUrl}),
@@ -73,7 +76,7 @@ class LostPetPostRepository {
       ),
     );
 
-    final response = await request.send();
+    final response = await _client.send(request);
     if (response.statusCode == 200 || response.statusCode == 201) {
       final responseData = await response.stream.bytesToString();
       final json = jsonDecode(responseData) as Map<String, dynamic>;
@@ -95,7 +98,7 @@ class LostPetPostRepository {
   /// breaks `MissingPetModel`'s generated `List<double>` cast. We don't
   /// need that field here anyway.
   Future<String> createLostPetPost(LostPetPostRequest request) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/missing-pets/'),
       headers: _headers,
       body: jsonEncode(request.toJson()),
