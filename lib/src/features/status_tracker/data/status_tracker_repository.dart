@@ -69,12 +69,21 @@ class StatusTrackerRepository {
         .toList();
   }
 
-  /// Fetch the authoritative current status of the report — one of
-  /// "Searching", "Spotted", or "Found" — from `GET /missing-pets/{id}`.
+  /// Fetch the report's derived badge — `post_status`, one of "Pending",
+  /// "Spotted", "Expired" or "Rescued" — from `GET /missing-pets/{id}`.
   ///
-  /// This is what drives the stepper: the real DB state, not a guess inferred
-  /// from the sighting timeline. Returns null if the row carries no status.
-  Future<String?> fetchPetStatus(String petId) async {
+  /// This is what drives the stepper. It is deliberately NOT the raw `status`
+  /// column: that column is storage (Searching / Spotted / Found / Resolved),
+  /// it uses different words for the same states, and reading it here meant the
+  /// app owned a second copy of the rule. The copy had already drifted — it
+  /// treated only "Found" as a closed search, so a pet whose bounty had been
+  /// settled ("Resolved") reappeared in the stepper as still being searched
+  /// for. The backend owns the rule; this reads its answer.
+  ///
+  /// Returns null if the payload carries no `post_status`, which is how a
+  /// backend older than 2026-08-21 answers — the caller falls back rather than
+  /// showing a wrong stage.
+  Future<String?> fetchPostStatus(String petId) async {
     final url = Uri.parse('$_baseUrl/missing-pets/$petId');
     final response = await _client.get(url, headers: _authHeaders);
 
@@ -84,7 +93,7 @@ class StatusTrackerRepository {
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     final data = body['data'] as Map<String, dynamic>?;
-    return data?['status'] as String?;
+    return data?['post_status'] as String?;
   }
 
   /// Owner marks their own report as resolved by setting `status` -> "Found"
