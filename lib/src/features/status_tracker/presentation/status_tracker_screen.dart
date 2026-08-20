@@ -149,6 +149,57 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
     );
   }
 
+  /// Flag a sighting for moderator review. Opens a reason sheet, then POSTs the
+  /// chosen reason to `/reports`. Distinct from Reject (an owner "not my pet"
+  /// decision) — this is a guideline-violation report to admins.
+  Future<void> _reportSighting(SightingActivity item) async {
+    const reasons = <String>['Spam', 'Not a pet', 'Inappropriate image'];
+    final reason = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 18, 20, 6),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Report this sighting',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                ),
+              ),
+            ),
+            for (final r in reasons)
+              ListTile(
+                leading:
+                    const Icon(Icons.flag_outlined, color: Colors.redAccent),
+                title: Text(r),
+                onTap: () => Navigator.pop(ctx, r),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (reason == null || !mounted) return;
+
+    try {
+      await ref
+          .read(statusTrackerRepositoryProvider)
+          .flagSighting(item.id, reason);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reported for review. Thank you.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   void _openImage(String imageUrl) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -324,6 +375,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             onTapImage: items[i].imageUrl != null
                 ? () => _openImage(items[i].imageUrl!)
                 : null,
+            onReport: () => _reportSighting(items[i]),
           ),
       ],
     );
