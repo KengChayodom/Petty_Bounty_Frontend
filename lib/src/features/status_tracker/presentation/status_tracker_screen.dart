@@ -7,6 +7,7 @@ import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/models/sighting_activity.dart';
 import '../data/status_tracker_repository.dart';
 import '../domain/providers/status_tracker_providers.dart';
+import '../../profile/domain/providers/profile_providers.dart';
 import 'widgets/activity_card.dart';
 import 'widgets/activity_timeline_skeleton.dart';
 import 'widgets/full_image_view.dart';
@@ -205,6 +206,11 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   void _refresh() {
     ref.invalidate(sightingTimelineProvider(widget.petId));
     ref.invalidate(petPostStatusProvider(widget.petId));
+    // Also drop the Profile screen's owner-posts cache so its status badge
+    // (ACTIVE SEARCH → RESCUED, etc.) is re-fetched on the next visit instead
+    // of showing a stale value. The provider is autoDispose so this is a no-op
+    // when the Profile screen is not in the tree — safe to call either way.
+    ref.invalidate(ownerPostsProvider);
   }
 
   Future<void> _confirmRescue() async {

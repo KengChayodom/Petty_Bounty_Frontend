@@ -23,6 +23,7 @@ class HunterSightingHistoryItem {
   // verified/resolved) — shown as "Pending", never a made-up number.
   final int? points;
   final String sentAtFormatted;
+  final bool isDuplicate;
 
   bool get isCaught => actionType.toLowerCase() == 'caught';
 
@@ -34,6 +35,7 @@ class HunterSightingHistoryItem {
     required this.actionType,
     required this.points,
     required this.sentAtFormatted,
+    this.isDuplicate = false,
   });
 }
 

@@ -182,7 +182,13 @@ class HunterHistoryCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      item.points != null ? '+${item.points} point' : 'Pending',
+                      item.points != null
+                          ? '+${item.points} point'
+                          : item.isDuplicate
+                              ? 'Duplicate (0 point)'
+                              : item.status == SightingStatus.unmatch
+                                  ? '0 point'
+                                  : 'Pending',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
