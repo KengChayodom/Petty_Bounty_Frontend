@@ -224,19 +224,73 @@ class ProfileRepository {
     return list.map<HunterSightingHistoryItem>((json) {
       final m = json as Map<String, dynamic>;
       final award = m['score_award'] as Map<String, dynamic>?;
+      final matches = (m['matches'] as List?) ?? const [];
 
-      SightingStatus status = SightingStatus.waitingVerified;
+      // Status derivation — three mutually exclusive cases:
+      //
+      // 1. score_award exists → the pet was recovered and this hunter was paid.
+      //    The award is created by owner_decide_sighting() at the moment the
+      //    owner confirms a Caught card, which also closes the search. There is
+      //    no award without a closed pet.
+      //
+      // 2. No matches → the AI found no candidate pets at all → unmatch.
+      //
+      // 3. Matches exist — inspect owner_status on each:
+      //    a. EVERY match is "Rejected" by the owner → the owner said "not my
+      //       pet" for every candidate → treat as no match (unmatch).
+      //       This was the bug: the old code left these sightings on
+      //       waitingVerified forever, even after the owner had already decided.
+      //    b. Otherwise (any match is "Pending" or "Confirmed" without an award
+      //       yet) → the search is still open → waitingVerified is honest.
+      //       A Confirmed-Spotted match without an award means the owner said
+      //       "yes I saw this" but nobody has caught the pet yet — still waiting.
+      bool isDuplicate = false;
+      SightingStatus status;
       if (award != null) {
         status = SightingStatus.verified;
-      } else if ((m['matches'] as List?)?.isEmpty ?? true) {
+      } else if (matches.isEmpty) {
         status = SightingStatus.unmatch;
+      } else {
+        final anyConfirmed = matches.any(
+          (match) =>
+              ((match as Map<String, dynamic>)['owner_status'] as String?)
+                  ?.toLowerCase() ==
+              'confirmed',
+        );
+        final allRejected = matches.every(
+          (match) =>
+              ((match as Map<String, dynamic>)['owner_status'] as String?)
+                  ?.toLowerCase() ==
+              'rejected',
+        );
+
+        if (allRejected) {
+          status = SightingStatus.unmatch;
+        } else if (anyConfirmed) {
+          // The owner already said "yes this is my pet" -> Verified.
+          status = SightingStatus.verified;
+          if (m['sighting_status'] == 'Closed') {
+            // Pet search is closed but this sighting got no award.
+            // (e.g., they submitted multiple, only newest gets points).
+            isDuplicate = true;
+          }
+        } else if (m['sighting_status'] == 'Closed') {
+          // Search is closed and the owner never confirmed this sighting.
+          status = SightingStatus.unmatch;
+        } else {
+          // Owner hasn't responded yet, and the search is still open.
+          status = SightingStatus.waitingVerified;
+        }
       }
 
       final createdAtRaw = m['created_at'] as String?;
       String formattedDate = 'Recent';
       if (createdAtRaw != null) {
         try {
-          final dt = DateTime.parse(createdAtRaw);
+          // .toLocal() converts UTC (as stored by Postgres/Supabase) to the
+          // device's local timezone (e.g. UTC+7 / ICT) so "23:45 ICT" is not
+          // displayed as "16:45".
+          final dt = DateTime.parse(createdAtRaw).toLocal();
           formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(dt);
         } catch (_) {}
       }
@@ -251,6 +305,7 @@ class ProfileRepository {
         actionType: (m['action_type'] as String?) ?? 'Spotted',
         points: (award?['points'] as num?)?.toInt(),
         sentAtFormatted: formattedDate,
+        isDuplicate: isDuplicate,
       );
     }).toList();
   }
@@ -314,7 +369,9 @@ class ProfileRepository {
       String formattedDate = 'Recent';
       if (createdAtRaw != null) {
         try {
-          final dt = DateTime.parse(createdAtRaw);
+          // .toLocal() — same fix as fetchHunterHistory: Postgres emits UTC,
+          // device is UTC+7, so omitting this shows 16:45 instead of 23:45.
+          final dt = DateTime.parse(createdAtRaw).toLocal();
           formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(dt);
         } catch (_) {}
       }
