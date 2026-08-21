@@ -14,6 +14,7 @@ import '../features/sightings/presentation/matching_results_screen.dart';
 import '../features/home_map/presentation/missing_pet_detail_screen.dart';
 import '../features/lost_pet_post/presentation/lost_pet_post_screen.dart';
 import '../features/status_tracker/presentation/status_tracker_screen.dart';
+import '../features/leaderboard/presentation/leaderboard_screen.dart';
 import 'root_navigator_key.dart';
 
 // Define route paths as constants to prevent typos
@@ -27,6 +28,7 @@ class AppRoutes {
   static const String matchingResults = '/matching-results';
   static const String lostPetPost = '/lost-pet-post';
   static const String statusTracker = '/status-tracker';
+  static const String leaderboard = '/leaderboard';
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -80,6 +82,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.lostPetPost,
         name: 'lost-pet-post',
         builder: (context, state) => const LostPetPostScreen(),
+      ),
+
+      // Leaderboard (rank list) — reached from the home nav.
+      GoRoute(
+        path: AppRoutes.leaderboard,
+        name: 'leaderboard',
+        builder: (context, state) => const LeaderboardScreen(),
       ),
 
       // Status Tracker — owner's per-report search progress + sighting
