@@ -497,16 +497,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature coming soon!'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   Widget _buildNavIcon({
     required String iconAsset,
     required bool isActive,
@@ -571,7 +561,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               _buildNavIcon(
                 iconAsset: 'assets/ranking.png',
                 isActive: false,
-                onTap: () => _showComingSoon('Ranking'),
+                onTap: () => context.push('/leaderboard'),
               ),
               const SizedBox(width: 70), // เว้นที่ว่างตรงกลางให้ปุ่มกล้อง
               _buildNavIcon(
