@@ -1,8 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 
+import '../../../core/constants/pet_species.dart';
+import '../../../core/map/cached_tile_provider.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../domain/entities/missing_pet_entity.dart';
 
@@ -35,19 +39,6 @@ class PetDetailView extends StatelessWidget {
   final MissingPetEntity pet;
   final ScrollController? scrollController;
 
-  String _getSpeciesEmoji(String speciesName) {
-    switch (speciesName.toLowerCase()) {
-      case 'cat':
-        return '🐱';
-      case 'dog':
-        return '🐶';
-      case 'bird':
-        return '🦜';
-      default:
-        return '🐾';
-    }
-  }
-
   String _formatDateTime(String dateString) {
     try {
       final date = DateTime.parse(dateString).toLocal();
@@ -59,7 +50,7 @@ class PetDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String breed = pet.characteristics['breed'] ?? 'common';
+    final String breed = pet.characteristics['breed'] ?? 'Common';
     final String traitsVal =
         (pet.characteristics['traits'] ?? pet.characteristics['description'] ?? '')
             .toString()
@@ -68,7 +59,7 @@ class PetDetailView extends StatelessWidget {
         ? traitsVal
         : (pet.characteristicsText.isNotEmpty
             ? pet.characteristicsText
-            : "Looking for this sweet ${pet.species}.");
+            : "No additional description provided.");
 
     return SingleChildScrollView(
       controller: scrollController,
@@ -94,10 +85,10 @@ class PetDetailView extends StatelessWidget {
           ),
           _buildSectionTitle('DATE LOST'),
           _buildDateLostPill(_formatDateTime(pet.lastSeenTime)),
-          _buildSectionTitle('SIGHTING'),
-          _buildSightingMap(),
+          _buildSectionTitle('LAST SEEN LOCATION'),
+          _buildSightingMap(pet),
           _buildSectionTitle('OWNER'),
-          _buildOwnerCard(),
+          _buildOwnerCard(context, pet),
           const SizedBox(height: 30),
           _buildActionButtons(context, pet),
           const SizedBox(height: 30),
@@ -265,7 +256,7 @@ class PetDetailView extends StatelessWidget {
             _buildDetailItem(
               'SPECIES',
               Text(
-                _getSpeciesEmoji(pet.species),
+                PetSpecies.emojiFor(pet.species),
                 style: const TextStyle(fontSize: 24),
               ),
             ),
@@ -316,24 +307,50 @@ class PetDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildSightingMap() {
+  Widget _buildSightingMap(MissingPetEntity pet) {
+    final petLocation = LatLng(pet.latitude, pet.longitude);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        height: 150,
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: SizedBox(
+          height: 160,
+          child: FlutterMap(
+            options: MapOptions(
+              initialCenter: petLocation,
+              initialZoom: 15.0,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.none,
+              ),
+            ),
             children: [
-              Icon(Icons.map_outlined, size: 40, color: Colors.grey[400]),
-              const SizedBox(height: 8),
-              Text(
-                'Interactive Map Placeholder',
-                style: TextStyle(color: Colors.grey[500]),
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.pettybounty.app',
+                tileProvider: CachedTileProvider(),
+              ),
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: petLocation,
+                    width: 40,
+                    height: 40,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.pets, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -342,7 +359,15 @@ class PetDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildOwnerCard() {
+  Widget _buildOwnerCard(BuildContext context, MissingPetEntity pet) {
+    // Real owner data comes from the by-id detail endpoint. When absent (pet
+    // opened from an in-memory list) fall back to a generic label and 'Owner'
+    // rather than inventing a name or a "Verified" claim the backend never made.
+    final ownerName = pet.ownerDisplayName?.trim();
+    final displayName = ownerName?.isNotEmpty == true ? ownerName! : 'Pet Owner';
+    final ownerPhone = pet.ownerPhone?.trim();
+    final subtitle = ownerPhone?.isNotEmpty == true ? ownerPhone! : 'Owner';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
@@ -354,30 +379,22 @@ class PetDetailView extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.blueAccent,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: const Icon(Icons.person, color: Colors.white),
-            ),
+            _buildOwnerAvatar(context, pet.ownerProfileImageUrl),
             const SizedBox(width: 15),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Pet Owner',
-                  style: TextStyle(
+                  displayName,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     letterSpacing: 1.1,
                   ),
                 ),
                 Text(
-                  'Tap to view profile',
-                  style: TextStyle(
+                  subtitle,
+                  style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -387,6 +404,34 @@ class PetDetailView extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Owner avatar: the real profile photo when the backend joined one, else the
+  /// blue person placeholder (same fallback while the image loads or if it
+  /// errors). Decoded to the painted 50pt box to spare the raster cache.
+  Widget _buildOwnerAvatar(BuildContext context, String? imageUrl) {
+    Widget fallback() => Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.blueAccent,
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: const Icon(Icons.person, color: Colors.white),
+        );
+    if (imageUrl == null || imageUrl.isEmpty) return fallback();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(25),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: 50,
+        height: 50,
+        fit: BoxFit.cover,
+        memCacheWidth: (50 * MediaQuery.devicePixelRatioOf(context)).round(),
+        placeholder: (_, _) => fallback(),
+        errorWidget: (_, _, _) => fallback(),
       ),
     );
   }
