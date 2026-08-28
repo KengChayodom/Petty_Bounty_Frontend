@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/pet_species.dart';
 import '../../domain/providers/lost_pet_post_form_provider.dart';
 
 /// Species chip row (Cat/Dog/Bird/Other) — required by the backend schema.
 class SpeciesSelectorWidget extends ConsumerWidget {
   const SpeciesSelectorWidget({super.key});
 
-  static const _species = ['Cat', 'Dog', 'Bird', 'Other'];
+  static List<String> get _species => PetSpecies.labels;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
