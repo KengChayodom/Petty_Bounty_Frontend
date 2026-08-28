@@ -18,6 +18,12 @@ class MissingPetEntity extends Equatable {
   final String? primaryColorHex;
   final String? patternId;
 
+  /// Owner's public contact info, present only when this pet was fetched by id
+  /// (GET /missing-pets/{id}); null for pets that came from a list RPC.
+  final String? ownerDisplayName;
+  final String? ownerPhone;
+  final String? ownerProfileImageUrl;
+
   const MissingPetEntity({
     required this.id,
     this.ownerId,
@@ -34,6 +40,9 @@ class MissingPetEntity extends Equatable {
     this.distanceMeters,
     this.primaryColorHex,
     this.patternId,
+    this.ownerDisplayName,
+    this.ownerPhone,
+    this.ownerProfileImageUrl,
   });
 
   /// Get formatted characteristics as a readable string
