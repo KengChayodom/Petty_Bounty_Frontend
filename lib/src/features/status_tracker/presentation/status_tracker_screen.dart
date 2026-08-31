@@ -16,8 +16,9 @@ import 'widgets/sighting_map_view.dart';
 import 'widgets/status_stepper.dart';
 
 /// Owner-facing "Status Tracker" screen: the search progress of a single lost
-/// pet report — a 4-stage stepper plus the reverse-chronological sighting
-/// timeline. Reached from the Profile → Owner tab by tapping a report card.
+/// pet report — a 4-stage stepper plus the chronological sighting timeline
+/// (oldest first, top to bottom). Reached from the Profile → Owner tab by
+/// tapping a report card.
 class StatusTrackerScreen extends ConsumerStatefulWidget {
   const StatusTrackerScreen({
     super.key,
@@ -114,13 +115,13 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
 
   /// The one card the owner may act on: the OLDEST still-undecided card.
   ///
-  /// The list arrives newest-first, so that is the last Pending entry in it.
+  /// [items] is oldest-first here, so that is the first Pending entry in it.
   /// The rule is enforced by the backend (409) — this only keeps the screen
   /// from offering a button that would be refused. Its purpose is that nobody
   /// who helped is skipped over on the way to closing the case: scoring counts
   /// confirmed cards only, so a card left Pending earns its hunter nothing.
   SightingActivity? _nextCard(List<SightingActivity> items) {
-    for (final item in items.reversed) {
+    for (final item in items) {
       if (!item.isDecided) return item;
     }
     return null;
@@ -355,7 +356,14 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
     // Rejected cards stay on the timeline, wearing their badge: the owner said
     // "not mine", which is a decision worth showing back to them, not an
     // entry to hide. Hiding it would also make the queue's order unreadable.
-    final items = timelineAsync.valueOrNull ?? const <SightingActivity>[];
+    //
+    // The endpoint hands back newest-first; flip it to oldest-first so the
+    // timeline reads top-to-bottom in the order things happened and the card
+    // the owner acts on next — the oldest undecided one — sits at the top
+    // instead of at the very bottom of a long scroll.
+    final items = (timelineAsync.valueOrNull ?? const <SightingActivity>[])
+        .reversed
+        .toList(growable: false);
     final resolved = _isResolved(postStatus);
 
     return Scaffold(
@@ -508,8 +516,8 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             isFirst: i == 0,
             isLast: i == items.length - 1,
             // Exactly one card is actionable at a time — the oldest undecided
-            // one. Everything above it waits its turn; everything decided
-            // wears a badge instead of buttons.
+            // one. Everything below it waits its turn; everything above is
+            // already decided and wears a badge instead of buttons.
             showConfirmButton: items[i].id == next?.id,
             isConfirming: _decidingId == items[i].id,
             onConfirm: () => _decide(items[i], 'Confirmed'),
