@@ -9,10 +9,15 @@ class OwnerPostCard extends StatelessWidget {
     super.key,
     required this.item,
     required this.onViewSightingsPressed,
+    this.onEditPressed,
   });
 
   final OwnerPostHistoryItem item;
   final VoidCallback onViewSightingsPressed;
+
+  /// Owner edits this report (SRS-61). Null hides the button — the caller only
+  /// wires it for reports still being searched for.
+  final VoidCallback? onEditPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -207,16 +212,46 @@ class OwnerPostCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
-                Text(
-                  'RECEIVED ${item.receivedEntriesCount} ENTRIES',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFFFF0000),
-                    letterSpacing: 0.5,
+                Expanded(
+                  child: Text(
+                    'RECEIVED ${item.receivedEntriesCount} ENTRIES',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFFF0000),
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
+                if (onEditPressed != null) ...[
+                  OutlinedButton.icon(
+                    onPressed: onEditPressed,
+                    icon: const Icon(Icons.edit_outlined, size: 15),
+                    label: const Text(
+                      'EDIT',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF555555),
+                      side: const BorderSide(color: Color(0xFFDDDDDD)),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 ElevatedButton.icon(
                   onPressed: onViewSightingsPressed,
                   icon: const Icon(
