@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/ui/skeleton/skeleton.dart';
+import '../../home_map/data/repositories/missing_pet_repository_impl.dart';
 import '../../home_map/domain/entities/missing_pet_entity.dart';
-import '../../home_map/presentation/pet_detail_resolver.dart';
+import '../../home_map/domain/providers/nearby_pets_providers.dart';
+import '../../home_map/presentation/pet_detail_skeleton.dart';
 import '../../profile/domain/providers/profile_providers.dart';
 import '../data/lost_pet_post_repository.dart';
 import 'widgets/collar_marker_widget.dart' show PetImageEyedropperDialog;
@@ -47,10 +49,68 @@ class EditLostPetPostScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: PetDetailResolver(
-        petId: petId,
-        builder: (context, pet) => EditReportForm(pet: pet),
-      ),
+      body: _ResolveReport(petId: petId),
+    );
+  }
+}
+
+/// Always fetches the report fresh from the backend before showing the form —
+/// deliberately NOT `PetDetailResolver`, which prefers a possibly-stale
+/// in-memory copy from the map list. Editing must start from the current DB
+/// values, or a second edit would seed from what the owner saw last time.
+class _ResolveReport extends StatefulWidget {
+  const _ResolveReport({required this.petId});
+
+  final String petId;
+
+  @override
+  State<_ResolveReport> createState() => _ResolveReportState();
+}
+
+class _ResolveReportState extends State<_ResolveReport> {
+  late Future<MissingPetEntity> _fetch;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch = MissingPetRepositoryImpl().getMissingPet(widget.petId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<MissingPetEntity>(
+      future: _fetch,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const PetDetailSkeleton();
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Could not load this report.\n${snapshot.error ?? ''}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _fetch = MissingPetRepositoryImpl()
+                          .getMissingPet(widget.petId);
+                    }),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return EditReportForm(pet: snapshot.data!);
+      },
     );
   }
 }
@@ -184,7 +244,11 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
           .read(lostPetPostRepositoryProvider)
           .updateLostPetPost(pet.id, patch);
       if (!mounted) return;
+      // Owner's "My Posted" list re-fetches, and the map list is re-pulled so
+      // the pet-detail view (which reads the in-memory nearby list first) no
+      // longer shows the pre-edit name / bounty / colour.
       ref.invalidate(ownerPostsProvider);
+      ref.read(nearbyPetsProvider.notifier).refresh();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Changes saved successfully')),
       );
