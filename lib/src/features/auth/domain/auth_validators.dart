@@ -35,4 +35,8 @@ class AuthValidators {
   /// length rule here — login just needs a non-empty value to attempt auth.
   static String? loginPassword(String? v) =>
       (v == null || v.isEmpty) ? 'Enter your password' : null;
+
+  /// Phone is required (UC-01 discrepancy fix).
+  static String? phone(String? v) =>
+      (v == null || v.trim().isEmpty) ? 'Phone number is required' : null;
 }
