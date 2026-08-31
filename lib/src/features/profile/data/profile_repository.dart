@@ -345,7 +345,7 @@ class ProfileRepository {
       // raw `status` column. The two use different words for the same states,
       // and this mapper used to read the column: it matched 'expired' against
       // it, which `pet_status` has never had a value for — expiry is a 7-day
-      // predicate (SRS-91), never stored — so the EXPIRED badge below was
+      // predicate (SRS-95), never stored — so the EXPIRED badge below was
       // unreachable. Falls back to the column only for a backend older than
       // 2026-08-21, where 'expired' genuinely cannot occur.
       final derived = (m['post_status'] as String?)?.toLowerCase();

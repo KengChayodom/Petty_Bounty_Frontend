@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/ui/skeleton/skeleton.dart';
+import '../../../routing/app_router.dart';
 import '../data/models/sighting_activity.dart';
 import '../data/status_tracker_repository.dart';
 import '../domain/providers/status_tracker_providers.dart';
@@ -345,12 +346,16 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   @override
   Widget build(BuildContext context) {
     final timelineAsync = ref.watch(sightingTimelineProvider(widget.petId));
+    // `.valueOrNull`, not `.value`: the latter RE-THROWS when the provider is
+    // in its error state (e.g. the backend connection dropped), which would
+    // crash `build` before the `timelineAsync.when(error: ...)` branch below
+    // gets a chance to render the retry UI.
     final postStatus =
-        ref.watch(petPostStatusProvider(widget.petId)).value;
+        ref.watch(petPostStatusProvider(widget.petId)).valueOrNull;
     // Rejected cards stay on the timeline, wearing their badge: the owner said
     // "not mine", which is a decision worth showing back to them, not an
     // entry to hide. Hiding it would also make the queue's order unreadable.
-    final items = timelineAsync.value ?? const <SightingActivity>[];
+    final items = timelineAsync.valueOrNull ?? const <SightingActivity>[];
     final resolved = _isResolved(postStatus);
 
     return Scaffold(
@@ -374,6 +379,21 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          // SRS-61: edit the report's name / bounty / colour / traits. Hidden
+          // once the search has ended — there is nothing left to edit then.
+          if (!resolved)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Colors.black87),
+              tooltip: 'Edit report',
+              onPressed: () async {
+                final changed = await context.push<bool>(
+                  '${AppRoutes.lostPetPostEdit}/${widget.petId}',
+                );
+                if (changed == true && mounted) _refresh();
+              },
+            ),
+        ],
       ),
       // `.noSpinner`: the pull gesture stays, the progress arc goes. The
       // timeline dropping to its skeleton is the refresh feedback.

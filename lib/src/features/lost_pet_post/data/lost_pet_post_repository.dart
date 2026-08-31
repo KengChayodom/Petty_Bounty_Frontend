@@ -112,6 +112,36 @@ class LostPetPostRepository {
       throw Exception('Failed to submit report: ${response.body}');
     }
   }
+
+  /// Owner edits the editable fields of their own report —
+  /// `PATCH /missing-pets/{id}` (MD-35 / SRS-61). [patch] carries only the
+  /// fields being changed (`pet_name`, `bounty_amount`, `primary_color_hex`,
+  /// `characteristics`); owner scoping is enforced server-side via the JWT, so
+  /// a report that doesn't exist or isn't the caller's comes back as 404.
+  ///
+  /// Deliberately does NOT parse the response body: the PATCH route returns the
+  /// raw inserted row (no RPC projection), where PostgREST serializes the
+  /// `feature_vector` column as a string that breaks `MissingPetModel` — and
+  /// the caller re-reads the pet through the normal GET anyway.
+  Future<void> updateLostPetPost(
+    String petId,
+    Map<String, dynamic> patch,
+  ) async {
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/missing-pets/$petId'),
+      headers: _headers,
+      body: jsonEncode(patch),
+    );
+
+    if (response.statusCode != 200) {
+      String detail = 'Failed to save changes (${response.statusCode}).';
+      try {
+        final err = jsonDecode(response.body) as Map<String, dynamic>;
+        if (err['detail'] != null) detail = err['detail'].toString();
+      } catch (_) {}
+      throw Exception(detail);
+    }
+  }
 }
 
 final lostPetPostRepositoryProvider = Provider<LostPetPostRepository>((ref) {
