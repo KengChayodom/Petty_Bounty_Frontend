@@ -12,12 +12,17 @@ class OwnerTabContent extends StatelessWidget {
     required this.recoversCount,
     required this.postItems,
     required this.onViewSightingsPressed,
+    this.onEditPressed,
   });
 
   final int postsCount;
   final int recoversCount;
   final List<OwnerPostHistoryItem> postItems;
   final ValueChanged<OwnerPostHistoryItem> onViewSightingsPressed;
+
+  /// Owner edits a report (SRS-61). Returns null for a given item to hide the
+  /// button (the caller only offers it for reports still being searched for).
+  final VoidCallback? Function(OwnerPostHistoryItem item)? onEditPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +107,7 @@ class OwnerTabContent extends StatelessWidget {
             return OwnerPostCard(
               item: item,
               onViewSightingsPressed: () => onViewSightingsPressed(item),
+              onEditPressed: onEditPressed?.call(item),
             );
           },
         ),

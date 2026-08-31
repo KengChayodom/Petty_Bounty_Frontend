@@ -283,6 +283,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           },
         );
       },
+      // SRS-61: only a report still being searched for is worth editing —
+      // a rescued/expired case's bounty and traits no longer matter.
+      onEditPressed: (item) => item.status == PostStatus.activeSearch
+          ? () async {
+              final changed = await context.push<bool>(
+                '${AppRoutes.lostPetPostEdit}/${item.id}',
+              );
+              if (changed == true) {
+                ref.invalidate(ownerPostsProvider);
+              }
+            }
+          : null,
     );
   }
 }
