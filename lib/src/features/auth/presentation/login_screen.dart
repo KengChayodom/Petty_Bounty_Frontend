@@ -76,7 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // controller because Supabase auth logs in by email (the user types
         // their email here), so SRS-03/04 email validation is preserved.
         AuthField(
-          label: 'User name',
+          label: 'Email',
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
