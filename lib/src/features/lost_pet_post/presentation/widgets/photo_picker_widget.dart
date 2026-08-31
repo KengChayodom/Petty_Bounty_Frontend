@@ -4,14 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/app_config.dart';
+import '../../../../core/constants/pet_species.dart';
 import '../../../../core/ui/skeleton/skeleton.dart';
 import '../../data/lost_pet_post_repository.dart';
 import '../../domain/providers/lost_pet_post_form_provider.dart';
 
-/// The four species options the backend accepts — shared with
-/// [SpeciesSelectorWidget]'s chip row (kept in sync manually since the two
-/// widgets are deliberately independent files).
-const _speciesOptions = ['Cat', 'Dog', 'Bird'];
+List<String> get _speciesOptions => PetSpecies.labels;
 
 /// Photo picker box (gallery or camera). Once a photo is picked it's
 /// uploaded immediately and sent to the same AI species-detection endpoint

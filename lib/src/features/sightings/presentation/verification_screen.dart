@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
+import '../../../core/constants/pet_species.dart';
 import '../../../core/location/current_fix.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/sighting_repository.dart';
@@ -246,7 +247,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
 
   void _showConfirmationDialog() {
     String? selectedSpecies = _detectedSpecies;
-    final List<String> speciesList = ['Cat', 'Dog', 'Bird', 'Other'];
+    final List<String> speciesList = PetSpecies.labels;
     bool showDropdown = false;
 
     showDialog(

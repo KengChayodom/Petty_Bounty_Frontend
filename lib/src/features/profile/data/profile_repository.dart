@@ -90,31 +90,40 @@ class ProfileRepository {
             ? user.email
             : ((user.userMetadata?['email'] as String?)?.isNotEmpty == true
                 ? user.userMetadata!['email'] as String
-                : (data['email'] as String?) ?? 'chayodom@cmu.ac.th');
+                : (data['email'] as String?));
 
         final phone = ((data['phone'] as String?)?.isNotEmpty == true)
             ? data['phone'] as String
             : ((user.userMetadata?['phone'] as String?)?.isNotEmpty == true
                 ? user.userMetadata!['phone'] as String
-                : '0912131209');
+                : null);
+
+        final displayName = ((data['display_name'] as String?)?.isNotEmpty == true)
+            ? data['display_name'] as String
+            : ((user.userMetadata?['display_name'] as String?)?.isNotEmpty == true
+                ? user.userMetadata!['display_name'] as String
+                : (user.email?.split('@').first ?? 'User'));
 
         return ProfileUserModel.fromJson({
           ...data,
+          'display_name': displayName,
           'email': email,
           'phone': phone,
         });
       }
     } catch (_) {}
 
+    final fallbackEmail = user.email ?? (user.userMetadata?['email'] as String?);
+    final fallbackName = (user.userMetadata?['display_name'] as String?)?.trim();
+
     // Fallback to local session user metadata if API is unreachable
     return ProfileUserModel(
       id: user.id,
-      displayName:
-          (user.userMetadata?['display_name'] as String?)?.trim() ?? 'Hunter Guide',
-      phone: (user.userMetadata?['phone'] as String?)?.trim() ?? '0912131209',
-      email: user.email?.isNotEmpty == true
-          ? user.email!
-          : 'chayodom@cmu.ac.th',
+      displayName: fallbackName?.isNotEmpty == true
+          ? fallbackName!
+          : (fallbackEmail?.split('@').first ?? 'User'),
+      phone: (user.userMetadata?['phone'] as String?)?.trim(),
+      email: fallbackEmail,
       role: (user.userMetadata?['role'] as String?) ?? 'user',
       totalScore: 0,
       profileImageUrl: user.userMetadata?['profile_image_url'] as String?,
@@ -226,7 +235,7 @@ class ProfileRepository {
       final award = m['score_award'] as Map<String, dynamic>?;
       final matches = (m['matches'] as List?) ?? const [];
 
-      // Status derivation — three mutually exclusive cases:
+      // Status derivation — mutually exclusive cases:
       //
       // 1. score_award exists → the pet was recovered and this hunter was paid.
       //    The award is created by owner_decide_sighting() at the moment the
@@ -237,12 +246,12 @@ class ProfileRepository {
       //
       // 3. Matches exist — inspect owner_status on each:
       //    a. EVERY match is "Rejected" by the owner → the owner said "not my
-      //       pet" for every candidate → treat as no match (unmatch).
-      //       This was the bug: the old code left these sightings on
-      //       waitingVerified forever, even after the owner had already decided.
-      //    b. Otherwise (any match is "Pending" or "Confirmed" without an award
-      //       yet) → the search is still open → waitingVerified is honest.
-      //       A Confirmed-Spotted match without an award means the owner said
+      //       pet" for every candidate → treat as no match (unmatch). Without
+      //       this, a fully-rejected sighting stays on waitingVerified forever
+      //       even after the owner has already decided.
+      //    b. Otherwise (any match "Pending", or "Confirmed" without an award
+      //       yet) → the search is still open → waitingVerified is honest. A
+      //       Confirmed-Spotted match without an award means the owner said
       //       "yes I saw this" but nobody has caught the pet yet — still waiting.
       bool isDuplicate = false;
       SightingStatus status;
