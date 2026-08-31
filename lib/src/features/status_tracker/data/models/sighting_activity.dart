@@ -1,6 +1,7 @@
 library;
 
 import 'package:intl/intl.dart';
+import '../../../../core/constants/pet_species.dart';
 
 /// One entry in a missing pet's sighting timeline, as returned by the
 /// backend `GET /missing-pets/{id}/sightings` endpoint (the `sightings_for_pet`
@@ -89,6 +90,20 @@ class SightingActivity {
     );
   }
 
+  /// The AI's detected species for display. Normalised to our canonical label
+  /// when it is one of our known species (so 'cat' and 'Cat' render the same),
+  /// but the backend's own word is kept verbatim when it reports something
+  /// outside our set (e.g. 'Rabbit') — we don't flatten a real detection down
+  /// to 'Other'. Only a genuinely absent value falls back to 'Unknown'.
+  static String _resolveDetectedSpecies(String? raw) {
+    final value = raw?.trim();
+    if (value == null || value.isEmpty) return 'Unknown';
+    final species = PetSpecies.fromString(value);
+    final isKnown =
+        species != PetSpecies.other || value.toLowerCase() == 'other';
+    return isKnown ? species.label : value;
+  }
+
   String get timeFormatted {
     final dt = createdAt;
     if (dt == null) return '';
@@ -109,14 +124,16 @@ class SightingActivity {
       hunterName: (json['hunter_display_name'] as String?)?.trim().isNotEmpty ==
               true
           ? (json['hunter_display_name'] as String).trim()
-          : 'Anonymous',
+          : 'Anonymous Hunter',
       hunterPhone: (json['phone'] as String?)?.trim().isNotEmpty == true
           ? (json['phone'] as String).trim()
           : null,
       imageUrl: (json['image_url'] as String?)?.isNotEmpty == true
           ? json['image_url'] as String
           : null,
-      detectedSpecies: (json['detected_species'] as String?) ?? 'Unknown',
+      detectedSpecies: _resolveDetectedSpecies(
+        json['detected_species'] as String?,
+      ),
       actionType: (json['action_type'] as String?) ?? 'Spotted',
       verificationStatus: (json['verification_status'] as String?) ?? 'Pending',
       // Absent reads as Pending, matching the column's NOT NULL DEFAULT: an

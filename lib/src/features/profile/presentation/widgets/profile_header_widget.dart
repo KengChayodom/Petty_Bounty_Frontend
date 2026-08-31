@@ -60,19 +60,19 @@ class ProfileHeaderWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Tel. ${phone.isNotEmpty ? phone : '0912131209'}',
+                  phone.isNotEmpty ? 'Tel. $phone' : 'Tel. —',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
+                    color: phone.isNotEmpty ? Colors.grey[700] : Colors.grey[400],
                   ),
                 ),
                 Text(
-                  'Email ${email.isNotEmpty ? email : 'chayodom@cmu.ac.th'}',
+                  email.isNotEmpty ? 'Email $email' : 'Email —',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
+                    color: email.isNotEmpty ? Colors.grey[700] : Colors.grey[400],
                   ),
                 ),
               ],

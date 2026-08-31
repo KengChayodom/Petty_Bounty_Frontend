@@ -88,7 +88,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       subtitle: 'Create your account',
       children: [
         AuthField(
-          label: 'User name',
+          label: 'Username',
           controller: _displayNameController,
           textCapitalization: TextCapitalization.words,
           validator: AuthValidators.username,
@@ -105,6 +105,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           controller: _phoneController,
           keyboardType: TextInputType.phone,
           maxLength: 20, // hard cap at the UI (DB column is nullable)
+          validator: AuthValidators.phone,
         ),
         AuthField(
           label: 'Password',
