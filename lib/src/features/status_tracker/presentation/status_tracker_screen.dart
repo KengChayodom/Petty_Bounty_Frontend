@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/ui/skeleton/skeleton.dart';
+import '../../../routing/app_router.dart';
 import '../data/models/sighting_activity.dart';
 import '../data/status_tracker_repository.dart';
 import '../domain/providers/status_tracker_providers.dart';
@@ -374,6 +375,21 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          // SRS-61: edit the report's name / bounty / colour / traits. Hidden
+          // once the search has ended — there is nothing left to edit then.
+          if (!resolved)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Colors.black87),
+              tooltip: 'Edit report',
+              onPressed: () async {
+                final changed = await context.push<bool>(
+                  '${AppRoutes.lostPetPostEdit}/${widget.petId}',
+                );
+                if (changed == true && mounted) _refresh();
+              },
+            ),
+        ],
       ),
       // `.noSpinner`: the pull gesture stays, the progress arc goes. The
       // timeline dropping to its skeleton is the refresh feedback.

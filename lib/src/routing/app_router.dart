@@ -13,6 +13,7 @@ import '../features/sightings/presentation/verification_screen.dart';
 import '../features/sightings/presentation/matching_results_screen.dart';
 import '../features/home_map/presentation/missing_pet_detail_screen.dart';
 import '../features/lost_pet_post/presentation/lost_pet_post_screen.dart';
+import '../features/lost_pet_post/presentation/edit_lost_pet_post_screen.dart';
 import '../features/status_tracker/presentation/status_tracker_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_screen.dart';
 import 'root_navigator_key.dart';
@@ -27,6 +28,7 @@ class AppRoutes {
   static const String verification = '/verification';
   static const String matchingResults = '/matching-results';
   static const String lostPetPost = '/lost-pet-post';
+  static const String lostPetPostEdit = '/lost-pet-post/edit';
   static const String statusTracker = '/status-tracker';
   static const String leaderboard = '/leaderboard';
 }
@@ -82,6 +84,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.lostPetPost,
         name: 'lost-pet-post',
         builder: (context, state) => const LostPetPostScreen(),
+      ),
+
+      // Owner edits an existing report (SRS-61). Reached from the Profile →
+      // Owner tab card and the Status Tracker app bar. The screen resolves the
+      // full report itself, so no `extra` is passed.
+      GoRoute(
+        path: '${AppRoutes.lostPetPostEdit}/:petId',
+        name: 'lost-pet-post-edit',
+        builder: (context, state) => EditLostPetPostScreen(
+          petId: state.pathParameters['petId']!,
+        ),
       ),
 
       // Leaderboard (rank list) — reached from the home nav.
