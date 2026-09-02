@@ -60,6 +60,18 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   // buttons go busy rather than every card at once.
   String? _decidingId;
 
+  // True only while an explicit pull-to-refresh is in flight. It decides
+  // whether a re-fetch is allowed to drop the timeline to its skeleton.
+  //
+  // The skeleton is two placeholder cards. Substituting it for a timeline of
+  // ten collapses the scrollable's extent, which clamps the scroll offset —
+  // and the offset does not come back when the real cards do. So every
+  // confirm/reject threw the owner back to the top of the list, away from the
+  // card they had just ruled on and the one they were about to. A pull gesture
+  // can only start at the top, so there the collapse costs nothing and the
+  // skeleton stays: it is the only feedback `RefreshIndicator.noSpinner` gives.
+  bool _pullRefreshing = false;
+
   /// Whether the report is resolved. `_locallyResolved` (this session's own
   /// end-search tap) always wins; otherwise the backend's derived badge
   /// decides, falling back to the seed passed in only while it's still loading.
@@ -213,6 +225,21 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
     // of showing a stale value. The provider is autoDispose so this is a no-op
     // when the Profile screen is not in the tree — safe to call either way.
     ref.invalidate(ownerPostsProvider);
+  }
+
+  /// Pull-to-refresh: the same re-fetch, but flagged so the timeline is allowed
+  /// to show its skeleton, and awaited so the flag is only cleared once the new
+  /// data has landed.
+  Future<void> _pullToRefresh() async {
+    setState(() => _pullRefreshing = true);
+    _refresh();
+    try {
+      await ref.read(sightingTimelineProvider(widget.petId).future);
+    } catch (_) {
+      // A failed re-fetch is the `error:` branch's story to tell; all this
+      // needs to do either way is stop suppressing the data.
+    }
+    if (mounted) setState(() => _pullRefreshing = false);
   }
 
   Future<void> _confirmRescue() async {
@@ -406,7 +433,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       // `.noSpinner`: the pull gesture stays, the progress arc goes. The
       // timeline dropping to its skeleton is the refresh feedback.
       body: RefreshIndicator.noSpinner(
-        onRefresh: () async => _refresh(),
+        onRefresh: _pullToRefresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -430,7 +457,11 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             ),
             const SizedBox(height: 16),
             timelineAsync.when(
-              skipLoadingOnRefresh: false,
+              // Keep the cards on screen through a decision's re-fetch, and
+              // only through that one — see `_pullRefreshing`. The first load
+              // is unaffected either way: with no previous value to keep,
+              // `loading:` runs regardless and the skeleton still shows.
+              skipLoadingOnRefresh: !_pullRefreshing,
               // Use the reject-filtered `items`, not the raw provider data.
               data: (_) => _buildTimeline(items, resolved),
               loading: () => const ActivityTimelineSkeleton(),
@@ -512,6 +543,10 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       children: [
         for (var i = 0; i < items.length; i++)
           ActivityCard(
+            // Keyed by sighting id so a re-fetch re-uses each card's existing
+            // element (and its already-decoded photo) instead of rebuilding
+            // the column from scratch under the owner's scroll position.
+            key: ValueKey(items[i].id),
             item: items[i],
             isFirst: i == 0,
             isLast: i == items.length - 1,
