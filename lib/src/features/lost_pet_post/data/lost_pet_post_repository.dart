@@ -114,7 +114,7 @@ class LostPetPostRepository {
   }
 
   /// Owner edits the editable fields of their own report —
-  /// `PATCH /missing-pets/{id}` (MD-35 / SRS-61). [patch] carries only the
+  /// `PATCH /missing-pets/{id}` (MD-39 / SRS-66). [patch] carries only the
   /// fields being changed (`pet_name`, `bounty_amount`, `primary_color_hex`,
   /// `characteristics`); owner scoping is enforced server-side via the JWT, so
   /// a report that doesn't exist or isn't the caller's comes back as 404.

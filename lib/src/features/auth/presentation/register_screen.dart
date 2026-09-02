@@ -67,7 +67,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         context.pop();
       }
     } on AuthException catch (e) {
-      // SRS-08: surface a clean "Email already exists" for the duplicate case.
+      // SRS-07: surface a clean "Email already exists" for the duplicate case.
       final alreadyRegistered = e.message.toLowerCase().contains(
         'already registered',
       );

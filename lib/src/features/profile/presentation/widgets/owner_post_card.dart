@@ -15,7 +15,7 @@ class OwnerPostCard extends StatelessWidget {
   final OwnerPostHistoryItem item;
   final VoidCallback onViewSightingsPressed;
 
-  /// Owner edits this report (SRS-61). Null hides the button — the caller only
+  /// Owner edits this report (SRS-66). Null hides the button — the caller only
   /// wires it for reports still being searched for.
   final VoidCallback? onEditPressed;
 
