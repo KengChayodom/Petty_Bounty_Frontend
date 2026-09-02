@@ -108,7 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (!mounted) return;
 
     // Keep our position fresh on the backend so geo-targeted push can find us
-    // (SRS-21/23). The publisher re-reads GPS each tick and skips the denied/
+    // (SRS-24/26). The publisher re-reads GPS each tick and skips the denied/
     // fallback case itself, so denied users never pile up at one point.
     LocationPublisher.instance.start();
 

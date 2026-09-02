@@ -27,8 +27,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   int _selectedTab = 0; // 0 = Hunter, 1 = Pet Owner
 
   Future<void> _logout() async {
-    await FcmService.instance.unregisterForCurrentUser();
-    LocationPublisher.instance.stop();
+    // Read through providers rather than the singletons directly, so the order
+    // below is verifiable (UTC-30). Production resolves the same two objects.
+    await ref.read(pushRegistrationProvider).unregisterForCurrentUser();
+    ref.read(locationTrackingProvider).stop();
     await ref.read(authServiceProvider).signOut();
     // Deliberately NO ref.invalidate here. Invalidating after signOut made the
     // providers refetch immediately in a signed-out state (no access token ->
@@ -38,20 +40,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // unmounts, and the cache is dropped for free.
   }
 
-  void _openEditProfileDialog(String currentName, String? currentPhoto) {
+  void _openEditProfileDialog(
+    String currentName,
+    String? currentPhone,
+    String? currentPhoto,
+  ) {
     showDialog(
       context: context,
       builder: (dialogContext) {
         return EditProfileDialog(
           currentDisplayName: currentName,
+          currentPhone: currentPhone,
           currentPhotoUrl: currentPhoto,
           // Returns whether the save succeeded, so the dialog knows whether
           // it's safe to close (on failure it stays open so the user's
           // typed changes aren't lost and they can just retry).
-          onSave: (newName, newPhoto) async {
+          onSave: (newName, newPhone, newPhoto) async {
             try {
-              await ref.read(userProfileProvider.notifier).updateProfile(
+              await ref
+                  .read(userProfileProvider.notifier)
+                  .updateProfile(
                     displayName: newName,
+                    phone: newPhone,
                     photoUrl: newPhoto,
                   );
               if (mounted) {
@@ -144,6 +154,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   photoUrl: profile.profileImageUrl,
                   onEditPressed: () => _openEditProfileDialog(
                     profile.displayName,
+                    profile.phone,
                     profile.profileImageUrl,
                   ),
                 ),
@@ -152,7 +163,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 32),
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 32,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'Could not load your profile: $err',
@@ -181,16 +196,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _selectedTab == 0
                     ? _buildTabBody(
-                        loading: hunterStatsAsync.isLoading ||
+                        loading:
+                            hunterStatsAsync.isLoading ||
                             hunterHistoryAsync.isLoading,
-                        error: hunterStatsAsync.error ?? hunterHistoryAsync.error,
+                        error:
+                            hunterStatsAsync.error ?? hunterHistoryAsync.error,
                         onRetry: () {
                           ref.invalidate(hunterStatsProvider);
                           ref.invalidate(hunterHistoryProvider);
                         },
                         skeleton: const HunterTabSkeleton(),
-                        content: () =>
-                            _buildHunterTab(hunterStatsAsync, hunterHistoryAsync),
+                        content: () => _buildHunterTab(
+                          hunterStatsAsync,
+                          hunterHistoryAsync,
+                        ),
                       )
                     : _buildTabBody(
                         loading: ownerPostsAsync.isLoading,
@@ -283,7 +302,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           },
         );
       },
-      // SRS-61: only a report still being searched for is worth editing —
+      // SRS-66: only a report still being searched for is worth editing —
       // a rescued/expired case's bounty and traits no longer matter.
       onEditPressed: (item) => item.status == PostStatus.activeSearch
           ? () async {

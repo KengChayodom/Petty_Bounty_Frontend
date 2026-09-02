@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 
@@ -22,9 +23,24 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('[FCM][background] ${message.messageId} data=${message.data}');
 }
 
+/// The slice of [FcmService] the logout path needs, kept narrow on purpose: a
+/// test can implement one method, where it could not build an [FcmService] at
+/// all — the constructor is private and the class reaches the Firebase plugin.
+abstract interface class PushRegistration {
+  Future<void> unregisterForCurrentUser();
+}
+
+/// Injection point for the logout path (MD-34). Production resolves the
+/// singleton, so behaviour is unchanged; a test overrides it. Every other
+/// caller still reaches [FcmService.instance] directly — only the path that
+/// needed to be verifiable was routed through a provider.
+final pushRegistrationProvider = Provider<PushRegistration>(
+  (ref) => FcmService.instance,
+);
+
 /// Owns FCM setup for a signed-in user: permission, backend token
 /// registration (+ refresh), and the three foreground/tap/terminated states.
-class FcmService {
+class FcmService implements PushRegistration {
   FcmService._();
   static final FcmService instance = FcmService._();
 
@@ -116,7 +132,20 @@ class FcmService {
   /// A no-op while signed out — `/devices/register` is JWT-scoped, and the
   /// row must belong to the right user.
   Future<void> syncToken() async {
-    if (_auth.getAuthorizationHeader() == null) {
+    // Reading the session can throw where Supabase was never initialised (a
+    // widget test, or a very early startup failure). The callers treat this
+    // method as fire-and-forget — `LoginScreen._submit` does not await it — so
+    // an escaping error would surface as an unhandled async exception rather
+    // than as anything a user could act on. Not knowing whether we are signed
+    // in is treated the same as being signed out: skip.
+    final String? authHeader;
+    try {
+      authHeader = _auth.getAuthorizationHeader();
+    } catch (e) {
+      debugPrint('[FCM] auth unavailable — skipping token sync: $e');
+      return;
+    }
+    if (authHeader == null) {
       debugPrint('[FCM] not signed in — skipping token sync');
       return;
     }
@@ -149,6 +178,7 @@ class FcmService {
   /// a valid JWT. Order matters: drop the server row first, then invalidate the
   /// token on-device so this handset stops receiving alerts entirely, then
   /// cancel listeners and reset so the next login re-initialises cleanly.
+  @override
   Future<void> unregisterForCurrentUser() async {
     final messaging = FirebaseMessaging.instance;
     try {

@@ -169,12 +169,14 @@ class ProfileRepository {
   /// Update user profile via Backend PATCH /me (display_name, photo_url)
   Future<ProfileUserModel> updateProfile({
     String? displayName,
+    String? phone,
     String? photoUrl,
   }) async {
     final url = Uri.parse('$_baseUrl/me');
     final payload = <String, dynamic>{
-      'display_name': ?displayName,
-      'photo_url': ?photoUrl,
+      if (displayName != null) 'display_name': displayName,
+      if (photoUrl != null) 'photo_url': photoUrl,
+      if (phone != null) 'phone': phone,
     };
 
     final response = await _client.patch(
@@ -186,7 +188,10 @@ class ProfileRepository {
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final data = body['data'] as Map<String, dynamic>;
-      return ProfileUserModel.fromJson(data);
+      final user = _supabase.auth.currentUser;
+      final email = (user?.email?.isNotEmpty == true) ? user!.email : ((user?.userMetadata?['email'] as String?)?.isNotEmpty == true ? user!.userMetadata!['email'] as String : null);
+      return ProfileUserModel.fromJson({...data, if (email != null) 'email': email});
+
     } else {
       final error = jsonDecode(response.body);
       throw Exception(error['detail'] ?? 'Failed to update profile');
@@ -354,7 +359,7 @@ class ProfileRepository {
       // raw `status` column. The two use different words for the same states,
       // and this mapper used to read the column: it matched 'expired' against
       // it, which `pet_status` has never had a value for — expiry is a 7-day
-      // predicate (SRS-85), never stored — so the EXPIRED badge below was
+      // predicate (SRS-87), never stored — so the EXPIRED badge below was
       // unreachable. Falls back to the column only for a backend older than
       // 2026-08-21, where 'expired' genuinely cannot occur.
       final derived = (m['post_status'] as String?)?.toLowerCase();

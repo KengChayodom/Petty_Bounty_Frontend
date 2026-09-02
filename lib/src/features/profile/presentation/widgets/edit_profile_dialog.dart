@@ -7,21 +7,23 @@ import '../../../../core/app_config.dart';
 import '../../../../core/ui/skeleton/skeleton.dart';
 import '../../domain/providers/profile_providers.dart';
 
-/// Modal dialog allowing user to edit Username (display_name) & Profile Picture.
+/// Modal dialog allowing user to edit Username (display_name), Phone, & Profile Picture.
 class EditProfileDialog extends ConsumerStatefulWidget {
   const EditProfileDialog({
     super.key,
     required this.currentDisplayName,
+    this.currentPhone,
     required this.currentPhotoUrl,
     required this.onSave,
   });
 
   final String currentDisplayName;
+  final String? currentPhone;
   final String? currentPhotoUrl;
 
   /// Returns true on success, false on failure — the dialog only closes
   /// itself on true, so a failed save doesn't silently look like it worked.
-  final Future<bool> Function(String newDisplayName, String? newPhotoUrl) onSave;
+  final Future<bool> Function(String newDisplayName, String? newPhone, String? newPhotoUrl) onSave;
 
   @override
   ConsumerState<EditProfileDialog> createState() => _EditProfileDialogState();
@@ -29,6 +31,7 @@ class EditProfileDialog extends ConsumerStatefulWidget {
 
 class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   late TextEditingController _nameController;
+  late TextEditingController _phoneController;
   bool _isSaving = false;
   bool _isUploadingPhoto = false;
 
@@ -41,12 +44,14 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.currentDisplayName);
+    _phoneController = TextEditingController(text: widget.currentPhone);
     _photoUrl = widget.currentPhotoUrl;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -91,6 +96,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
 
   Future<void> _handleSave() async {
     final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -102,18 +108,18 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
     }
 
     setState(() => _isSaving = true);
-    // Wait for the real result before deciding whether to close — closing
-    // unconditionally right after firing this off would show a "successful"
-    // dialog dismissal even when the save actually failed.
-    final success = await widget.onSave(name, _photoUrl);
+    // Wait for the real result before deciding whether to close
+    final success = await widget.onSave(
+      name,
+      phone.isEmpty ? null : phone,
+      _photoUrl,
+    );
     if (!mounted) return;
 
     setState(() => _isSaving = false);
     if (success) {
       Navigator.of(context).pop();
     }
-    // On failure the dialog stays open with the typed name and picked photo
-    // intact, so the user can just retry instead of redoing everything.
   }
 
   ImageProvider? _avatarImage() {
@@ -197,6 +203,29 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
               controller: _nameController,
               decoration: InputDecoration(
                 hintText: 'e.g. Hunter Guide',
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Mobile Number',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                hintText: 'e.g. 0812345678',
                 filled: true,
                 fillColor: Colors.grey[100],
                 border: OutlineInputBorder(

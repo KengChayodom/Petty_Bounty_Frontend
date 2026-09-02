@@ -4,7 +4,7 @@ import 'pet_detail_resolver.dart';
 import 'pet_detail_view.dart';
 
 /// Full-page presentation of the pet detail — the deep-link target opened when
-/// a Bounty Hunter taps an FCM "missing pet nearby" notification (SRS-FR-12).
+/// a Bounty Hunter taps an FCM "missing pet nearby" notification.
 ///
 /// Renders the SAME shared [PetDetailView] as the map bottom sheet (no
 /// duplicate UI). Data is resolved by [PetDetailResolver]: used from memory if

@@ -98,10 +98,9 @@ class SightingActivity {
   static String _resolveDetectedSpecies(String? raw) {
     final value = raw?.trim();
     if (value == null || value.isEmpty) return 'Unknown';
-    final species = PetSpecies.fromString(value);
-    final isKnown =
-        species != PetSpecies.other || value.toLowerCase() == 'other';
-    return isKnown ? species.label : value;
+    // Known species render as our canonical label; anything outside the set
+    // (a legacy 'Other', or a raw detection like 'Rabbit') is kept verbatim.
+    return PetSpecies.fromString(value)?.label ?? value;
   }
 
   String get timeFormatted {
