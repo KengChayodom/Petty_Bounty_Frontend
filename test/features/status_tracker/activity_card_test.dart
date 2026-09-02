@@ -20,10 +20,13 @@ SightingActivity _card({
   String id = 's1',
   String action = 'Spotted',
   String ownerStatus = 'Pending',
+  String hunterName = 'Hunter',
+  String? hunterPhone,
 }) {
   return SightingActivity(
     id: id,
-    hunterName: 'Hunter',
+    hunterName: hunterName,
+    hunterPhone: hunterPhone,
     detectedSpecies: 'Cat',
     actionType: action,
     verificationStatus: 'Pending',
@@ -116,7 +119,64 @@ void main() {
     expect(find.text('YOU SAID NOT MINE'), findsOneWidget);
   });
 
+  testWidgets('the reporting hunter is shown with a number to ring',
+      (tester) async {
+    // Confirming a card is not the end of the owner's job: somebody is standing
+    // next to their pet. The number is what makes the card actionable.
+    await _pump(
+      tester,
+      item: _card(hunterName: 'Somchai', hunterPhone: '0812345678'),
+    );
+
+    expect(find.text('Somchai'), findsOneWidget);
+    expect(find.text('Tel. 0812345678'), findsOneWidget);
+  });
+
+  testWidgets('a hunter with no phone on file gets no phone line',
+      (tester) async {
+    // `users.phone` is optional, so the row has to survive its absence without
+    // printing "Tel. null" or a placeholder number the owner might dial.
+    await _pump(tester, item: _card(hunterName: 'Somchai'));
+
+    expect(find.text('Somchai'), findsOneWidget);
+    expect(find.textContaining('Tel.'), findsNothing);
+    // The avatar falls back to the person icon rather than an empty hole.
+    expect(find.byIcon(Icons.person), findsOneWidget);
+  });
+
   group('SightingActivity.fromJson', () {
+    test('reads the hunter contact fields under their prefixed keys', () {
+      // The RPC namespaces the hunter's profile columns. Reading the bare
+      // `phone` key — which it has never returned — is why the phone line
+      // never once rendered.
+      final item = SightingActivity.fromJson({
+        'id': 's1',
+        'hunter_display_name': 'Somchai',
+        'hunter_phone': '0812345678',
+        'hunter_profile_image_url': 'https://storage.test/somchai.jpg',
+      });
+
+      expect(item.hunterName, 'Somchai');
+      expect(item.hunterPhone, '0812345678');
+      expect(item.hunterProfileImageUrl, 'https://storage.test/somchai.jpg');
+    });
+
+    test('blank contact fields read as absent, not as empty strings', () {
+      // An empty column and a missing one mean the same thing to the card:
+      // nothing to show. An empty-string URL would otherwise reach
+      // CachedNetworkImage and fail a request for it.
+      final item = SightingActivity.fromJson({
+        'id': 's1',
+        'hunter_display_name': '  ',
+        'hunter_phone': '',
+        'hunter_profile_image_url': '   ',
+      });
+
+      expect(item.hunterName, 'Anonymous Hunter');
+      expect(item.hunterPhone, isNull);
+      expect(item.hunterProfileImageUrl, isNull);
+    });
+
     test('reads the owner verdict', () {
       final item = SightingActivity.fromJson({
         'id': 's1',
