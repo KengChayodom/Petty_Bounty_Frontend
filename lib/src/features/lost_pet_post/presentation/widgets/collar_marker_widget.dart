@@ -16,7 +16,6 @@ class CollarMarkerWidget extends ConsumerWidget {
   void _openColorPicker({
     required BuildContext context,
     required WidgetRef ref,
-    required bool isSecondary,
   }) {
     final state = ref.read(lostPetPostFormProvider);
     final notifier = ref.read(lostPetPostFormProvider.notifier);
@@ -31,14 +30,6 @@ class CollarMarkerWidget extends ConsumerWidget {
       return;
     }
 
-    final initialHex = isSecondary
-        ? (state.secondaryColorHex ?? '#FFFFFF')
-        : (state.primaryColorHex ?? '#D0D0D0');
-
-    final otherColorHex = isSecondary
-        ? state.primaryColorHex
-        : state.secondaryColorHex;
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -46,22 +37,8 @@ class CollarMarkerWidget extends ConsumerWidget {
         return PetImageEyedropperDialog(
           imagePath: state.imagePath,
           imageUrl: state.imageUrl,
-          initialHex: initialHex,
-          isSecondary: isSecondary,
-          otherColorHex: otherColorHex,
-          onColorConfirmed: (selectedHex) {
-            if (isSecondary) {
-              notifier.updateSecondaryColor(selectedHex);
-            } else {
-              // If selected primary color matches current secondary color, clear secondary
-              if (state.secondaryColorHex != null &&
-                  selectedHex.toUpperCase() ==
-                      state.secondaryColorHex!.toUpperCase()) {
-                notifier.clearSecondaryColor();
-              }
-              notifier.updateColor(selectedHex);
-            }
-          },
+          initialHex: state.primaryColorHex ?? '#D0D0D0',
+          onColorConfirmed: notifier.updateColor,
         );
       },
     );
@@ -72,13 +49,9 @@ class CollarMarkerWidget extends ConsumerWidget {
     final primaryColorHex = ref.watch(
       lostPetPostFormProvider.select((state) => state.primaryColorHex),
     );
-    final secondaryColorHex = ref.watch(
-      lostPetPostFormProvider.select((state) => state.secondaryColorHex),
-    );
     final notifier = ref.read(lostPetPostFormProvider.notifier);
 
     final currentPrimaryHex = (primaryColorHex ?? '#D0D0D0').toUpperCase();
-    final currentSecondaryHex = secondaryColorHex?.toUpperCase();
 
     Color parseColor(String hex) {
       try {
@@ -90,15 +63,12 @@ class CollarMarkerWidget extends ConsumerWidget {
     }
 
     final primaryColor = parseColor(currentPrimaryHex);
-    final secondaryColor = currentSecondaryHex != null
-        ? parseColor(currentSecondaryHex)
-        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'PET COAT COLORS',
+          'PET COAT COLOR',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
@@ -108,149 +78,57 @@ class CollarMarkerWidget extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
 
-        // 2 TILES ROW MATCHING USER DESIGN (NO HEX CODES SHOWN)
-        Row(
-          children: [
-            // 1. PRIMARY COLOR TILE
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _openColorPicker(
-                  context: context,
-                  ref: ref,
-                  isSecondary: false,
-                ),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: const Color(0xFF0022FF),
-                      width: 2.0,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: primaryColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'PRIMARY',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        // SINGLE COAT COLOR TILE (NO HEX CODE SHOWN)
+        GestureDetector(
+          onTap: () => _openColorPicker(context: context, ref: ref),
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: const Color(0xFF0022FF),
+                width: 2.0,
               ),
-            ),
-            const SizedBox(width: 12),
-
-            // 2. SECONDARY COLOR TILE
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _openColorPicker(
-                  context: context,
-                  ref: ref,
-                  isSecondary: true,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: secondaryColor != null
-                          ? Colors.teal
-                          : Colors.grey.shade300,
-                      width: secondaryColor != null ? 2.0 : 1.2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      if (secondaryColor != null)
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: secondaryColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                        )
-                      else
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[150] ?? Colors.grey[200],
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.block,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          secondaryColor != null ? 'SECONDARY' : 'NONE',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: secondaryColor != null
-                                ? Colors.black87
-                                : Colors.grey.shade400,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      if (secondaryColor != null)
-                        GestureDetector(
-                          onTap: () => notifier.clearSecondaryColor(),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            child: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                    ],
+                    color: primaryColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey.shade300),
                   ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                const Text(
+                  'COAT COLOR',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.colorize,
+                  size: 18,
+                  color: Color(0xFF0022FF),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
 
         const SizedBox(height: 18),
@@ -291,7 +169,7 @@ class PetImageEyedropperDialog extends StatefulWidget {
     this.imagePath,
     this.imageUrl,
     required this.initialHex,
-    required this.isSecondary,
+    this.isSecondary = false,
     this.otherColorHex,
     required this.onColorConfirmed,
   });
