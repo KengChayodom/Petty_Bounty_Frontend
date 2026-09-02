@@ -8,19 +8,25 @@ import '../../../../core/constants/pet_species.dart';
 /// RPC). Only maps columns the RPC actually returns.
 ///
 /// The RPC row shape is:
-///   id, hunter_id, hunter_display_name, image_url, detected_species,
+///   id, hunter_id, hunter_display_name, hunter_phone,
+///   hunter_profile_image_url, image_url, detected_species,
 ///   action_type ('Spotted' | 'Caught'), sighting_status, verification_status,
 ///   owner_status, sighted_location (free text), created_at, similarity_score,
 ///   match_source.
 ///
-/// Note: the hunter's phone number is NOT part of this RPC (the `phone` column
-/// exists on `users` but isn't joined), so [hunterPhone] stays null until the
-/// backend RPC is extended to select it — the UI renders the phone row only
-/// when it's present rather than inventing a placeholder.
+/// The three `hunter_*` profile fields are a LEFT JOIN onto `users`, so name
+/// aside they are null for a hunter who never filled them in. The card renders
+/// the phone row and the avatar only when they're present rather than
+/// inventing a placeholder number or claiming a photo that doesn't exist.
 class SightingActivity {
   final String id;
   final String hunterName;
   final String? hunterPhone;
+
+  /// The hunter's profile photo (`users.profile_image_url`), null when they
+  /// never set one — the card falls back to a person icon.
+  final String? hunterProfileImageUrl;
+
   final String? imageUrl;
   final String detectedSpecies;
 
@@ -51,6 +57,7 @@ class SightingActivity {
     required this.id,
     required this.hunterName,
     this.hunterPhone,
+    this.hunterProfileImageUrl,
     this.imageUrl,
     required this.detectedSpecies,
     required this.actionType,
@@ -74,6 +81,16 @@ class SightingActivity {
   bool get isConfirmed => ownerStatus.toLowerCase() == 'confirmed';
 
   bool get isRejected => ownerStatus.toLowerCase() == 'rejected';
+
+  /// A JSON string with its whitespace stripped, or null when it is absent,
+  /// not a string, or blank. An empty `phone` column and a missing one mean
+  /// the same thing to the card — there is nothing to show — so they are
+  /// flattened to the same null here rather than at each call site.
+  static String? _trimmedOrNull(Object? value) {
+    if (value is! String) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
 
   /// Parse `POINT(lng lat)` WKT into (lat, lng). Note the coordinate order:
   /// WKT/PostGIS write X (longitude) first, then Y (latitude).
@@ -120,13 +137,13 @@ class SightingActivity {
 
     return SightingActivity(
       id: json['id'] as String? ?? '',
-      hunterName: (json['hunter_display_name'] as String?)?.trim().isNotEmpty ==
-              true
-          ? (json['hunter_display_name'] as String).trim()
-          : 'Anonymous Hunter',
-      hunterPhone: (json['phone'] as String?)?.trim().isNotEmpty == true
-          ? (json['phone'] as String).trim()
-          : null,
+      // `hunter_phone` / `hunter_profile_image_url`, not `phone` / the pet's
+      // own `image_url`: the RPC namespaces the hunter's profile columns, and
+      // reading the un-prefixed key meant the phone row never once rendered.
+      hunterName: _trimmedOrNull(json['hunter_display_name']) ??
+          'Anonymous Hunter',
+      hunterPhone: _trimmedOrNull(json['hunter_phone']),
+      hunterProfileImageUrl: _trimmedOrNull(json['hunter_profile_image_url']),
       imageUrl: (json['image_url'] as String?)?.isNotEmpty == true
           ? json['image_url'] as String
           : null,

@@ -72,11 +72,11 @@ class ActivityCard extends StatelessWidget {
     // the missing buttons then say the same thing at once.
     return Opacity(
       opacity: isLocked ? 0.45 : 1.0,
-      child: _timelineRow(nodeColor, nodeIcon),
+      child: _timelineRow(context, nodeColor, nodeIcon),
     );
   }
 
-  Widget _timelineRow(Color nodeColor, IconData nodeIcon) {
+  Widget _timelineRow(BuildContext context, Color nodeColor, IconData nodeIcon) {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -119,7 +119,7 @@ class ActivityCard extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: _card(nodeColor),
+              child: _card(context, nodeColor),
             ),
           ),
         ],
@@ -127,7 +127,7 @@ class ActivityCard extends StatelessWidget {
     );
   }
 
-  Widget _card(Color accent) {
+  Widget _card(BuildContext context, Color accent) {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -155,8 +155,7 @@ class ActivityCard extends StatelessWidget {
               width: double.infinity,
               child: item.imageUrl != null
                   // LayoutBuilder purely to size the decode: the card's own
-                  // width is a tighter ceiling than the screen's, and _card()
-                  // has no BuildContext of its own.
+                  // width is a tighter ceiling than the screen's.
                   ? LayoutBuilder(
                       builder: (context, constraints) => CachedNetworkImage(
                         imageUrl: item.imageUrl!,
@@ -227,42 +226,7 @@ class ActivityCard extends StatelessWidget {
                     ],
                   ),
                 const Divider(height: 20),
-                // Reporting hunter.
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: const Color(0xFFF0F0F0),
-                      child: const Icon(Icons.person,
-                          size: 18, color: Colors.grey),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.hunterName,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        // Phone only when the backend actually supplies it — no
-                        // fabricated placeholder number.
-                        if (item.hunterPhone != null)
-                          Text(
-                            'Tel. ${item.hunterPhone}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
+                _hunterRow(context),
                 // Map affordance — a mini map preview with a pin and a
                 // "VIEW ON MAP" overlay. Shown only with real coords.
                 if (onViewMap != null) ...[
@@ -355,6 +319,83 @@ class ActivityCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Who reported this sighting: their profile photo, their name, and their
+  /// phone number when they have one.
+  ///
+  /// The phone is the point of the row. Confirming a card is not the end of
+  /// the owner's job — somebody is standing next to their pet — so the number
+  /// is what turns a timeline entry into something they can act on. It is
+  /// rendered only when the backend actually joined one; a hunter who never
+  /// filled in `users.phone` gets no line rather than a fabricated one.
+  Widget _hunterRow(BuildContext context) {
+    final phone = item.hunterPhone;
+    return Row(
+      children: [
+        _hunterAvatar(context),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.hunterName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black87,
+                ),
+              ),
+              if (phone != null)
+                Text(
+                  'Tel. $phone',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// The hunter's real profile photo, or the grey person icon when they have
+  /// none — the same fallback while it loads and if it fails, so the row never
+  /// changes height. Decoded to the 32pt box it is painted into: a timeline of
+  /// full-resolution avatar decodes would evict the sighting photos from
+  /// Flutter's image cache for no visible gain.
+  Widget _hunterAvatar(BuildContext context) {
+    const double size = 32;
+    Widget fallback() => Container(
+          width: size,
+          height: size,
+          color: const Color(0xFFF0F0F0),
+          child: const Icon(Icons.person, size: 18, color: Colors.grey),
+        );
+
+    final url = item.hunterProfileImageUrl;
+    return ClipOval(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: url == null
+            ? fallback()
+            : CachedNetworkImage(
+                imageUrl: url,
+                fit: BoxFit.cover,
+                memCacheWidth:
+                    (size * MediaQuery.devicePixelRatioOf(context)).round(),
+                placeholder: (_, _) => fallback(),
+                errorWidget: (_, _, _) => fallback(),
+              ),
       ),
     );
   }
