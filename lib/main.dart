@@ -19,7 +19,7 @@ Future<void> main() async {
     anonKey: AppConfig.supabaseAnonKey,
   );
 
-  // Firebase / FCM push (SRS-FR-12). initializeApp + the background handler do
+  // Firebase / FCM push. initializeApp + the background handler do
   // NOT prompt the user, so they're safe to run at launch. The notification
   // PERMISSION prompt is deliberately NOT triggered here — HomeScreen fires it
   // after the location permission flow settles, so the two native permission

@@ -388,7 +388,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
         ),
         centerTitle: true,
         actions: [
-          // SRS-61: edit the report's name / bounty / colour / traits. Hidden
+          // SRS-66: edit the report's name / bounty / colour / traits. Hidden
           // once the search has ended — there is nothing left to edit then.
           if (!resolved)
             IconButton(

@@ -7,7 +7,7 @@ import '../../../core/auth/auth_service.dart';
 import '../../../core/network/app_http_client.dart';
 
 /// Publishes the hunter's current position to the backend (POST /me/location)
-/// so geo-targeted push (SRS-FR-12) can find who is near a newly reported pet.
+/// so geo-targeted push can find who is near a newly reported pet.
 /// Best-effort and non-blocking — failures are swallowed.
 class LocationApi {
   final AuthService _auth = AuthService();

@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../../core/location/current_fix.dart';
 import 'location_api.dart';
 
 /// Keeps the hunter's `last_location` fresh on the backend while the app is in
-/// use (SRS-23), so a newly reported missing pet can geo-target genuinely
+/// use (SRS-26), so a newly reported missing pet can geo-target genuinely
 /// nearby hunters via `get_nearby_hunters`.
 ///
 /// Design notes (why foreground-only, why a poll):
@@ -21,9 +22,24 @@ import 'location_api.dart';
 ///    map. Denied/disabled location => we skip publishing (never push a
 ///    fallback point, which would cluster denied users at one spot).
 ///
-/// Singleton so [HomeScreen] can [start] it and logout can [stop] it without
-/// provider plumbing — mirrors `FcmService`.
-class LocationPublisher {
+/// The slice of [LocationPublisher] the logout path needs, kept narrow so a
+/// test can implement it without the geolocator plugin.
+abstract interface class LocationTracking {
+  void stop();
+}
+
+/// Injection point for the logout path (MD-34). Production resolves the
+/// singleton, so behaviour is unchanged; a test overrides it.
+final locationTrackingProvider = Provider<LocationTracking>(
+  (ref) => LocationPublisher.instance,
+);
+
+/// Singleton so [HomeScreen] can [start] it directly. Logout goes through
+/// [locationTrackingProvider] instead — the original note here said the
+/// singleton existed so that logout would need no provider plumbing, and that
+/// was true until the logout path had to be made verifiable (MD-34, 2126-09-02).
+/// Mirrors `FcmService`.
+class LocationPublisher implements LocationTracking {
   LocationPublisher._();
   static final LocationPublisher instance = LocationPublisher._();
 
@@ -43,6 +59,7 @@ class LocationPublisher {
 
   /// Stop publishing — call on logout (SRS-20) so a signed-out user is no
   /// longer tracked.
+  @override
   void stop() {
     _timer?.cancel();
     _timer = null;

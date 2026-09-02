@@ -86,7 +86,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LostPetPostScreen(),
       ),
 
-      // Owner edits an existing report (SRS-61). Reached from the Profile →
+      // Owner edits an existing report (SRS-66). Reached from the Profile →
       // Owner tab card and the Status Tracker app bar. The screen resolves the
       // full report itself, so no `extra` is passed.
       GoRoute(
@@ -170,7 +170,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Missing-pet detail — deep-link target for FCM push (SRS-FR-12).
+      // Missing-pet detail — deep-link target for FCM push.
       GoRoute(
         path: '/missing-pets/:petId',
         name: 'missing-pet-detail',
