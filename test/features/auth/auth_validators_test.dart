@@ -1,20 +1,20 @@
 // Unit tests for AuthValidators (pure functions — no widget tree, `test` package).
 //
 // These are true unit tests per the Flutter taxonomy: each exercises a single
-// validator function in isolation. One UTC per validator method (UTC-22…26,
-// continuing the backend UTC-01–21 sequence — "one method = one UTC").
+// validator function in isolation. One UTC per validator method (UTC-20…26,
+// continuing the backend UTC-01–19 sequence — "one method = one UTC").
 //
-//   UTC-22  AuthValidators.username        (MD-27, SRS-02 umbrella)
-//   UTC-23  AuthValidators.email           (MD-28, SRS-03/04)
-//   UTC-24  AuthValidators.password        (MD-29, SRS-05)
-//   UTC-25  AuthValidators.confirmPassword (MD-30, SRS-06)
-//   UTC-26  AuthValidators.loginPassword   (MD-31, SRS-02 umbrella)
+//   UTC-20  AuthValidators.username        (MD-26, SRS-02 umbrella)
+//   UTC-21  AuthValidators.email           (MD-27, SRS-03/04)
+//   UTC-22  AuthValidators.password        (MD-28, SRS-05)
+//   UTC-23  AuthValidators.confirmPassword (MD-29, SRS-06)
+//   UTC-24  AuthValidators.loginPassword   (MD-30, SRS-02 umbrella)
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/auth/domain/auth_validators.dart';
 
 void main() {
-  group('UTC-22 AuthValidators.username', () {
+  group('UTC-20 AuthValidators.username', () {
     test('TC-01 null / empty / whitespace -> "Enter a username"', () {
       expect(AuthValidators.username(null), 'Enter a username');
       expect(AuthValidators.username(''), 'Enter a username');
@@ -25,7 +25,7 @@ void main() {
     });
   });
 
-  group('UTC-23 AuthValidators.email', () {
+  group('UTC-21 AuthValidators.email', () {
     test('TC-01 null / empty -> "Email is required!"', () {
       expect(AuthValidators.email(null), 'Email is required!');
       expect(AuthValidators.email('   '), 'Email is required!');
@@ -40,7 +40,7 @@ void main() {
     });
   });
 
-  group('UTC-24 AuthValidators.password', () {
+  group('UTC-22 AuthValidators.password', () {
     test('TC-01 null / shorter than 6 -> message', () {
       expect(AuthValidators.password(null),
           'Password must be at least 6 characters');
@@ -55,7 +55,7 @@ void main() {
     });
   });
 
-  group('UTC-25 AuthValidators.confirmPassword', () {
+  group('UTC-23 AuthValidators.confirmPassword', () {
     test('TC-01 differs from original -> "Passwords must match"', () {
       expect(AuthValidators.confirmPassword('secret2', 'secret1'),
           'Passwords must match');
@@ -65,7 +65,7 @@ void main() {
     });
   });
 
-  group('UTC-26 AuthValidators.loginPassword', () {
+  group('UTC-24 AuthValidators.loginPassword', () {
     test('TC-01 null / empty -> "Enter your password"', () {
       expect(AuthValidators.loginPassword(null), 'Enter your password');
       expect(AuthValidators.loginPassword(''), 'Enter your password');

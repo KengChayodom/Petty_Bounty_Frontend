@@ -1,9 +1,9 @@
-// Widget tests for the owner's "Edit Report" form (SRS-61 / MD-35 / UD-11).
+// Widget tests for the owner's "Edit Report" form (SRS-66 / MD-39 / UD-11).
 //
 // What these pin:
 //   * the form opens pre-filled from the existing report — an edit screen that
 //     starts blank would silently wipe fields the owner didn't touch;
-//   * a blank name can't be saved (SRS-52 keeps the name required);
+//   * a blank name can't be saved (SRS-57 keeps the name required);
 //   * Save sends exactly the editable fields to PATCH /missing-pets/{id}, with
 //     the untouched characteristics keys carried through;
 //   * a backend failure keeps the page open with the error shown (UD-11 [E1]).

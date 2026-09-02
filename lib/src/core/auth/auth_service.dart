@@ -7,7 +7,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// allowed to call directly). Registration/login/logout happen here; every
 /// FastAPI call then carries the resulting JWT via [getAuthorizationHeader].
 class AuthService {
-  final GoTrueClient _auth = Supabase.instance.client.auth;
+  /// Test seam. Production constructs `AuthService()` and reaches the real
+  /// GoTrue client lazily on first use, exactly as before. A test constructs
+  /// the subclass it needs — resolving [_auth] is deferred to the getter, so
+  /// building the object no longer requires `Supabase.initialize()` to have run.
+  AuthService({GoTrueClient? auth}) : _authOverride = auth;
+
+  final GoTrueClient? _authOverride;
+
+  GoTrueClient get _auth => _authOverride ?? Supabase.instance.client.auth;
 
   /// Register a new Pet Owner / Bounty Hunter. `display_name` and `phone` are
   /// passed as user metadata; the DB trigger `handle_new_user` reads them to
