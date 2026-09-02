@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/pet_species.dart';
 import '../../domain/providers/lost_pet_post_form_provider.dart';
 
-/// Species chip row (Cat/Dog/Bird/Other) — required by the backend schema.
+/// Species chip row (Cat/Dog/Bird) — required by the backend schema.
 class SpeciesSelectorWidget extends ConsumerWidget {
   const SpeciesSelectorWidget({super.key});
 
