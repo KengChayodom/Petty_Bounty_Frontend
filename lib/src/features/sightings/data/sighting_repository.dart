@@ -150,7 +150,7 @@ class SightingRepository {
       'longitude': longitude,
       'detected_species': detectedSpecies,
       'target_pet_id': targetPetId,
-      'notes': ?notes,
+      if (notes != null) 'notes': notes,
     };
 
     final response = await _client.post(
