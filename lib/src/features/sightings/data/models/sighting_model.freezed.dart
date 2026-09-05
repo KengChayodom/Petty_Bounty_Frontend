@@ -28,8 +28,7 @@ mixin _$SightingModel {
   @JsonKey(name: 'sighted_location')
   String get sightedLocation => throw _privateConstructorUsedError;
   @JsonKey(name: 'detected_species')
-  String get detectedSpecies =>
-      throw _privateConstructorUsedError; // ❌ ลบ featureVector ทิ้งไปเรียบร้อยแล้ว
+  String get detectedSpecies => throw _privateConstructorUsedError;
   @JsonKey(name: 'action_type')
   String get actionType => throw _privateConstructorUsedError;
   @JsonKey(name: 'sighting_status')
@@ -254,7 +253,6 @@ class _$SightingModelImpl implements _SightingModel {
   @override
   @JsonKey(name: 'detected_species')
   final String detectedSpecies;
-// ❌ ลบ featureVector ทิ้งไปเรียบร้อยแล้ว
   @override
   @JsonKey(name: 'action_type')
   final String actionType;
@@ -360,7 +358,7 @@ abstract class _SightingModel implements SightingModel {
   @override
   @JsonKey(name: 'detected_species')
   String get detectedSpecies;
-  @override // ❌ ลบ featureVector ทิ้งไปเรียบร้อยแล้ว
+  @override
   @JsonKey(name: 'action_type')
   String get actionType;
   @override
@@ -394,7 +392,11 @@ mixin _$SightingCreateRequest {
   double get latitude => throw _privateConstructorUsedError;
   double get longitude => throw _privateConstructorUsedError;
   @JsonKey(name: 'detected_species')
-  String get detectedSpecies => throw _privateConstructorUsedError;
+  String get detectedSpecies =>
+      throw _privateConstructorUsedError; // `bbox` is retained on the wire shape for backward compatibility with
+// existing generated code, but the backend no longer requires it (the
+// /analyze step caches the feature vector keyed by image_url). The
+// repository sends it as null.
   List<double>? get bbox => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
 
@@ -576,7 +578,15 @@ class _$SightingCreateRequestImpl implements _SightingCreateRequest {
   @override
   @JsonKey(name: 'detected_species')
   final String detectedSpecies;
+// `bbox` is retained on the wire shape for backward compatibility with
+// existing generated code, but the backend no longer requires it (the
+// /analyze step caches the feature vector keyed by image_url). The
+// repository sends it as null.
   final List<double>? _bbox;
+// `bbox` is retained on the wire shape for backward compatibility with
+// existing generated code, but the backend no longer requires it (the
+// /analyze step caches the feature vector keyed by image_url). The
+// repository sends it as null.
   @override
   List<double>? get bbox {
     final value = _bbox;
@@ -666,7 +676,10 @@ abstract class _SightingCreateRequest implements SightingCreateRequest {
   @override
   @JsonKey(name: 'detected_species')
   String get detectedSpecies;
-  @override
+  @override // `bbox` is retained on the wire shape for backward compatibility with
+// existing generated code, but the backend no longer requires it (the
+// /analyze step caches the feature vector keyed by image_url). The
+// repository sends it as null.
   List<double>? get bbox;
   @override
   String? get notes;

@@ -523,7 +523,7 @@ class _ColorTilesRow extends StatelessWidget {
                 ),
               ),
             ),
-            ?trailing,
+            if (trailing != null) trailing,
           ],
         ),
       ),
