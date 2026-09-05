@@ -302,7 +302,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           },
         );
       },
-      // SRS-66: only a report still being searched for is worth editing —
+      // Only a report still being searched for is worth editing —
       // a rescued/expired case's bounty and traits no longer matter.
       onEditPressed: (item) => item.status == PostStatus.activeSearch
           ? () async {

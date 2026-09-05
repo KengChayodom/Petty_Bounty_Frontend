@@ -16,7 +16,6 @@ class MissingPetEntity extends Equatable {
   final String createdAt;
   final double? distanceMeters;
   final String? primaryColorHex;
-  final String? patternId;
 
   /// Owner's public contact info, present only when this pet was fetched by id
   /// (GET /missing-pets/{id}); null for pets that came from a list RPC.
@@ -39,7 +38,6 @@ class MissingPetEntity extends Equatable {
     required this.createdAt,
     this.distanceMeters,
     this.primaryColorHex,
-    this.patternId,
     this.ownerDisplayName,
     this.ownerPhone,
     this.ownerProfileImageUrl,
@@ -48,11 +46,6 @@ class MissingPetEntity extends Equatable {
   /// Get formatted characteristics as a readable string
   String get characteristicsText {
     final parts = <String>[];
-
-    // Use new pattern_id field if available
-    if (patternId != null) {
-      parts.add(_capitalizeFirstLetter(patternId!));
-    }
 
     // Fall back to legacy color from characteristics
     if (primaryColorHex == null && characteristics['color'] != null) {
@@ -78,12 +71,6 @@ class MissingPetEntity extends Equatable {
       parts.add(characteristics['description'].toString());
     }
     return parts.join(' • ');
-  }
-
-  /// Capitalize first letter of a string
-  String _capitalizeFirstLetter(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1);
   }
 
   /// Get formatted bounty amount
@@ -113,5 +100,5 @@ class MissingPetEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, primaryColorHex, patternId];
+  List<Object?> get props => [id, primaryColorHex];
 }

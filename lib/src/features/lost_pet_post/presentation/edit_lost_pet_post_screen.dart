@@ -14,7 +14,7 @@ import 'widgets/collar_marker_widget.dart' show PetImageEyedropperDialog;
 const Color _kAccent = Color(0xFF0022FF);
 final RegExp _kHexColor = RegExp(r'^#[0-9A-Fa-f]{6}$');
 
-/// Owner-facing "Edit Report" screen for a lost-pet report (SRS-66 / MD-39 /
+/// Owner-facing "Edit Report" screen for a lost-pet report (MD-39 /
 /// UD-11). Covers the fields the product captures and the backend accepts on
 /// `PATCH /missing-pets/{id}`: name, bounty, primary coat colour, and the
 /// characteristics blob (traits + optional secondary colour). Species, location,
