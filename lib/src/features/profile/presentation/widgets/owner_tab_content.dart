@@ -20,7 +20,7 @@ class OwnerTabContent extends StatelessWidget {
   final List<OwnerPostHistoryItem> postItems;
   final ValueChanged<OwnerPostHistoryItem> onViewSightingsPressed;
 
-  /// Owner edits a report (SRS-66). Returns null for a given item to hide the
+  /// Owner edits a report. Returns null for a given item to hide the
   /// button (the caller only offers it for reports still being searched for).
   final VoidCallback? Function(OwnerPostHistoryItem item)? onEditPressed;
 

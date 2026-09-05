@@ -97,7 +97,6 @@ extension MissingPetModelX on MissingPetModel {
       createdAt: createdAt,
       distanceMeters: distanceMeters,
       primaryColorHex: primaryColorHex,
-      patternId: patternId,
       ownerDisplayName: ownerDisplayName,
       ownerPhone: ownerPhone,
       ownerProfileImageUrl: ownerProfileImageUrl,
