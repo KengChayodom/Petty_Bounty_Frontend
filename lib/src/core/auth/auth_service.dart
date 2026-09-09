@@ -17,20 +17,20 @@ class AuthService {
 
   GoTrueClient get _auth => _authOverride ?? Supabase.instance.client.auth;
 
-  /// Register a new Pet Owner / Bounty Hunter. `display_name` and `phone` are
+  /// Register a new Pet Owner / Bounty Hunter. `username` and `phone` are
   /// passed as user metadata; the DB trigger `handle_new_user` reads them to
   /// populate the public.users profile row.
   Future<AuthResponse> signUp({
     required String email,
     required String password,
-    required String displayName,
+    required String username,
     String? phone,
   }) {
     return _auth.signUp(
       email: email,
       password: password,
       data: {
-        'display_name': displayName,
+        'username': username,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
       },
     );

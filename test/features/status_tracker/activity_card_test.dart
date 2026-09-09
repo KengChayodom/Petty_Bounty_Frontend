@@ -151,7 +151,7 @@ void main() {
       // never once rendered.
       final item = SightingActivity.fromJson({
         'id': 's1',
-        'hunter_display_name': 'Somchai',
+        'hunter_username': 'Somchai',
         'hunter_phone': '0812345678',
         'hunter_profile_image_url': 'https://storage.test/somchai.jpg',
       });
@@ -167,7 +167,7 @@ void main() {
       // CachedNetworkImage and fail a request for it.
       final item = SightingActivity.fromJson({
         'id': 's1',
-        'hunter_display_name': '  ',
+        'hunter_username': '  ',
         'hunter_phone': '',
         'hunter_profile_image_url': '   ',
       });

@@ -363,8 +363,8 @@ class PetDetailView extends StatelessWidget {
     // Real owner data comes from the by-id detail endpoint. When absent (pet
     // opened from an in-memory list) fall back to a generic label and 'Owner'
     // rather than inventing a name or a "Verified" claim the backend never made.
-    final ownerName = pet.ownerDisplayName?.trim();
-    final displayName = ownerName?.isNotEmpty == true ? ownerName! : 'Pet Owner';
+    final ownerName = pet.ownerUsername?.trim();
+    final username = ownerName?.isNotEmpty == true ? ownerName! : 'Pet Owner';
     final ownerPhone = pet.ownerPhone?.trim();
     final subtitle = ownerPhone?.isNotEmpty == true ? ownerPhone! : 'Owner';
 
@@ -385,7 +385,7 @@ class PetDetailView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  displayName,
+                  username,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,

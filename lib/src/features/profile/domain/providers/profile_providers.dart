@@ -31,14 +31,14 @@ class UserProfileNotifier extends AutoDisposeAsyncNotifier<ProfileUserModel> {
   }
 
   Future<void> updateProfile({
-    String? displayName,
+    String? username,
     String? phone,
     String? photoUrl,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final updated = await _repository.updateProfile(
-        displayName: displayName,
+        username: username,
         phone: phone,
         photoUrl: photoUrl,
       );

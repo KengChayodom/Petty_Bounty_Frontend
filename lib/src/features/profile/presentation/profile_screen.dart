@@ -49,7 +49,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       builder: (dialogContext) {
         return EditProfileDialog(
-          currentDisplayName: currentName,
+          currentUsername: currentName,
           currentPhone: currentPhone,
           currentPhotoUrl: currentPhoto,
           // Returns whether the save succeeded, so the dialog knows whether
@@ -60,7 +60,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               await ref
                   .read(userProfileProvider.notifier)
                   .updateProfile(
-                    displayName: newName,
+                    username: newName,
                     phone: newPhone,
                     photoUrl: newPhoto,
                   );
@@ -148,12 +148,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 // first load: with no spinner it is the only refresh feedback.
                 skipLoadingOnRefresh: false,
                 data: (profile) => ProfileHeaderWidget(
-                  displayName: profile.displayName,
+                  username: profile.username,
                   phone: profile.phone ?? '',
                   email: profile.email ?? '',
                   photoUrl: profile.profileImageUrl,
                   onEditPressed: () => _openEditProfileDialog(
-                    profile.displayName,
+                    profile.username,
                     profile.phone,
                     profile.profileImageUrl,
                   ),
