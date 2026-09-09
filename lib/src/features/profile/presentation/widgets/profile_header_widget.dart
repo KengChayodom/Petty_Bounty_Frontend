@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 class ProfileHeaderWidget extends StatelessWidget {
   const ProfileHeaderWidget({
     super.key,
-    required this.displayName,
+    required this.username,
     required this.phone,
     required this.email,
     this.photoUrl,
     required this.onEditPressed,
   });
 
-  final String displayName;
+  final String username;
   final String phone;
   final String email;
   final String? photoUrl;
@@ -40,7 +40,7 @@ class ProfileHeaderWidget extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      displayName,
+                      username,
                       style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,

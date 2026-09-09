@@ -7,23 +7,23 @@ import '../../../../core/app_config.dart';
 import '../../../../core/ui/skeleton/skeleton.dart';
 import '../../domain/providers/profile_providers.dart';
 
-/// Modal dialog allowing user to edit Username (display_name), Phone, & Profile Picture.
+/// Modal dialog allowing user to edit Username (username), Phone, & Profile Picture.
 class EditProfileDialog extends ConsumerStatefulWidget {
   const EditProfileDialog({
     super.key,
-    required this.currentDisplayName,
+    required this.currentUsername,
     this.currentPhone,
     required this.currentPhotoUrl,
     required this.onSave,
   });
 
-  final String currentDisplayName;
+  final String currentUsername;
   final String? currentPhone;
   final String? currentPhotoUrl;
 
   /// Returns true on success, false on failure — the dialog only closes
   /// itself on true, so a failed save doesn't silently look like it worked.
-  final Future<bool> Function(String newDisplayName, String? newPhone, String? newPhotoUrl) onSave;
+  final Future<bool> Function(String newUsername, String? newPhone, String? newPhotoUrl) onSave;
 
   @override
   ConsumerState<EditProfileDialog> createState() => _EditProfileDialogState();
@@ -43,7 +43,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.currentDisplayName);
+    _nameController = TextEditingController(text: widget.currentUsername);
     _phoneController = TextEditingController(text: widget.currentPhone);
     _photoUrl = widget.currentPhotoUrl;
   }

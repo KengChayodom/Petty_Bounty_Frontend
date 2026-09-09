@@ -54,11 +54,11 @@ class MissingPetRepositoryImpl {
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as Map<String, dynamic>;
-      // owner_display_name / owner_phone are a join the detail endpoint adds
+      // owner_username / owner_phone are a join the detail endpoint adds
       // on top of the pet row (not part of the pet schema), so read them from
       // the raw payload rather than the model.
       return MissingPetModel.fromJson(data).toEntity(
-        ownerDisplayName: data['owner_display_name'] as String?,
+        ownerUsername: data['owner_username'] as String?,
         ownerPhone: data['owner_phone'] as String?,
         ownerProfileImageUrl: data['owner_profile_image_url'] as String?,
       );
@@ -74,11 +74,11 @@ class MissingPetRepositoryImpl {
 
 // Extension to convert Model to Entity
 extension MissingPetModelX on MissingPetModel {
-  /// [ownerDisplayName] / [ownerPhone] / [ownerProfileImageUrl] are supplied
+  /// [ownerUsername] / [ownerPhone] / [ownerProfileImageUrl] are supplied
   /// only by the by-id detail fetch (see [getMissingPet]); list mappings leave
   /// them null.
   MissingPetEntity toEntity({
-    String? ownerDisplayName,
+    String? ownerUsername,
     String? ownerPhone,
     String? ownerProfileImageUrl,
   }) {
@@ -97,7 +97,7 @@ extension MissingPetModelX on MissingPetModel {
       createdAt: createdAt,
       distanceMeters: distanceMeters,
       primaryColorHex: primaryColorHex,
-      ownerDisplayName: ownerDisplayName,
+      ownerUsername: ownerUsername,
       ownerPhone: ownerPhone,
       ownerProfileImageUrl: ownerProfileImageUrl,
     );

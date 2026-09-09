@@ -98,15 +98,15 @@ class ProfileRepository {
                 ? user.userMetadata!['phone'] as String
                 : null);
 
-        final displayName = ((data['display_name'] as String?)?.isNotEmpty == true)
-            ? data['display_name'] as String
-            : ((user.userMetadata?['display_name'] as String?)?.isNotEmpty == true
-                ? user.userMetadata!['display_name'] as String
+        final username = ((data['username'] as String?)?.isNotEmpty == true)
+            ? data['username'] as String
+            : ((user.userMetadata?['username'] as String?)?.isNotEmpty == true
+                ? user.userMetadata!['username'] as String
                 : (user.email?.split('@').first ?? 'User'));
 
         return ProfileUserModel.fromJson({
           ...data,
-          'display_name': displayName,
+          'username': username,
           'email': email,
           'phone': phone,
         });
@@ -114,12 +114,12 @@ class ProfileRepository {
     } catch (_) {}
 
     final fallbackEmail = user.email ?? (user.userMetadata?['email'] as String?);
-    final fallbackName = (user.userMetadata?['display_name'] as String?)?.trim();
+    final fallbackName = (user.userMetadata?['username'] as String?)?.trim();
 
     // Fallback to local session user metadata if API is unreachable
     return ProfileUserModel(
       id: user.id,
-      displayName: fallbackName?.isNotEmpty == true
+      username: fallbackName?.isNotEmpty == true
           ? fallbackName!
           : (fallbackEmail?.split('@').first ?? 'User'),
       phone: (user.userMetadata?['phone'] as String?)?.trim(),
@@ -166,15 +166,15 @@ class ProfileRepository {
     }
   }
 
-  /// Update user profile via Backend PATCH /me (display_name, photo_url)
+  /// Update user profile via Backend PATCH /me (username, photo_url)
   Future<ProfileUserModel> updateProfile({
-    String? displayName,
+    String? username,
     String? phone,
     String? photoUrl,
   }) async {
     final url = Uri.parse('$_baseUrl/me');
     final payload = <String, dynamic>{
-      if (displayName != null) 'display_name': displayName,
+      if (username != null) 'username': username,
       if (photoUrl != null) 'photo_url': photoUrl,
       if (phone != null) 'phone': phone,
     };

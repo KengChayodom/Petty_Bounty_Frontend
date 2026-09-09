@@ -4,14 +4,14 @@ library;
 class RankUser {
   final int rank;
   final String userId;
-  final String displayName;
+  final String username;
   final String? profileImageUrl;
   final int totalScore;
 
   const RankUser({
     required this.rank,
     required this.userId,
-    required this.displayName,
+    required this.username,
     this.profileImageUrl,
     required this.totalScore,
   });
@@ -19,8 +19,8 @@ class RankUser {
   factory RankUser.fromJson(Map<String, dynamic> json) => RankUser(
         rank: (json['rank'] as num?)?.toInt() ?? 0,
         userId: json['user_id'] as String? ?? '',
-        displayName: (json['display_name'] as String?)?.trim().isNotEmpty == true
-            ? (json['display_name'] as String).trim()
+        username: (json['username'] as String?)?.trim().isNotEmpty == true
+            ? (json['username'] as String).trim()
             : 'Anonymous',
         profileImageUrl: (json['profile_image_url'] as String?)?.isNotEmpty == true
             ? json['profile_image_url'] as String

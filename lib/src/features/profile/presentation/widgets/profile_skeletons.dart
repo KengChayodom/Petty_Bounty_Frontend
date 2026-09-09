@@ -24,7 +24,7 @@ class ProfileHeaderSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Skeletonizer(
       child: ProfileHeaderWidget(
-        displayName: BoneMock.name,
+        username: BoneMock.name,
         phone: BoneMock.phone,
         email: BoneMock.email,
         onEditPressed: () {},

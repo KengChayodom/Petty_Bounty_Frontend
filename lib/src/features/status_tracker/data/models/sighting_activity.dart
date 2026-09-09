@@ -8,7 +8,7 @@ import '../../../../core/constants/pet_species.dart';
 /// RPC). Only maps columns the RPC actually returns.
 ///
 /// The RPC row shape is:
-///   id, hunter_id, hunter_display_name, hunter_phone,
+///   id, hunter_id, hunter_username, hunter_phone,
 ///   hunter_profile_image_url, image_url, detected_species,
 ///   action_type ('Spotted' | 'Caught'), sighting_status, verification_status,
 ///   owner_status, sighted_location (free text), created_at, similarity_score,
@@ -140,7 +140,7 @@ class SightingActivity {
       // `hunter_phone` / `hunter_profile_image_url`, not `phone` / the pet's
       // own `image_url`: the RPC namespaces the hunter's profile columns, and
       // reading the un-prefixed key meant the phone row never once rendered.
-      hunterName: _trimmedOrNull(json['hunter_display_name']) ??
+      hunterName: _trimmedOrNull(json['hunter_username']) ??
           'Anonymous Hunter',
       hunterPhone: _trimmedOrNull(json['hunter_phone']),
       hunterProfileImageUrl: _trimmedOrNull(json['hunter_profile_image_url']),

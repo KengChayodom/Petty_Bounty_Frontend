@@ -19,7 +19,7 @@ class MissingPetEntity extends Equatable {
 
   /// Owner's public contact info, present only when this pet was fetched by id
   /// (GET /missing-pets/{id}); null for pets that came from a list RPC.
-  final String? ownerDisplayName;
+  final String? ownerUsername;
   final String? ownerPhone;
   final String? ownerProfileImageUrl;
 
@@ -38,7 +38,7 @@ class MissingPetEntity extends Equatable {
     required this.createdAt,
     this.distanceMeters,
     this.primaryColorHex,
-    this.ownerDisplayName,
+    this.ownerUsername,
     this.ownerPhone,
     this.ownerProfileImageUrl,
   });
