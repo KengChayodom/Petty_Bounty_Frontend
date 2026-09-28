@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../core/theme/app_glass.dart';
 import '../domain/entities/missing_pet_entity.dart';
 
 /// Helper class for creating map markers
 class MarkerHelper {
-  /// Create a marker for the user's current location
+  /// Create a marker for the user's current location.
+  ///
+  /// Just the pin. The radar sweep around it is [UserRadarLayer], a map layer
+  /// rather than part of this marker: it has to reach the search radius, which
+  /// is a distance in metres, and a marker is sized in screen pixels.
   static Marker createUserMarker(LatLng position) {
     return Marker(
       point: position,
@@ -15,7 +20,9 @@ class MarkerHelper {
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.blueAccent, width: 3),
+          // Deliberately neutral: brand orange here would collide with the
+          // ring a `searching` pet carries.
+          border: Border.all(color: Colors.white, width: 3),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.3),
@@ -30,9 +37,9 @@ class MarkerHelper {
             fit: BoxFit.cover,
             // ใส่ errorBuilder เผื่อหารูปไม่เจอ จะได้ไม่พัง
             errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.blue[100],
-                child: const Icon(Icons.person, color: Colors.blue),
+              return const ColoredBox(
+                color: kInk,
+                child: Icon(Icons.person, color: Colors.white),
               );
             },
           ),
@@ -138,9 +145,11 @@ class MarkerHelper {
       point: center,
       radius: radiusMeters,
       useRadiusInMeter: true,
-      color: Colors.blue.withValues(alpha: 0.15),
+      // Kept faint: this is the reach of the search, not a thing to look at,
+      // and it sits under pins that are themselves brand-coloured.
+      color: kBrand.withValues(alpha: 0.08),
       borderStrokeWidth: 2,
-      borderColor: Colors.blue.withValues(alpha: 0.3),
+      borderColor: kBrand.withValues(alpha: 0.28),
     );
   }
 }
