@@ -15,7 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:petty_bounty/src/core/auth/auth_service.dart';
 import 'package:petty_bounty/src/features/auth/presentation/login_screen.dart';
-import 'package:petty_bounty/src/features/auth/presentation/widgets/auth_scaffold.dart';
+import 'package:petty_bounty/src/features/auth/presentation/widgets/glass_auth_scaffold.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _FakeAuthService extends AuthService {
@@ -41,11 +41,19 @@ class _FakeAuthService extends AuthService {
 }
 
 Finder _field(String label) => find.descendant(
-  of: find.widgetWithText(AuthField, label),
+  of: find.widgetWithText(GlassAuthField, label),
   matching: find.byType(TextFormField),
 );
 
 Future<void> _pump(WidgetTester tester, _FakeAuthService auth) async {
+  // The auth screens run a repeating ambient animation. `pumpAndSettle` waits
+  // for the frame queue to drain, which a loop never lets happen, so the tests
+  // take the same "reduce motion" path a user with the accessibility switch on
+  // would get.
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+
   final router = GoRouter(
     initialLocation: '/login',
     routes: [GoRoute(path: '/login', builder: (_, _) => const LoginScreen())],

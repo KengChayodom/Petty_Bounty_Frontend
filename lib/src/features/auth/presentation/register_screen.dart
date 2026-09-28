@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/auth/auth_service.dart';
 import '../domain/auth_validators.dart';
-import 'widgets/auth_scaffold.dart';
+import 'widgets/glass_auth_scaffold.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -22,6 +22,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  // One per field after the first, so Enter / "next" walks the form in order
+  // instead of dismissing the keyboard between every entry.
+  final _emailFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmPasswordFocus = FocusNode();
+
   bool _loading = false;
   String? _error;
 
@@ -32,6 +39,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _emailFocus.dispose();
+    _phoneFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmPasswordFocus.dispose();
     super.dispose();
   }
 
@@ -83,60 +94,82 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AuthScaffold(
+    return GlassAuthScaffold(
       formKey: _formKey,
-      subtitle: 'Create your account',
+      // Five fields: a full-height brandmark would push the first one off a
+      // small screen before the user has typed anything.
+      compact: true,
+      onBack: _loading ? null : () => context.pop(),
+      title: 'Create your account',
+      subtitle: 'Join the hunt and help bring pets home.',
+      footer: GlassFooterLink(
+        question: 'Already have an account?',
+        action: 'Sign in',
+        onTap: _loading ? null : () => context.pop(),
+      ),
       children: [
-        AuthField(
+        GlassAuthField(
           label: 'Username',
+          icon: Icons.person_outline,
           controller: _usernameController,
           textCapitalization: TextCapitalization.words,
           validator: AuthValidators.username,
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _emailFocus.requestFocus(),
         ),
-        AuthField(
+        GlassAuthField(
           label: 'Email',
+          icon: Icons.alternate_email,
           controller: _emailController,
+          focusNode: _emailFocus,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
           validator: AuthValidators.email,
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
         ),
-        AuthField(
+        GlassAuthField(
           label: 'Phone',
+          icon: Icons.phone_outlined,
           controller: _phoneController,
+          focusNode: _phoneFocus,
           keyboardType: TextInputType.phone,
           maxLength: 20, // hard cap at the UI (DB column is nullable)
           validator: AuthValidators.phone,
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
         ),
-        AuthField(
+        GlassAuthField(
           label: 'Password',
+          icon: Icons.lock_outline,
           controller: _passwordController,
+          focusNode: _passwordFocus,
           obscureText: true,
           autofillHints: const [AutofillHints.newPassword],
           validator: AuthValidators.password,
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _confirmPasswordFocus.requestFocus(),
         ),
-        AuthField(
+        GlassAuthField(
           label: 'Confirm password',
+          icon: Icons.lock_reset_outlined,
           controller: _confirmPasswordController,
+          focusNode: _confirmPasswordFocus,
           obscureText: true,
           autofillHints: const [AutofillHints.newPassword],
           validator: (v) =>
               AuthValidators.confirmPassword(v, _passwordController.text),
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) {
+            if (!_loading) _submit();
+          },
         ),
-        if (_error != null) ...[
-          const SizedBox(height: 4),
-          AuthErrorText(_error!),
-        ],
-        const SizedBox(height: 6),
-        AuthPrimaryButton(
+        if (_error != null) GlassErrorBanner(_error!),
+        const SizedBox(height: 4),
+        GlassPrimaryButton(
           label: 'Register',
           loading: _loading,
           onPressed: _submit,
-        ),
-        const SizedBox(height: 24),
-        AuthFooterLink(
-          question: 'You already have account ?',
-          action: 'Sign in',
-          onTap: _loading ? null : () => context.pop(),
         ),
       ],
     );
