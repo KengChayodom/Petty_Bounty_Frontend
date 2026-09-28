@@ -86,7 +86,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LostPetPostScreen(),
       ),
 
-      // Owner edits an existing report (SRS-66). Reached from the Profile →
+      // Owner edits an existing report. Reached from the Profile →
       // Owner tab card and the Status Tracker app bar. The screen resolves the
       // full report itself, so no `extra` is passed.
       GoRoute(

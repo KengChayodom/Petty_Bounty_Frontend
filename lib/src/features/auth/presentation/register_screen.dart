@@ -16,7 +16,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _displayNameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -27,7 +27,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
-    _displayNameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -49,7 +49,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           .signUp(
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            displayName: _displayNameController.text.trim(),
+            username: _usernameController.text.trim(),
             phone: _phoneController.text.trim(),
           );
 
@@ -89,7 +89,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       children: [
         AuthField(
           label: 'Username',
-          controller: _displayNameController,
+          controller: _usernameController,
           textCapitalization: TextCapitalization.words,
           validator: AuthValidators.username,
         ),

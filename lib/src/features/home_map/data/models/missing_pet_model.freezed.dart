@@ -47,8 +47,6 @@ mixin _$MissingPetModel {
   double? get similarity => throw _privateConstructorUsedError;
   @JsonKey(name: 'primary_color_hex')
   String? get primaryColorHex => throw _privateConstructorUsedError;
-  @JsonKey(name: 'pattern_id')
-  String? get patternId => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -78,8 +76,7 @@ abstract class $MissingPetModelCopyWith<$Res> {
       @JsonKey(name: 'created_at') String createdAt,
       @JsonKey(name: 'distance_meters') double? distanceMeters,
       double? similarity,
-      @JsonKey(name: 'primary_color_hex') String? primaryColorHex,
-      @JsonKey(name: 'pattern_id') String? patternId});
+      @JsonKey(name: 'primary_color_hex') String? primaryColorHex});
 }
 
 /// @nodoc
@@ -111,7 +108,6 @@ class _$MissingPetModelCopyWithImpl<$Res, $Val extends MissingPetModel>
     Object? distanceMeters = freezed,
     Object? similarity = freezed,
     Object? primaryColorHex = freezed,
-    Object? patternId = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -178,10 +174,6 @@ class _$MissingPetModelCopyWithImpl<$Res, $Val extends MissingPetModel>
           ? _value.primaryColorHex
           : primaryColorHex // ignore: cast_nullable_to_non_nullable
               as String?,
-      patternId: freezed == patternId
-          ? _value.patternId
-          : patternId // ignore: cast_nullable_to_non_nullable
-              as String?,
     ) as $Val);
   }
 }
@@ -210,8 +202,7 @@ abstract class _$$MissingPetModelImplCopyWith<$Res>
       @JsonKey(name: 'created_at') String createdAt,
       @JsonKey(name: 'distance_meters') double? distanceMeters,
       double? similarity,
-      @JsonKey(name: 'primary_color_hex') String? primaryColorHex,
-      @JsonKey(name: 'pattern_id') String? patternId});
+      @JsonKey(name: 'primary_color_hex') String? primaryColorHex});
 }
 
 /// @nodoc
@@ -241,7 +232,6 @@ class __$$MissingPetModelImplCopyWithImpl<$Res>
     Object? distanceMeters = freezed,
     Object? similarity = freezed,
     Object? primaryColorHex = freezed,
-    Object? patternId = freezed,
   }) {
     return _then(_$MissingPetModelImpl(
       id: null == id
@@ -308,10 +298,6 @@ class __$$MissingPetModelImplCopyWithImpl<$Res>
           ? _value.primaryColorHex
           : primaryColorHex // ignore: cast_nullable_to_non_nullable
               as String?,
-      patternId: freezed == patternId
-          ? _value.patternId
-          : patternId // ignore: cast_nullable_to_non_nullable
-              as String?,
     ));
   }
 }
@@ -335,8 +321,7 @@ class _$MissingPetModelImpl implements _MissingPetModel {
       @JsonKey(name: 'created_at') required this.createdAt,
       @JsonKey(name: 'distance_meters') this.distanceMeters,
       this.similarity,
-      @JsonKey(name: 'primary_color_hex') this.primaryColorHex,
-      @JsonKey(name: 'pattern_id') this.patternId})
+      @JsonKey(name: 'primary_color_hex') this.primaryColorHex})
       : _characteristics = characteristics,
         _featureVector = featureVector;
 
@@ -399,13 +384,10 @@ class _$MissingPetModelImpl implements _MissingPetModel {
   @override
   @JsonKey(name: 'primary_color_hex')
   final String? primaryColorHex;
-  @override
-  @JsonKey(name: 'pattern_id')
-  final String? patternId;
 
   @override
   String toString() {
-    return 'MissingPetModel(id: $id, ownerId: $ownerId, petName: $petName, species: $species, characteristics: $characteristics, bountyAmount: $bountyAmount, latitude: $latitude, longitude: $longitude, lastSeenTime: $lastSeenTime, imageUrl: $imageUrl, featureVector: $featureVector, status: $status, createdAt: $createdAt, distanceMeters: $distanceMeters, similarity: $similarity, primaryColorHex: $primaryColorHex, patternId: $patternId)';
+    return 'MissingPetModel(id: $id, ownerId: $ownerId, petName: $petName, species: $species, characteristics: $characteristics, bountyAmount: $bountyAmount, latitude: $latitude, longitude: $longitude, lastSeenTime: $lastSeenTime, imageUrl: $imageUrl, featureVector: $featureVector, status: $status, createdAt: $createdAt, distanceMeters: $distanceMeters, similarity: $similarity, primaryColorHex: $primaryColorHex)';
   }
 
   @override
@@ -439,9 +421,7 @@ class _$MissingPetModelImpl implements _MissingPetModel {
             (identical(other.similarity, similarity) ||
                 other.similarity == similarity) &&
             (identical(other.primaryColorHex, primaryColorHex) ||
-                other.primaryColorHex == primaryColorHex) &&
-            (identical(other.patternId, patternId) ||
-                other.patternId == patternId));
+                other.primaryColorHex == primaryColorHex));
   }
 
   @JsonKey(ignore: true)
@@ -463,8 +443,7 @@ class _$MissingPetModelImpl implements _MissingPetModel {
       createdAt,
       distanceMeters,
       similarity,
-      primaryColorHex,
-      patternId);
+      primaryColorHex);
 
   @JsonKey(ignore: true)
   @override
@@ -498,8 +477,7 @@ abstract class _MissingPetModel implements MissingPetModel {
           @JsonKey(name: 'created_at') required final String createdAt,
           @JsonKey(name: 'distance_meters') final double? distanceMeters,
           final double? similarity,
-          @JsonKey(name: 'primary_color_hex') final String? primaryColorHex,
-          @JsonKey(name: 'pattern_id') final String? patternId}) =
+          @JsonKey(name: 'primary_color_hex') final String? primaryColorHex}) =
       _$MissingPetModelImpl;
 
   factory _MissingPetModel.fromJson(Map<String, dynamic> json) =
@@ -546,9 +524,6 @@ abstract class _MissingPetModel implements MissingPetModel {
   @override
   @JsonKey(name: 'primary_color_hex')
   String? get primaryColorHex;
-  @override
-  @JsonKey(name: 'pattern_id')
-  String? get patternId;
   @override
   @JsonKey(ignore: true)
   _$$MissingPetModelImplCopyWith<_$MissingPetModelImpl> get copyWith =>

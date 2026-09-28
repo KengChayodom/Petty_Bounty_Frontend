@@ -28,20 +28,20 @@ class _FakeAuthService extends AuthService {
   int calls = 0;
   String? seenEmail;
   String? seenPassword;
-  String? seenDisplayName;
+  String? seenUsername;
   String? seenPhone;
 
   @override
   Future<AuthResponse> signUp({
     required String email,
     required String password,
-    required String displayName,
+    required String username,
     String? phone,
   }) async {
     calls++;
     seenEmail = email;
     seenPassword = password;
-    seenDisplayName = displayName;
+    seenUsername = username;
     seenPhone = phone;
     if (throwing != null) throw throwing!;
     return response ?? AuthResponse();
@@ -125,7 +125,7 @@ void main() {
       // SRS-08: the entered values reach the credential store, email trimmed.
       expect(auth.seenEmail, 'kim@example.com');
       expect(auth.seenPassword, 'secret123');
-      expect(auth.seenDisplayName, 'Kim');
+      expect(auth.seenUsername, 'Kim');
       expect(auth.seenPhone, '0812345678');
       // SRS-09: the success notice is always shown.
       expect(find.text('Registration successful'), findsOneWidget);

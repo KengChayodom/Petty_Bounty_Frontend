@@ -25,7 +25,6 @@ class MissingPetModel with _$MissingPetModel {
     @JsonKey(name: 'distance_meters') double? distanceMeters,
     double? similarity,
     @JsonKey(name: 'primary_color_hex') String? primaryColorHex,
-    @JsonKey(name: 'pattern_id') String? patternId,
   }) = _MissingPetModel;
 
   factory MissingPetModel.fromJson(Map<String, dynamic> json) =>

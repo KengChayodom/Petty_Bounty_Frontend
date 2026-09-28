@@ -12,7 +12,6 @@ class LostPetPostRequest {
   final DateTime lastSeenTime;
   final String imageUrl;
   final String? primaryColorHex;
-  final String? patternId;
 
   const LostPetPostRequest({
     required this.petName,
@@ -24,7 +23,6 @@ class LostPetPostRequest {
     required this.lastSeenTime,
     required this.imageUrl,
     this.primaryColorHex,
-    this.patternId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -39,6 +37,5 @@ class LostPetPostRequest {
         'last_seen_time': lastSeenTime.toUtc().toIso8601String(),
         'image_url': imageUrl,
         'primary_color_hex': primaryColorHex,
-        'pattern_id': patternId,
       };
 }

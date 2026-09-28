@@ -203,7 +203,7 @@ class _UserBoardState extends ConsumerState<_UserBoard> {
                   imageUrl: u.profileImageUrl,
                   avatarFallback:
                       const Icon(Icons.person, size: 20, color: Colors.grey),
-                  title: u.displayName,
+                  title: u.username,
                   trailing: Text(
                     '${u.totalScore}',
                     style: const TextStyle(
@@ -266,7 +266,7 @@ class _YourStanding extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    me.displayName.toUpperCase(),
+                    me.username.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
