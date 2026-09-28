@@ -124,6 +124,18 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
     final data = analysis?['data'] as Map<String, dynamic>?;
     final detectedSpecies = data?['species'] as String?;
 
+    // The coat colour measured from this photo, the same measurement the
+    // matcher takes from a sighting, becomes the form's default. The owner
+    // can still change it in the coat colour step. A colour left over from a
+    // previous photo is cleared, since it describes a different picture.
+    final measuredColorHex = data?['primary_color_hex'] as String?;
+    final formNotifier = ref.read(lostPetPostFormProvider.notifier);
+    if (measuredColorHex != null) {
+      formNotifier.updateColor(measuredColorHex);
+    } else {
+      formNotifier.clearColor();
+    }
+
     if (analysis != null &&
         analysis['status'] == 'success' &&
         detectedSpecies != null) {

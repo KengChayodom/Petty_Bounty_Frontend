@@ -27,7 +27,6 @@ _$MissingPetModelImpl _$$MissingPetModelImplFromJson(
       distanceMeters: (json['distance_meters'] as num?)?.toDouble(),
       similarity: (json['similarity'] as num?)?.toDouble(),
       primaryColorHex: json['primary_color_hex'] as String?,
-      patternId: json['pattern_id'] as String?,
     );
 
 Map<String, dynamic> _$$MissingPetModelImplToJson(
@@ -49,5 +48,4 @@ Map<String, dynamic> _$$MissingPetModelImplToJson(
       'distance_meters': instance.distanceMeters,
       'similarity': instance.similarity,
       'primary_color_hex': instance.primaryColorHex,
-      'pattern_id': instance.patternId,
     };

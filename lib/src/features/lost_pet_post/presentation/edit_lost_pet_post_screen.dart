@@ -14,7 +14,10 @@ import 'widgets/collar_marker_widget.dart' show PetImageEyedropperDialog;
 const Color _kAccent = Color(0xFF0022FF);
 final RegExp _kHexColor = RegExp(r'^#[0-9A-Fa-f]{6}$');
 
-/// Owner-facing "Edit Report" screen for a lost-pet report (SRS-66 / MD-39 /
+// Swatch shown while a report has no coat colour. Display only, never sent.
+const String _kNoColorSwatch = '#D0D0D0';
+
+/// Owner-facing "Edit Report" screen for a lost-pet report (MD-39 /
 /// UD-11). Covers the fields the product captures and the backend accepts on
 /// `PATCH /missing-pets/{id}`: name, bounty, primary coat colour, and the
 /// characteristics blob (traits + optional secondary colour). Species, location,
@@ -132,7 +135,9 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
   late final TextEditingController _traitsController;
   late final TextEditingController _bountyController;
 
-  late String _primaryColorHex;
+  // Null when the report has no coat colour. Nothing is sent until the owner
+  // picks one, so a save never invents a colour that matching would read.
+  String? _primaryColorHex;
   String? _secondaryColorHex;
   late bool _isBountyMode;
   bool _isSaving = false;
@@ -165,12 +170,12 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
             : null;
   }
 
-  String _seedPrimaryHex(MissingPetEntity pet, Map<String, dynamic> chars) {
+  String? _seedPrimaryHex(MissingPetEntity pet, Map<String, dynamic> chars) {
     final fromColumn = pet.primaryColorHex?.toUpperCase();
     if (fromColumn != null && _kHexColor.hasMatch(fromColumn)) return fromColumn;
     final fromChars = chars['color']?.toString().toUpperCase();
     if (fromChars != null && _kHexColor.hasMatch(fromChars)) return fromChars;
-    return '#D4AF37'; // same neutral default the create form starts from
+    return null;
   }
 
   @override
@@ -192,7 +197,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
         imageUrl: widget.pet.imageUrl,
         initialHex: isSecondary
             ? (_secondaryColorHex ?? '#FFFFFF')
-            : _primaryColorHex,
+            : (_primaryColorHex ?? _kNoColorSwatch),
         isSecondary: isSecondary,
         otherColorHex: isSecondary ? _primaryColorHex : _secondaryColorHex,
         onColorConfirmed: (hex) {
@@ -223,7 +228,9 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
     // Start from the existing blob so keys we don't touch (breed, size,
     // markings, description...) survive the edit.
     final characteristics = Map<String, dynamic>.from(pet.characteristics);
-    characteristics['color'] = _primaryColorHex;
+    if (_primaryColorHex != null) {
+      characteristics['color'] = _primaryColorHex;
+    }
     characteristics['traits'] = traits.isNotEmpty ? traits : 'Standard';
     if (_secondaryColorHex != null) {
       characteristics['secondary_color'] = _secondaryColorHex;
@@ -234,7 +241,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
     final patch = <String, dynamic>{
       'pet_name': _nameController.text.trim(),
       'bounty_amount': _isBountyMode ? _bountyAmount : 0.0,
-      'primary_color_hex': _primaryColorHex,
+      if (_primaryColorHex != null) 'primary_color_hex': _primaryColorHex,
       'characteristics': characteristics,
     };
 
@@ -291,7 +298,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 title: 'COAT COLOURS',
                 icon: Icons.palette_outlined,
                 child: _ColorTilesRow(
-                  primaryHex: _primaryColorHex,
+                  primaryHex: _primaryColorHex ?? _kNoColorSwatch,
                   secondaryHex: _secondaryColorHex,
                   onPickPrimary: () => _openColorPicker(isSecondary: false),
                   onPickSecondary: () => _openColorPicker(isSecondary: true),
@@ -523,7 +530,7 @@ class _ColorTilesRow extends StatelessWidget {
                 ),
               ),
             ),
-            ?trailing,
+            if (trailing != null) trailing,
           ],
         ),
       ),

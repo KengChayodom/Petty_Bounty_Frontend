@@ -4,7 +4,7 @@ library;
 
 class ProfileUserModel {
   final String id;
-  final String displayName;
+  final String username;
   final String? phone;
   final String? email;
   final String role;
@@ -13,7 +13,7 @@ class ProfileUserModel {
 
   const ProfileUserModel({
     required this.id,
-    required this.displayName,
+    required this.username,
     this.phone,
     this.email,
     required this.role,
@@ -24,7 +24,7 @@ class ProfileUserModel {
   factory ProfileUserModel.fromJson(Map<String, dynamic> json) {
     return ProfileUserModel(
       id: json['id'] as String? ?? '',
-      displayName: json['display_name'] as String? ?? 'User',
+      username: json['username'] as String? ?? 'User',
       phone: json['phone'] as String?,
       email: json['email'] as String?,
       role: json['role'] as String? ?? 'user',
