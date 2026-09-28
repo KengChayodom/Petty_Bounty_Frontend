@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_glass.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 
 /// Full-screen skeleton for the map tab's cold start — the window between app
@@ -35,12 +36,9 @@ class HomeMapSkeleton extends StatelessWidget {
               top: padding.top + 16,
               left: 16,
               right: 16,
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Padding(
+              child: const GlassSurface(
+                opacity: 0.68,
+                child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
@@ -67,15 +65,31 @@ class HomeMapSkeleton extends StatelessWidget {
             Positioned(
               right: 16,
               bottom: padding.bottom + 110,
-              child: const Bone.circle(size: 40),
+              child: const GlassSurface(
+                borderRadius: BorderRadius.all(Radius.circular(22)),
+                child: SizedBox(width: 44, height: 44),
+              ),
             ),
 
-            // Capsule bottom nav.
+            // Capsule bottom nav. The real bar's camera disc is reserved too,
+            // so nothing shifts when the map arrives underneath.
             Positioned(
               left: 16,
               right: 16,
               bottom: padding.bottom + 16,
-              child: const Bone(height: 65, uniRadius: 35),
+              child: const Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.bottomCenter,
+                children: [
+                  GlassSurface(
+                    borderRadius: BorderRadius.all(Radius.circular(35)),
+                    // Width must be stated: a Stack loosens its children, so a
+                    // bare height would let the bar collapse to nothing.
+                    child: SizedBox(height: 65, width: double.infinity),
+                  ),
+                  Positioned(top: -18, child: Bone.circle(size: 70)),
+                ],
+              ),
             ),
 
             // Why the screen is empty. Real text, not a bone — this is the one
@@ -87,20 +101,20 @@ class HomeMapSkeleton extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: kInk.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Text(
                   caption,
-                  style: TextStyle(
-                    color: Colors.grey[700],
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
