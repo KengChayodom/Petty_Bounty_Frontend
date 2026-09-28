@@ -25,7 +25,7 @@ class LostPetPostFormState {
   const LostPetPostFormState({
     this.petName = '',
     this.species = 'Dog',
-    this.primaryColorHex = '#D4AF37',
+    this.primaryColorHex,
     this.traits = '',
     this.isBountyMode = false,
     this.bountyAmount = 10000.0,
