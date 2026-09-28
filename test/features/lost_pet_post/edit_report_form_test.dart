@@ -6,7 +6,9 @@
 //   * a blank name can't be saved (SRS-57 keeps the name required);
 //   * Save sends exactly the editable fields to PATCH /missing-pets/{id}, with
 //     the untouched characteristics keys carried through;
-//   * a backend failure keeps the page open with the error shown (UD-11 [E1]).
+//   * a backend failure keeps the page open with the error shown (UD-11 [E1]);
+//   * a report with no coat colour is saved without one. Matching reads this
+//     column, so a placeholder written on save would act as a real colour.
 //
 // No network: the form takes a seeded entity directly and the repository is a
 // fake, so neither the pet-detail resolver nor the photo eyedropper is reached.
@@ -39,6 +41,7 @@ class _FakeRepo extends Fake implements LostPetPostRepository {
 MissingPetEntity _pet({
   double bounty = 1000,
   Map<String, dynamic>? characteristics,
+  String? primaryColorHex = '#333333',
 }) {
   return MissingPetEntity(
     id: 'pet-1',
@@ -58,7 +61,7 @@ MissingPetEntity _pet({
     imageUrl: 'https://example.test/mochi.jpg',
     status: 'Searching',
     createdAt: '2026-08-01T10:00:00Z',
-    primaryColorHex: '#333333',
+    primaryColorHex: primaryColorHex,
   );
 }
 
@@ -171,6 +174,25 @@ void main() {
     expect(find.textContaining('not owned by you'), findsOneWidget);
     // still on the form
     expect(find.text('SAVE CHANGES'), findsOneWidget);
+  });
+
+  testWidgets('a report with no coat colour is saved without inventing one',
+      (tester) async {
+    final repo = await _pump(
+      tester,
+      pet: _pet(
+        primaryColorHex: null,
+        characteristics: {'traits': 'shy, one white paw'},
+      ),
+    );
+
+    await tester.tap(find.text('SAVE CHANGES'));
+    await tester.pump();
+
+    final patch = repo.lastPatch!;
+    expect(patch.containsKey('primary_color_hex'), isFalse);
+    final chars = patch['characteristics'] as Map<String, dynamic>;
+    expect(chars.containsKey('color'), isFalse);
   });
 
   testWidgets('HELP FREE mode sends bounty 0', (tester) async {

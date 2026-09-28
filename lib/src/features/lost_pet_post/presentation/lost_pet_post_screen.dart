@@ -140,7 +140,8 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
       petName: formState.petName.trim(),
       species: formState.species,
       characteristics: {
-        "color": formState.primaryColorHex,
+        if (formState.primaryColorHex != null)
+          "color": formState.primaryColorHex,
         "traits": formState.traits.trim().isNotEmpty
             ? formState.traits.trim()
             : "Standard",
