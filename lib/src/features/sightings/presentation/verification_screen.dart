@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/constants/pet_species.dart';
+import '../../../core/theme/app_glass.dart';
 import '../../../core/location/current_fix.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/sighting_repository.dart';
@@ -127,13 +128,15 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       final position = await _getCurrentLocation();
       _currentPosition = position;
 
-      await ref.read(sightingNotifierProvider.notifier).createTargetedSighting(
-        imageUrl: _uploadedImageUrl!,
-        latitude: position.latitude,
-        longitude: position.longitude,
-        detectedSpecies: widget.targetSpecies ?? 'Other',
-        targetPetId: widget.targetPetId!,
-      );
+      await ref
+          .read(sightingNotifierProvider.notifier)
+          .createTargetedSighting(
+            imageUrl: _uploadedImageUrl!,
+            latitude: position.latitude,
+            longitude: position.longitude,
+            detectedSpecies: widget.targetSpecies ?? 'Other',
+            targetPetId: widget.targetPetId!,
+          );
 
       if (mounted) {
         // Show the sent acknowledgement instead of a snackbar. The targeted
@@ -288,7 +291,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             padding: const EdgeInsets.all(4),
                             child: const CircleAvatar(
                               radius: 16,
-                              backgroundColor: Color(0xFFED7645),
+                              backgroundColor: kBrand,
                               child: Icon(
                                 Icons.question_mark,
                                 color: Colors.white,
@@ -304,7 +307,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                         text: TextSpan(
                           style: const TextStyle(
                             fontSize: 22,
-                            color: Colors.black87,
+                            color: kInk,
                             fontFamily: 'serif',
                           ),
                           children: [
@@ -330,7 +333,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                                 _confirmSpecies(_detectedSpecies!, context),
                             child: const CircleAvatar(
                               radius: 30,
-                              backgroundColor: Colors.green,
+                              backgroundColor: Color(0xFF047857),
                               child: Icon(
                                 Icons.check,
                                 color: Colors.white,
@@ -347,7 +350,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                             },
                             child: const CircleAvatar(
                               radius: 30,
-                              backgroundColor: Colors.red,
+                              backgroundColor: kBrandErrorDeep,
                               child: Icon(
                                 Icons.close,
                                 color: Colors.white,
@@ -404,8 +407,10 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          border: Border.all(color: Colors.orange.shade300),
+                          color: kBrand.withValues(alpha: 0.08),
+                          border: Border.all(
+                            color: kBrand.withValues(alpha: 0.35),
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -413,7 +418,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                           children: [
                             Icon(
                               Icons.warning_amber_rounded,
-                              color: Colors.orange.shade700,
+                              color: kBrandDeep,
                               size: 18,
                             ),
                             const SizedBox(width: 8),
@@ -424,7 +429,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                                 "result in a penalty score deduction if flagged by an admin.",
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.orange.shade800,
+                                  color: kBrandDeep,
                                 ),
                               ),
                             ),
@@ -527,11 +532,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
 
           if (!_isLoading && _errorMessage != null)
             Container(
-              color: Colors.black87,
+              color: kInk,
               child: Center(
                 child: Text(
                   _errorMessage!,
-                  style: const TextStyle(color: Colors.redAccent, fontSize: 18),
+                  style: const TextStyle(color: kBrandError, fontSize: 18),
                 ),
               ),
             ),

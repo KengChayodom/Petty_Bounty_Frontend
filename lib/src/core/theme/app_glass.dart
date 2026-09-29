@@ -17,28 +17,44 @@ const Color kBrand = Color(0xFFF7791E);
 /// The lighter end of the brand gradient, and the tint for anything active.
 const Color kBrandLight = Color(0xFFFFA24C);
 
-/// The deep brown every dark surface in the app settles into.
+/// Brand orange for TYPE AND ICONS on a light surface.
+///
+/// [kBrand] measures about 2.7:1 against white — under WCAG AA's 4.5:1 for
+/// text and even under the 3:1 for a UI component — so it may only be used as
+/// a fill behind white, never as the foreground itself. This one clears 5.3:1
+/// on white and 4.9:1 on [kDaylight].
+const Color kBrandDeep = Color(0xFFB34C05);
+
+/// The deep brown the app writes with — type, icons, hairlines.
 const Color kInk = Color(0xFF120A04);
+
+/// The warm cream every page settles into.
+const Color kDaylight = Color(0xFFFFF3E6);
 
 /// Errors on a dark surface — the usual blood red vibrates there.
 const Color kBrandError = Color(0xFFFF8A7A);
 
+/// Errors on a light surface. [kBrandError] is a tint lifted for dark
+/// backdrops and has nowhere near enough contrast against white.
+const Color kBrandErrorDeep = Color(0xFFC0342B);
+
 /// A frosted pane for chrome that floats over live content: the map's status
 /// card, its recenter button and its nav capsule.
 ///
-/// Tinted with [kInk] rather than with white, because it is laid over map
-/// tiles, which are light. A white pane on a light map has nothing to separate
-/// it from the background; a dark one reads instantly and lets white type sit
-/// on it at full contrast.
+/// White, and deliberately near-opaque. A pale pane over pale map tiles has
+/// almost nothing to separate it from the background, so the separation has to
+/// come from somewhere: [opacity] carries most of it, with an ink hairline and
+/// a soft shadow doing the rest. Lowering [opacity] much below the default
+/// undoes that and the pane starts to dissolve into the tiles.
 class GlassSurface extends StatelessWidget {
   const GlassSurface({
     super.key,
     required this.child,
     this.borderRadius = const BorderRadius.all(Radius.circular(20)),
     this.padding = EdgeInsets.zero,
-    this.opacity = 0.62,
+    this.opacity = 0.86,
     this.blur = 16,
-    this.borderOpacity = 0.16,
+    this.borderOpacity = 0.10,
     this.shadow = true,
   });
 
@@ -46,8 +62,8 @@ class GlassSurface extends StatelessWidget {
   final BorderRadius borderRadius;
   final EdgeInsetsGeometry padding;
 
-  /// How much ink the pane carries. Raise it where type has to stay legible
-  /// over busy tiles, lower it where the pane is mostly decorative.
+  /// How opaque the white is. Raise it where type has to stay legible over
+  /// busy tiles, lower it only where the pane is purely decorative.
   final double opacity;
 
   final double blur;
@@ -62,9 +78,9 @@ class GlassSurface extends StatelessWidget {
         boxShadow: shadow
             ? [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.28),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
+                  color: kInk.withValues(alpha: 0.16),
+                  blurRadius: 22,
+                  offset: const Offset(0, 6),
                 ),
               ]
             : null,
@@ -77,9 +93,9 @@ class GlassSurface extends StatelessWidget {
             padding: padding,
             decoration: BoxDecoration(
               borderRadius: borderRadius,
-              color: kInk.withValues(alpha: opacity),
+              color: Colors.white.withValues(alpha: opacity),
               border: Border.all(
-                color: Colors.white.withValues(alpha: borderOpacity),
+                color: kInk.withValues(alpha: borderOpacity),
                 width: 1,
               ),
             ),

@@ -11,7 +11,7 @@ import '../domain/providers/status_tracker_providers.dart';
 import '../../profile/domain/providers/profile_providers.dart';
 import 'widgets/activity_card.dart';
 import 'widgets/activity_timeline_skeleton.dart';
-import 'widgets/full_image_view.dart';
+import '../../../core/ui/full_image_view.dart';
 import 'widgets/sighting_map_view.dart';
 import 'widgets/status_stepper.dart';
 

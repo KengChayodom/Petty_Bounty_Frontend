@@ -37,7 +37,7 @@ class HomeMapSkeleton extends StatelessWidget {
               left: 16,
               right: 16,
               child: const GlassSurface(
-                opacity: 0.68,
+                opacity: 0.93,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
@@ -101,11 +101,11 @@ class HomeMapSkeleton extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: kInk.withValues(alpha: 0.72),
+                  color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
+                      color: kInk.withValues(alpha: 0.14),
                       blurRadius: 14,
                       offset: const Offset(0, 4),
                     ),
@@ -113,8 +113,8 @@ class HomeMapSkeleton extends StatelessWidget {
                 ),
                 child: Text(
                   caption,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: kInk.withValues(alpha: 0.7),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),

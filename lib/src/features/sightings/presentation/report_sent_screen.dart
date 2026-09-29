@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/theme/app_glass.dart';
+
+/// Ink at half strength, as a literal so it can sit in const styles.
+const Color _muted = Color(0x80120A04);
+
 /// Success acknowledgement after a sighting report is sent to a pet's owner.
 ///
 /// Takes plain pet fields (not a MatchModel) so both the discovery flow — which
@@ -23,13 +28,10 @@ class ReportSentScreen extends StatelessWidget {
   final String? petImageUrl;
   final double? bounty;
 
-  static const _orange = Color(0xFFEE6D33);
-  static const _blue = Color(0xFF3B5BFE);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kDaylight,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
@@ -39,11 +41,14 @@ class ReportSentScreen extends StatelessWidget {
                 width: 130,
                 height: 130,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFCDEEDA),
+                  color: Color(0xFFD8F0E3),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle_outline_rounded,
-                    size: 76, color: Color(0xFF2E7D5B)),
+                child: const Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 76,
+                  color: Color(0xFF047857),
+                ),
               ),
             ),
             const SizedBox(height: 28),
@@ -54,7 +59,7 @@ class ReportSentScreen extends StatelessWidget {
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.0,
-                  color: Colors.black87,
+                  color: kInk,
                 ),
               ),
             ),
@@ -66,7 +71,7 @@ class ReportSentScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black54,
+                  color: Color(0x99120A04),
                 ),
               ),
             ),
@@ -79,7 +84,7 @@ class ReportSentScreen extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.0,
-                color: Color(0xFF9E9E9E),
+                color: Color(0x8C120A04),
               ),
             ),
             const SizedBox(height: 12),
@@ -87,9 +92,12 @@ class ReportSentScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: _blue.withValues(alpha: 0.12),
-                  child: const Icon(Icons.verified_user_outlined,
-                      color: _blue, size: 20),
+                  backgroundColor: kBrandDeep.withValues(alpha: 0.12),
+                  child: const Icon(
+                    Icons.verified_user_outlined,
+                    color: kBrandDeep,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -98,7 +106,7 @@ class ReportSentScreen extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,
-                    color: _blue,
+                    color: kBrandDeep,
                   ),
                 ),
               ],
@@ -109,7 +117,7 @@ class ReportSentScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => context.go('/'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _blue,
+                  backgroundColor: kBrandDeep,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -131,10 +139,10 @@ class ReportSentScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEEEEEE)),
+        border: Border.all(color: kInk.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: kInk.withValues(alpha: 0.07),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -148,13 +156,13 @@ class ReportSentScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: kInk.withValues(alpha: 0.07),
                   backgroundImage:
                       (petImageUrl != null && petImageUrl!.isNotEmpty)
-                          ? CachedNetworkImageProvider(petImageUrl!)
-                          : null,
+                      ? CachedNetworkImageProvider(petImageUrl!)
+                      : null,
                   child: (petImageUrl == null || petImageUrl!.isEmpty)
-                      ? const Icon(Icons.pets, color: Colors.grey)
+                      ? Icon(Icons.pets, color: kInk.withValues(alpha: 0.35))
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -163,7 +171,7 @@ class ReportSentScreen extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
-                    color: Colors.black87,
+                    color: kInk,
                   ),
                 ),
               ],
@@ -185,7 +193,7 @@ class ReportSentScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey,
+                          color: _muted,
                         ),
                       ),
                       Text(
@@ -193,7 +201,7 @@ class ReportSentScreen extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
-                          color: _orange,
+                          color: kBrand,
                         ),
                       ),
                     ],
@@ -207,19 +215,22 @@ class ReportSentScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey,
+                        color: _muted,
                       ),
                     ),
                     const Spacer(),
-                    const Icon(Icons.access_time_rounded,
-                        size: 14, color: Colors.grey),
+                    const Icon(
+                      Icons.access_time_rounded,
+                      size: 14,
+                      color: _muted,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       DateFormat('dd MMM yyyy, HH:mm').format(sentAt),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: kInk,
                       ),
                     ),
                   ],
