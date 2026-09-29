@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/models/rank_models.dart';
 import '../domain/leaderboard_providers.dart';
@@ -65,7 +66,9 @@ class LeaderboardScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(children: [_UserBoard(), _BountyBoard()]),
+        body: const ContentWidth(
+          child: TabBarView(children: [_UserBoard(), _BountyBoard()]),
+        ),
       ),
     );
   }
