@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_glass.dart';
 import '../../../../core/ui/skeleton/skeleton.dart';
@@ -68,76 +69,85 @@ class GlassAuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kInk,
-      body: _Ambient(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            const _Backdrop(),
-            const _Scrim(),
-            SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // Centre the column on a tall screen, but let it scroll away
-                  // from the keyboard on a short one.
-                  final minHeight = math.max(0.0, constraints.maxHeight - 44);
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: minHeight),
-                      child: Center(
-                        child: ConstrainedBox(
-                          // Keeps the card a card on a tablet instead of an
-                          // 800px-wide letterbox.
-                          constraints: const BoxConstraints(maxWidth: 420),
-                          child: _Entrance(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _Brandmark(compact: compact),
-                                SizedBox(height: compact ? 22 : 30),
-                                // Deliberately not floating. The brandmark and
-                                // the backdrop carry the motion; the card is
-                                // what the user is reading and typing into, so
-                                // it stays put.
-                                _GlassCard(
-                                  formKey: formKey,
-                                  title: title,
-                                  subtitle: subtitle,
-                                  children: children,
-                                ),
-                                if (footer != null) ...[
-                                  const SizedBox(height: 24),
-                                  footer!,
+    // The OS paints the status bar over this screen, and its icons default to
+    // light — invisible on a cream backdrop. `dark` here means dark icons.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: kDaylight,
+        body: _Ambient(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const _Backdrop(),
+              const _Scrim(),
+              SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Centre the column on a tall screen, but let it scroll away
+                    // from the keyboard on a short one.
+                    final minHeight = math.max(0.0, constraints.maxHeight - 44);
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: minHeight),
+                        child: Center(
+                          child: ConstrainedBox(
+                            // Keeps the card a card on a tablet instead of an
+                            // 800px-wide letterbox.
+                            constraints: const BoxConstraints(maxWidth: 420),
+                            child: _Entrance(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _Brandmark(compact: compact),
+                                  SizedBox(height: compact ? 22 : 30),
+                                  // Deliberately not floating. The brandmark and
+                                  // the backdrop carry the motion; the card is
+                                  // what the user is reading and typing into, so
+                                  // it stays put.
+                                  _GlassCard(
+                                    formKey: formKey,
+                                    title: title,
+                                    subtitle: subtitle,
+                                    children: children,
+                                  ),
+                                  if (footer != null) ...[
+                                    const SizedBox(height: 24),
+                                    footer!,
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-            if (onBack != null)
-              SafeArea(
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 4),
-                    child: IconButton(
-                      onPressed: onBack,
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      color: Colors.white,
-                      tooltip: 'Back',
+              if (onBack != null)
+                SafeArea(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 4),
+                      child: IconButton(
+                        onPressed: onBack,
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        color: kInk,
+                        tooltip: 'Back',
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -342,9 +352,9 @@ class _PaintedBackdrop extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF3B1F57), // dusk violet
-            Color(0xFF8E3B22), // ember
-            Color(0xFFF08A32), // late sun
+            Color(0xFFFFFBF5), // first light
+            Color(0xFFFFE6C9), // warm haze
+            Color(0xFFFFC98F), // low sun
           ],
           stops: [0.0, 0.55, 1.0],
         ),
@@ -359,7 +369,7 @@ class _PaintedBackdrop extends StatelessWidget {
             top: -110,
             left: -80,
             size: 320,
-            color: Color(0x73A97BE0),
+            color: Color(0x59FFFFFF),
             cycles: 1,
             drift: Offset(26, 18),
           ),
@@ -367,7 +377,7 @@ class _PaintedBackdrop extends StatelessWidget {
             top: 120,
             right: -120,
             size: 340,
-            color: Color(0x66FF8A3D),
+            color: Color(0x4DFFAE6B),
             cycles: 2,
             phase: 0.33,
             drift: Offset(-18, 26),
@@ -376,7 +386,7 @@ class _PaintedBackdrop extends StatelessWidget {
             bottom: -140,
             left: -60,
             size: 400,
-            color: Color(0x80FFC46B),
+            color: Color(0x66FFD9A8),
             cycles: 1,
             phase: 0.6,
             drift: Offset(22, -20),
@@ -481,7 +491,7 @@ class _PawPrintPainter extends CustomPainter {
         // The drift tilts the print a little as it goes, so it reads as
         // floating rather than as sliding on rails.
         p[3] * 2 * math.pi + math.sin(t) * 0.05,
-        Paint()..color = Colors.white.withValues(alpha: p[4]),
+        Paint()..color = kInk.withValues(alpha: p[4] * 0.55),
       );
     }
   }
@@ -545,7 +555,7 @@ class _Scrim extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0x38120A04), Color(0x8A120A04), Color(0xC7100803)],
+          colors: [Color(0x0DFFFFFF), Color(0x4DFFFFFF), Color(0x91FFFFFF)],
           stops: [0.0, 0.5, 1.0],
         ),
       ),
@@ -584,7 +594,7 @@ class _Brandmark extends StatelessWidget {
                 offset: Offset(0, 14 + lift * 6),
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3 - lift * 0.06),
+                color: kInk.withValues(alpha: 0.16 - lift * 0.04),
                 blurRadius: 24 + lift * 8,
                 offset: Offset(0, 10 + lift * 5),
               ),
@@ -613,18 +623,11 @@ class _Brandmark extends StatelessWidget {
           'Petty Bounty',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white,
+            color: kInk,
             fontSize: compact ? 26 : 34,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.5,
             height: 1.1,
-            shadows: const [
-              Shadow(
-                color: Color(0x73000000),
-                offset: Offset(0, 2),
-                blurRadius: 12,
-              ),
-            ],
           ),
         ),
         if (!compact) ...[
@@ -633,7 +636,7 @@ class _Brandmark extends StatelessWidget {
             'Bring them home.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: kInk.withValues(alpha: 0.6),
               fontSize: 15,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.3,
@@ -671,7 +674,7 @@ class _GlassCard extends StatelessWidget {
         borderRadius: radius,
         boxShadow: [
           BoxShadow(
-            color: Color(0x59000000),
+            color: Color(0x24AD6A2E),
             blurRadius: 40,
             offset: Offset(0, 18),
           ),
@@ -686,7 +689,7 @@ class _GlassCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: radius,
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.22),
+                color: Colors.white.withValues(alpha: 0.9),
                 width: 1,
               ),
               // A touch brighter at the top edge, so the pane catches light
@@ -695,8 +698,8 @@ class _GlassCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withValues(alpha: 0.18),
-                  Colors.white.withValues(alpha: 0.07),
+                  Colors.white.withValues(alpha: 0.82),
+                  Colors.white.withValues(alpha: 0.62),
                 ],
               ),
             ),
@@ -708,7 +711,7 @@ class _GlassCard extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: kInk,
                       fontSize: 23,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
@@ -718,7 +721,7 @@ class _GlassCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.66),
+                      color: kInk.withValues(alpha: 0.62),
                       fontSize: 14,
                       height: 1.35,
                     ),
@@ -824,9 +827,9 @@ class _GlassAuthFieldState extends State<GlassAuthField> {
         onFieldSubmitted: widget.onFieldSubmitted,
         maxLength: widget.maxLength,
         textCapitalization: widget.textCapitalization,
-        cursorColor: kBrandLight,
+        cursorColor: kBrand,
         style: const TextStyle(
-          color: Colors.white,
+          color: kInk,
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
@@ -834,7 +837,7 @@ class _GlassAuthFieldState extends State<GlassAuthField> {
           labelText: widget.label,
           counterText: '',
           filled: true,
-          fillColor: Colors.white.withValues(alpha: _focused ? 0.16 : 0.10),
+          fillColor: Colors.white.withValues(alpha: _focused ? 0.95 : 0.78),
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -843,7 +846,7 @@ class _GlassAuthFieldState extends State<GlassAuthField> {
           prefixIcon: Icon(
             widget.icon,
             size: 20,
-            color: _focused ? kBrandLight : Colors.white.withValues(alpha: 0.6),
+            color: _focused ? kBrandDeep : kInk.withValues(alpha: 0.45),
           ),
           suffixIcon: widget.obscureText
               ? IconButton(
@@ -853,13 +856,13 @@ class _GlassAuthFieldState extends State<GlassAuthField> {
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
                     size: 20,
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: kInk.withValues(alpha: 0.45),
                   ),
                   tooltip: _obscured ? 'Show password' : 'Hide password',
                 )
               : null,
           labelStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.62),
+            color: kInk.withValues(alpha: 0.5),
             fontSize: 15,
           ),
           // Resolved per state rather than fixed: a floating label is shown by
@@ -868,11 +871,11 @@ class _GlassAuthFieldState extends State<GlassAuthField> {
           floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
             final Color color;
             if (states.contains(WidgetState.error)) {
-              color = kBrandError;
+              color = kBrandErrorDeep;
             } else if (states.contains(WidgetState.focused)) {
-              color = kBrandLight;
+              color = kBrandDeep;
             } else {
-              color = Colors.white.withValues(alpha: 0.6);
+              color = kInk.withValues(alpha: 0.5);
             }
             return TextStyle(
               color: color,
@@ -881,14 +884,14 @@ class _GlassAuthFieldState extends State<GlassAuthField> {
             );
           }),
           errorStyle: const TextStyle(
-            color: kBrandError,
+            color: kBrandErrorDeep,
             fontWeight: FontWeight.w500,
           ),
-          border: border(Colors.white.withValues(alpha: 0.16), 1),
-          enabledBorder: border(Colors.white.withValues(alpha: 0.16), 1),
-          focusedBorder: border(kBrandLight, 1.5),
-          errorBorder: border(kBrandError.withValues(alpha: 0.7), 1),
-          focusedErrorBorder: border(kBrandError, 1.5),
+          border: border(kInk.withValues(alpha: 0.12), 1),
+          enabledBorder: border(kInk.withValues(alpha: 0.12), 1),
+          focusedBorder: border(kBrandDeep, 1.5),
+          errorBorder: border(kBrandErrorDeep.withValues(alpha: 0.6), 1),
+          focusedErrorBorder: border(kBrandErrorDeep, 1.5),
         ),
       ),
     );
@@ -982,19 +985,19 @@ class GlassErrorBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: kBrandError.withValues(alpha: 0.14),
+          color: kBrandErrorDeep.withValues(alpha: 0.08),
           borderRadius: const BorderRadius.all(Radius.circular(14)),
-          border: Border.all(color: kBrandError.withValues(alpha: 0.4)),
+          border: Border.all(color: kBrandErrorDeep.withValues(alpha: 0.35)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline, color: kBrandError, size: 19),
+            const Icon(Icons.error_outline, color: kBrandErrorDeep, size: 19),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 message,
                 style: const TextStyle(
-                  color: kBrandError,
+                  color: kBrandErrorDeep,
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                   height: 1.3,
@@ -1032,17 +1035,14 @@ class GlassFooterLink extends StatelessWidget {
       children: [
         Text(
           question,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.68),
-            fontSize: 14.5,
-          ),
+          style: TextStyle(color: kInk.withValues(alpha: 0.62), fontSize: 14.5),
         ),
         // A text button rather than a bare GestureDetector: this is the only
         // way off the screen, and it needs a real 48px tap target.
         TextButton(
           onPressed: onTap,
           style: TextButton.styleFrom(
-            foregroundColor: kBrandLight,
+            foregroundColor: kBrandDeep,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             minimumSize: const Size(0, 44),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,

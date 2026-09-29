@@ -6,9 +6,17 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/full_image_view.dart';
+import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/models/match_model.dart';
 import '../data/sighting_repository.dart';
 import 'report_sent_screen.dart';
+
+/// Rescue is an outcome, not an action the way spotting is: the pet is safe.
+/// The app already reads this green as "confirmed" on the verification and
+/// matching screens, so it carries the same meaning here.
+const Color _rescueGreen = Color(0xFF047857);
 
 /// Final review before a discovery sighting is reported to the matched pet's
 /// owner. The sighting itself was already persisted upstream (at species
@@ -38,8 +46,6 @@ class FinalReviewScreen extends ConsumerStatefulWidget {
 }
 
 class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
-  static const _orange = Color(0xFFEE6D33);
-
   // 'Spotted' (just saw it) or 'Caught' (rescued it). Defaults to Spotted,
   // matching the value the sighting was created with. Sending writes the
   // chosen value to the backend via PATCH /sightings/{id}/action.
@@ -49,18 +55,18 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kDaylight,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: kDaylight,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back, color: kInk),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'FINAL REVIEW',
           style: TextStyle(
-            color: Colors.black87,
+            color: kInk,
             fontSize: 15,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.5,
@@ -92,29 +98,42 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
   }
 
   Widget _sectionLabel(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 1.0,
-          color: Color(0xFF9E9E9E),
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 1.0,
+      color: Color(0x8C120A04),
+    ),
+  );
 
   Widget _yourPhoto() {
     return Column(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: SizedBox(
-            width: 130,
-            height: 130,
-            child: widget.imagePath != null
-                ? Image.file(File(widget.imagePath!), fit: BoxFit.cover)
-                : Container(
-                    color: const Color(0xFFF0F0F0),
-                    child: const Icon(Icons.pets, size: 48, color: Colors.grey),
+        GestureDetector(
+          onTap: widget.imagePath == null
+              ? null
+              : () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => FullImageView.file(path: widget.imagePath!),
                   ),
+                ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              width: 130,
+              height: 130,
+              child: widget.imagePath != null
+                  ? Image.file(File(widget.imagePath!), fit: BoxFit.cover)
+                  : Container(
+                      color: kInk.withValues(alpha: 0.06),
+                      child: Icon(
+                        Icons.pets,
+                        size: 48,
+                        color: kInk.withValues(alpha: 0.3),
+                      ),
+                    ),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -124,7 +143,7 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
             fontSize: 12,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.0,
-            color: Colors.black87,
+            color: kInk,
           ),
         ),
       ],
@@ -136,7 +155,7 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.black,
+          color: kInk,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
@@ -144,7 +163,7 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundColor: Colors.grey[800],
+              backgroundColor: kInk.withValues(alpha: 0.8),
               backgroundImage: widget.match.imageUrl.isNotEmpty
                   ? CachedNetworkImageProvider(widget.match.imageUrl)
                   : null,
@@ -165,7 +184,7 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
             Text(
               '฿ ${widget.match.bountyAmount.toStringAsFixed(0)}',
               style: const TextStyle(
-                color: _orange,
+                color: kBrand,
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
               ),
@@ -192,6 +211,8 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
             value: 'Caught',
             label: 'RESCUE',
             icon: Icons.volunteer_activism_rounded,
+            accent: _rescueGreen,
+            accentText: _rescueGreen,
           ),
         ),
       ],
@@ -202,6 +223,11 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
     required String value,
     required String label,
     required IconData icon,
+
+    /// The colour this tile wears while it is the chosen one. Brand orange is
+    /// the default because spotting is the ordinary case.
+    Color accent = kBrand,
+    Color accentText = kBrandDeep,
   }) {
     final selected = _actionType == value;
     return GestureDetector(
@@ -209,10 +235,12 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFFDEEE4) : const Color(0xFFF2F2F2),
+          color: selected
+              ? accent.withValues(alpha: 0.10)
+              : kInk.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? _orange : Colors.transparent,
+            color: selected ? accent : Colors.transparent,
             width: 2,
           ),
         ),
@@ -223,14 +251,20 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: selected ? _orange : Colors.grey[400],
+                  backgroundColor: selected
+                      ? accent
+                      : kInk.withValues(alpha: 0.3),
                   child: Icon(icon, color: Colors.white, size: 22),
                 ),
                 if (selected)
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 8,
-                    backgroundColor: _orange,
-                    child: Icon(Icons.check, size: 11, color: Colors.white),
+                    backgroundColor: accent,
+                    child: const Icon(
+                      Icons.check,
+                      size: 11,
+                      color: Colors.white,
+                    ),
                   ),
               ],
             ),
@@ -241,7 +275,7 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
-                color: selected ? _orange : Colors.grey[600],
+                color: selected ? accentText : kInk.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -280,8 +314,11 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
                       point: point,
                       width: 40,
                       height: 40,
-                      child: const Icon(Icons.location_pin,
-                          color: _orange, size: 40),
+                      child: const Icon(
+                        Icons.location_pin,
+                        color: kBrand,
+                        size: 40,
+                      ),
                     ),
                   ],
                 ),
@@ -298,26 +335,24 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: _isSending ? null : _send,
+        // A shimmering label bone, not a spinner. main.dart states that
+        // skeletons are the app's only pending-state affordance, and
+        // BusyButtonLabel exists for exactly this button shape.
         icon: _isSending
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
+            ? const SizedBox.shrink()
             : const Icon(Icons.send_rounded, size: 18),
-        label: Text(
-          _isSending ? 'SENDING...' : 'CONFIRM & SEND REPORT',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.5,
-          ),
-        ),
+        label: _isSending
+            ? const BusyButtonLabel(width: 150)
+            : const Text(
+                'CONFIRM & SEND REPORT',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: _orange,
+          backgroundColor: kBrand,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -344,7 +379,7 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
         if (!mounted) return;
         setState(() => _isSending = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('$e'), backgroundColor: kBrandErrorDeep),
         );
         return;
       }
