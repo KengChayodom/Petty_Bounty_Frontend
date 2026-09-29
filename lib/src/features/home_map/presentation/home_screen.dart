@@ -535,7 +535,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       }
                     },
                     icon: const Icon(Icons.my_location, size: 21),
-                    color: Colors.white,
+                    color: kInk,
                     tooltip: 'Recentre on me',
                   ),
                 ),
@@ -566,7 +566,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // Raised above the default: this pane sits over map tiles, which can be
       // anything from pale fields to dense city blocks, and the count has to
       // stay readable over all of them.
-      opacity: 0.68,
+      opacity: 0.93,
       child: InkWell(
         onTap: canOpen ? _openNearbyList : null,
         child: Padding(
@@ -575,7 +575,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             children: [
               // Not a magnifier. Nothing here searches, and an affordance that
               // does nothing when you press it is worse than no affordance.
-              Icon(Icons.pets, color: Colors.white.withValues(alpha: 0.7)),
+              Icon(Icons.pets, color: kInk.withValues(alpha: 0.55)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -585,7 +585,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     const Text(
                       'Nearby Missing Pets',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: kInk,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -597,7 +597,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 : 'Found ${state.pets.length} pet${state.pets.length == 1 ? '' : 's'} within $_defaultSearchRadiusKm km'),
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.66),
+                        color: kInk.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -634,7 +634,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               if (canOpen)
                 Icon(
                   Icons.keyboard_arrow_up_rounded,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: kInk.withValues(alpha: 0.55),
                 ),
             ],
           ),
@@ -663,7 +663,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: Icon(
             icon,
             size: 24,
-            color: isActive ? kBrandLight : Colors.white.withValues(alpha: 0.6),
+            color: isActive ? kBrandDeep : kInk.withValues(alpha: 0.45),
           ),
         ),
       ),
@@ -734,8 +734,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     end: Alignment.bottomRight,
                   ),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.22),
-                    width: 1.5,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
