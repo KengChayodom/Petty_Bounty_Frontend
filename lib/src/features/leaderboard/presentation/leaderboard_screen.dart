@@ -15,12 +15,12 @@ const _bronze = Color(0xFFE3B98F);
 
 /// Score, kept deliberately apart from [kBrand]. Bounty is money and reads
 /// orange everywhere in the app; score is points and would be conflated with it
-/// if the two shared a colour.
-const _scoreGreen = Color(0xFF34D399);
+/// if the two shared a colour. Deep enough to clear AA on white.
+const _scoreGreen = Color(0xFF047857);
 
-/// A surface lifted just off [kInk] — rank chips, avatars, the standing card.
-const _lifted = Color(0x14FFFFFF);
-const _hairline = Color(0x14FFFFFF);
+/// A surface set just into the page — rank chips, avatars, the standing card.
+const _lifted = Color(0x0F120A04);
+const _hairline = Color(0x14120A04);
 
 /// "RANK LIST" — two boards: hunters by score, and active pets by bounty.
 class LeaderboardScreen extends StatelessWidget {
@@ -31,13 +31,13 @@ class LeaderboardScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: kInk,
+        backgroundColor: kDaylight,
         appBar: AppBar(
-          backgroundColor: kInk,
+          backgroundColor: kDaylight,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: kInk),
             onPressed: () {
               if (context.canPop()) context.pop();
             },
@@ -45,7 +45,7 @@ class LeaderboardScreen extends StatelessWidget {
           title: const Text(
             'RANK LIST',
             style: TextStyle(
-              color: Colors.white,
+              color: kInk,
               fontSize: 15,
               fontWeight: FontWeight.w900,
               letterSpacing: 2.0,
@@ -53,10 +53,10 @@ class LeaderboardScreen extends StatelessWidget {
           ),
           centerTitle: true,
           bottom: const TabBar(
-            indicatorColor: kBrandLight,
+            indicatorColor: kBrandDeep,
             indicatorWeight: 3,
-            labelColor: kBrandLight,
-            unselectedLabelColor: Colors.white54,
+            labelColor: kBrandDeep,
+            unselectedLabelColor: Color(0x99120A04),
             // Labelled, not icon-only: a person and a paw do not say "ranked
             // by score" and "ranked by bounty" on their own.
             tabs: [
@@ -95,8 +95,8 @@ Widget _rankBadge(int rank) {
         fontStyle: FontStyle.italic,
         fontWeight: FontWeight.w900,
         // The medals are bright, so their number goes dark; the plain chip is
-        // dark, so its number goes light.
-        color: podium ? kInk : Colors.white70,
+        // barely tinted, so its number goes dark too, just softer.
+        color: podium ? kInk : kInk.withValues(alpha: 0.6),
       ),
     ),
   );
@@ -137,7 +137,7 @@ Widget _rankRow({
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w900,
-              color: Colors.white,
+              color: kInk,
             ),
           ),
         ),
@@ -194,7 +194,7 @@ Widget _errorRetry(Object err, VoidCallback onRetry) {
       children: [
         Icon(
           Icons.wifi_off_rounded,
-          color: Colors.white.withValues(alpha: 0.5),
+          color: kInk.withValues(alpha: 0.35),
           size: 34,
         ),
         const SizedBox(height: 12),
@@ -203,13 +203,13 @@ Widget _errorRetry(Object err, VoidCallback onRetry) {
           child: Text(
             "Couldn't load the rankings.",
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+            style: TextStyle(color: Color(0xB3120A04), fontSize: 14),
           ),
         ),
         const SizedBox(height: 4),
         TextButton(
           onPressed: onRetry,
-          style: TextButton.styleFrom(foregroundColor: kBrandLight),
+          style: TextButton.styleFrom(foregroundColor: kBrandDeep),
           child: const Text('Retry'),
         ),
       ],
@@ -258,10 +258,10 @@ class _UserBoardState extends ConsumerState<_UserBoard> {
                 return _rankRow(
                   rank: u.rank,
                   imageUrl: u.profileImageUrl,
-                  avatarFallback: const Icon(
+                  avatarFallback: Icon(
                     Icons.person,
                     size: 20,
-                    color: Colors.white54,
+                    color: kInk.withValues(alpha: 0.4),
                   ),
                   title: u.username,
                   trailing: Text(
@@ -296,8 +296,15 @@ class _YourStanding extends StatelessWidget {
         decoration: BoxDecoration(
           // Lifted off the page rather than a different colour from it: this
           // is the same list, pinned.
-          color: _lifted,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+          color: Colors.white,
+          border: Border.all(color: kInk.withValues(alpha: 0.1)),
+          boxShadow: [
+            BoxShadow(
+              color: kInk.withValues(alpha: 0.1),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
@@ -334,7 +341,7 @@ class _YourStanding extends StatelessWidget {
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,
-                      color: Colors.white.withValues(alpha: 0.55),
+                      color: kInk.withValues(alpha: 0.55),
                     ),
                   ),
                   Text(
@@ -344,7 +351,7 @@ class _YourStanding extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: kInk,
                     ),
                   ),
                 ],
@@ -395,7 +402,7 @@ class _BountyBoard extends ConsumerWidget {
       return const Center(
         child: Text(
           'No active bounties right now.',
-          style: TextStyle(color: Colors.white54),
+          style: TextStyle(color: Color(0x8C120A04)),
         ),
       );
     }
@@ -415,10 +422,10 @@ class _BountyBoard extends ConsumerWidget {
           return _rankRow(
             rank: p.rank,
             imageUrl: p.imageUrl,
-            avatarFallback: const Icon(
+            avatarFallback: Icon(
               Icons.pets,
               size: 20,
-              color: Colors.white54,
+              color: kInk.withValues(alpha: 0.4),
             ),
             title: p.petName,
             trailing: Text(
@@ -426,7 +433,7 @@ class _BountyBoard extends ConsumerWidget {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
-                color: kBrandLight,
+                color: kBrandDeep,
               ),
             ),
           );

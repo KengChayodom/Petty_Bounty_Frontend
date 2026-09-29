@@ -34,15 +34,11 @@ class NearbyPetsSheet extends ConsumerWidget {
       maxChildSize: 0.92,
       builder: (context, scrollController) => Container(
         decoration: BoxDecoration(
-          // Ink rather than white: this sheet rises out of chrome that is all
-          // dark glass, and a white panel would read as a different app. Solid
-          // rather than frosted — a BackdropFilter over half the screen, with
-          // the sonar sweeping behind it, is a lot to re-blur every frame for
-          // a surface whose job is to be read.
-          color: kInk,
-          border: Border(
-            top: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
-          ),
+          // Solid rather than frosted: a BackdropFilter over half the screen,
+          // with the sonar sweeping behind it, is a lot to re-blur every frame
+          // for a surface whose only job is to be read.
+          color: Colors.white,
+          border: Border(top: BorderSide(color: kInk.withValues(alpha: 0.08))),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         ),
         clipBehavior: Clip.hardEdge,
@@ -53,7 +49,7 @@ class NearbyPetsSheet extends ConsumerWidget {
               width: 40,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.28),
+                color: kInk.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -65,7 +61,7 @@ class NearbyPetsSheet extends ConsumerWidget {
                     child: Text(
                       'Nearby missing pets',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: kInk,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -74,7 +70,7 @@ class NearbyPetsSheet extends ConsumerWidget {
                   Text(
                     '${pets.length}',
                     style: const TextStyle(
-                      color: kBrandLight,
+                      color: kBrandDeep,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -82,7 +78,7 @@ class NearbyPetsSheet extends ConsumerWidget {
                 ],
               ),
             ),
-            Divider(height: 1, color: Colors.white.withValues(alpha: 0.1)),
+            Divider(height: 1, color: kInk.withValues(alpha: 0.08)),
             Expanded(
               child: ListView.separated(
                 // The sheet's own controller, so dragging the list drags the
@@ -94,7 +90,7 @@ class NearbyPetsSheet extends ConsumerWidget {
                   height: 1,
                   indent: 88,
                   endIndent: 16,
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: kInk.withValues(alpha: 0.07),
                 ),
                 itemBuilder: (context, i) => _PetRow(pet: pets[i]),
               ),
@@ -141,7 +137,7 @@ class _PetRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: kInk,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
@@ -155,7 +151,7 @@ class _PetRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: kInk.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -202,8 +198,8 @@ class _PhotoFallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: Colors.white.withValues(alpha: 0.08),
-      child: Icon(Icons.pets, color: Colors.white.withValues(alpha: 0.45)),
+      color: kInk.withValues(alpha: 0.07),
+      child: Icon(Icons.pets, color: kInk.withValues(alpha: 0.35)),
     );
   }
 }
