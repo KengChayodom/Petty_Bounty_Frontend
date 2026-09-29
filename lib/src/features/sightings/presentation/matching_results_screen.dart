@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/full_image_view.dart';
 import '../data/models/match_model.dart';
 import '../domain/sighting_providers.dart';
@@ -205,449 +206,457 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                // 1. Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, size: 28, color: kInk),
-                      onPressed: () => context.go('/'),
-                    ),
-                    const Text(
-                      'MATCHING',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        letterSpacing: 1.5,
-                        color: kInk,
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // 2. Sighting vs Matching
-                if (displayMatch != null)
+          child: ContentWidth(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  // 1. Header
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // รูปภาพ SIGHTING (จากรูปที่ถ่าย)
-                      Column(
-                        children: [
-                          GestureDetector(
-                            onTap: widget.imagePath == null
-                                ? null
-                                : () => _openPhoto(path: widget.imagePath),
-                            child: Container(
-                              width: _sightingSize,
-                              height: _sightingSize,
-                              decoration: BoxDecoration(
-                                color: kInk.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(18),
-                                image: widget.imagePath != null
-                                    ? DecorationImage(
-                                        image: FileImage(
-                                          File(widget.imagePath!),
-                                        ),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null, // กันเหนียวเผื่อ path หาย
-                              ),
-                              child: widget.imagePath == null
-                                  ? const Icon(Icons.photo)
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'SIGHTING',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 13,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          size: 28,
+                          color: kInk,
+                        ),
+                        onPressed: () => context.go('/'),
                       ),
+                      const Text(
+                        'MATCHING',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                          letterSpacing: 1.5,
+                          color: kInk,
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
 
-                      // ไอคอนเปรียบเทียบ
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Column(
+                  // 2. Sighting vs Matching
+                  if (displayMatch != null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // รูปภาพ SIGHTING (จากรูปที่ถ่าย)
+                        Column(
                           children: [
-                            const Icon(
-                              Icons.compare_arrows,
-                              color: kBrandLight,
-                              size: 28,
+                            GestureDetector(
+                              onTap: widget.imagePath == null
+                                  ? null
+                                  : () => _openPhoto(path: widget.imagePath),
+                              child: Container(
+                                width: _sightingSize,
+                                height: _sightingSize,
+                                decoration: BoxDecoration(
+                                  color: kInk.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(18),
+                                  image: widget.imagePath != null
+                                      ? DecorationImage(
+                                          image: FileImage(
+                                            File(widget.imagePath!),
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null, // กันเหนียวเผื่อ path หาย
+                                ),
+                                child: widget.imagePath == null
+                                    ? const Icon(Icons.photo)
+                                    : null,
+                              ),
                             ),
-                            const SizedBox(height: 10),
-                            Icon(Icons.auto_awesome, color: _star, size: 20),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'SIGHTING',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // ไอคอนเปรียบเทียบ
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Column(
+                            children: [
+                              const Icon(
+                                Icons.compare_arrows,
+                                color: kBrandLight,
+                                size: 28,
+                              ),
+                              const SizedBox(height: 10),
+                              Icon(Icons.auto_awesome, color: _star, size: 20),
+                            ],
+                          ),
+                        ),
+
+                        // รูปภาพ MATCHING
+                        Column(
+                          children: [
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                GestureDetector(
+                                  onTap: () =>
+                                      _openPhoto(url: displayMatch.imageUrl),
+                                  child: Container(
+                                    width: _matchSize,
+                                    height: _matchSize,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(18),
+                                      border: Border.all(
+                                        color: kBrandLight,
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(15),
+                                      // Cross-faded, because this photo is what
+                                      // changes when a candidate is tapped and a
+                                      // hard swap goes unnoticed by a user whose
+                                      // eyes are still on the list below.
+                                      child: AnimatedSwitcher(
+                                        duration: _motion(240),
+                                        child: CachedNetworkImage(
+                                          key: ValueKey(displayMatch.imageUrl),
+                                          imageUrl: displayMatch.imageUrl,
+                                          width: _matchSize,
+                                          height: _matchSize,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const Positioned(
+                                  bottom: -6,
+                                  right: -6,
+                                  child: CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: kBrandErrorDeep,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            // Not 'MATCHING' — that is the page's own title,
+                            // two hundred pixels above. This caption names the
+                            // pet being compared, whichever candidate is picked.
+                            const Text(
+                              'MATCHED PET',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                  const SizedBox(height: 30),
+
+                  // 3. OTHER CANDIDATES
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'OTHER CANDIDATES',
+                        style: TextStyle(
+                          color: _muted,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kInk.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.star, color: _star, size: 14),
+                            const SizedBox(width: 4),
+                            const Text(
+                              'MATCH SCORE',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0x99120A04),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-
-                      // รูปภาพ MATCHING
-                      Column(
-                        children: [
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              GestureDetector(
-                                onTap: () =>
-                                    _openPhoto(url: displayMatch.imageUrl),
-                                child: Container(
-                                  width: _matchSize,
-                                  height: _matchSize,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(
-                                      color: kBrandLight,
-                                      width: 3,
-                                    ),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(15),
-                                    // Cross-faded, because this photo is what
-                                    // changes when a candidate is tapped and a
-                                    // hard swap goes unnoticed by a user whose
-                                    // eyes are still on the list below.
-                                    child: AnimatedSwitcher(
-                                      duration: _motion(240),
-                                      child: CachedNetworkImage(
-                                        key: ValueKey(displayMatch.imageUrl),
-                                        imageUrl: displayMatch.imageUrl,
-                                        width: _matchSize,
-                                        height: _matchSize,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const Positioned(
-                                bottom: -6,
-                                right: -6,
-                                child: CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: kBrandErrorDeep,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // Not 'MATCHING' — that is the page's own title,
-                          // two hundred pixels above. This caption names the
-                          // pet being compared, whichever candidate is picked.
-                          const Text(
-                            'MATCHED PET',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 13,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
+                  const SizedBox(height: 15),
 
-                const SizedBox(height: 30),
+                  // 4. ลิสต์ตัวเลือก
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: matches.length,
+                      itemBuilder: (context, index) {
+                        final match = matches[index];
+                        final isSelected = displayMatch?.id == match.id;
 
-                // 3. OTHER CANDIDATES
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'OTHER CANDIDATES',
-                      style: TextStyle(
-                        color: _muted,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: kInk.withValues(alpha: 0.07),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.star, color: _star, size: 14),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'MATCH SCORE',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0x99120A04),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-
-                // 4. ลิสต์ตัวเลือก
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: matches.length,
-                    itemBuilder: (context, index) {
-                      final match = matches[index];
-                      final isSelected = displayMatch?.id == match.id;
-
-                      return GestureDetector(
-                        onTap: () => setState(() => _selectedMatch = match),
-                        child: AnimatedScale(
-                          scale: isSelected ? 1.02 : 1,
-                          duration: _motion(),
-                          curve: Curves.easeOut,
-                          child: AnimatedContainer(
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedMatch = match),
+                          child: AnimatedScale(
+                            scale: isSelected ? 1.02 : 1,
                             duration: _motion(),
                             curve: Curves.easeOut,
-                            margin: const EdgeInsets.only(bottom: 14),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: isSelected ? _cardSelected : _card,
-                              borderRadius: BorderRadius.circular(15),
-                              // Always present, transparent when unselected: a
-                              // border that appears from nothing would shift the
-                              // card's contents by 4 px on every tap.
-                              border: Border.all(
-                                color: isSelected
-                                    ? kBrandLight
-                                    : Colors.transparent,
-                                width: 2,
+                            child: AnimatedContainer(
+                              duration: _motion(),
+                              curve: Curves.easeOut,
+                              margin: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: isSelected ? _cardSelected : _card,
+                                borderRadius: BorderRadius.circular(15),
+                                // Always present, transparent when unselected: a
+                                // border that appears from nothing would shift the
+                                // card's contents by 4 px on every tap.
+                                border: Border.all(
+                                  color: isSelected
+                                      ? kBrandLight
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: kBrand.withValues(alpha: 0.35),
+                                          blurRadius: 24,
+                                          spreadRadius: -6,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ]
+                                    : null,
                               ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: kBrand.withValues(alpha: 0.35),
-                                        blurRadius: 24,
-                                        spreadRadius: -6,
-                                        offset: const Offset(0, 8),
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: Row(
-                              children: [
-                                // A rounded square, not a circle. A circle crops
-                                // the animal to a disc and throws away the body
-                                // and the markings, which are exactly what tells
-                                // one tabby from another.
-                                Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () =>
-                                          _openPhoto(url: match.imageUrl),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: CachedNetworkImage(
-                                          imageUrl: match.imageUrl,
-                                          width: _thumbSize,
-                                          height: _thumbSize,
-                                          fit: BoxFit.cover,
-                                          placeholder: (_, _) => Container(
+                              child: Row(
+                                children: [
+                                  // A rounded square, not a circle. A circle crops
+                                  // the animal to a disc and throws away the body
+                                  // and the markings, which are exactly what tells
+                                  // one tabby from another.
+                                  Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () =>
+                                            _openPhoto(url: match.imageUrl),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          child: CachedNetworkImage(
+                                            imageUrl: match.imageUrl,
                                             width: _thumbSize,
                                             height: _thumbSize,
-                                            color: Colors.white.withValues(
-                                              alpha: 0.08,
+                                            fit: BoxFit.cover,
+                                            placeholder: (_, _) => Container(
+                                              width: _thumbSize,
+                                              height: _thumbSize,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.08,
+                                              ),
+                                            ),
+                                            errorWidget: (_, _, _) => Container(
+                                              width: _thumbSize,
+                                              height: _thumbSize,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.08,
+                                              ),
+                                              child: const Icon(
+                                                Icons.pets,
+                                                color: Colors.white54,
+                                              ),
                                             ),
                                           ),
-                                          errorWidget: (_, _, _) => Container(
-                                            width: _thumbSize,
-                                            height: _thumbSize,
-                                            color: Colors.white.withValues(
-                                              alpha: 0.08,
+                                        ),
+                                      ),
+                                      const Positioned(
+                                        bottom: -2,
+                                        right: -2,
+                                        child: CircleAvatar(
+                                          radius: 9,
+                                          backgroundColor: kBrandErrorDeep,
+                                        ),
+                                      ),
+                                      // Top-left, because the corner opposite is
+                                      // already taken by the red dot this screen
+                                      // has always drawn.
+                                      Positioned(
+                                        top: -6,
+                                        left: -6,
+                                        child: AnimatedScale(
+                                          scale: isSelected ? 1 : 0,
+                                          duration: _motion(),
+                                          curve: Curves.easeOutBack,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(3),
+                                            decoration: BoxDecoration(
+                                              color: kBrand,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: _cardSelected,
+                                                width: 2,
+                                              ),
                                             ),
                                             child: const Icon(
-                                              Icons.pets,
-                                              color: Colors.white54,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const Positioned(
-                                      bottom: -2,
-                                      right: -2,
-                                      child: CircleAvatar(
-                                        radius: 9,
-                                        backgroundColor: kBrandErrorDeep,
-                                      ),
-                                    ),
-                                    // Top-left, because the corner opposite is
-                                    // already taken by the red dot this screen
-                                    // has always drawn.
-                                    Positioned(
-                                      top: -6,
-                                      left: -6,
-                                      child: AnimatedScale(
-                                        scale: isSelected ? 1 : 0,
-                                        duration: _motion(),
-                                        curve: Curves.easeOutBack,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(3),
-                                          decoration: BoxDecoration(
-                                            color: kBrand,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: _cardSelected,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.check_rounded,
-                                            size: 14,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        match.petName,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 19,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Row(
-                                        children: [
-                                          const Text(
-                                            '฿',
-                                            style: TextStyle(
-                                              color: kBrandLight,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            match.bountyAmount.toStringAsFixed(
-                                              0,
-                                            ),
-                                            style: const TextStyle(
+                                              Icons.check_rounded,
+                                              size: 14,
                                               color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${(match.distanceMeters / 1000).toStringAsFixed(1)} km',
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 13,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                _buildStars(match),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // 5. ปุ่ม Actions
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 30, top: 15),
-                  // Both buttons to the taller one's height. Their labels are
-                  // different sizes, so padding alone left them mismatched.
-                  child: IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Not destructive, and it must not look it: the
-                        // sighting was persisted by POST /sightings/ before this
-                        // screen opened, so leaving here discards nothing. A red
-                        // unlabelled cross said the opposite.
-                        InkWell(
-                          onTap: () => context.go('/'),
-                          borderRadius: BorderRadius.circular(15),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 16,
-                            ),
-                            decoration: BoxDecoration(
-                              color: kInk.withValues(alpha: 0.06),
-                              border: Border.all(
-                                color: kInk.withValues(alpha: 0.12),
-                              ),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: const Text(
-                              'NONE MATCH',
-                              style: TextStyle(
-                                color: Color(0xB3120A04),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: InkWell(
-                            onTap: displayMatch == null
-                                ? null
-                                : () => _confirmMatch(displayMatch),
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Color(0xFF047857),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'CONFIRM MATCH',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  letterSpacing: 1.0,
-                                ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          match.petName,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 19,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            const Text(
+                                              '฿',
+                                              style: TextStyle(
+                                                color: kBrandLight,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              match.bountyAmount
+                                                  .toStringAsFixed(0),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${(match.distanceMeters / 1000).toStringAsFixed(1)} km',
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  _buildStars(match),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
-                ),
-              ],
+
+                  // 5. ปุ่ม Actions
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 30, top: 15),
+                    // Both buttons to the taller one's height. Their labels are
+                    // different sizes, so padding alone left them mismatched.
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Not destructive, and it must not look it: the
+                          // sighting was persisted by POST /sightings/ before this
+                          // screen opened, so leaving here discards nothing. A red
+                          // unlabelled cross said the opposite.
+                          InkWell(
+                            onTap: () => context.go('/'),
+                            borderRadius: BorderRadius.circular(15),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: kInk.withValues(alpha: 0.06),
+                                border: Border.all(
+                                  color: kInk.withValues(alpha: 0.12),
+                                ),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: const Text(
+                                'NONE MATCH',
+                                style: TextStyle(
+                                  color: Color(0xB3120A04),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: InkWell(
+                              onTap: displayMatch == null
+                                  ? null
+                                  : () => _confirmMatch(displayMatch),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF047857),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                alignment: Alignment.center,
+                                child: const Text(
+                                  'CONFIRM MATCH',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

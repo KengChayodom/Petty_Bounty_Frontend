@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../../home_map/data/repositories/missing_pet_repository_impl.dart';
 import '../../home_map/domain/entities/missing_pet_entity.dart';
@@ -112,7 +113,7 @@ class _ResolveReportState extends State<_ResolveReport> {
             ),
           );
         }
-        return EditReportForm(pet: snapshot.data!);
+        return ContentWidth(child: EditReportForm(pet: snapshot.data!));
       },
     );
   }

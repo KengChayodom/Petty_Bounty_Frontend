@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_service.dart';
 import '../../../core/notifications/fcm_service.dart';
+import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../routing/app_router.dart';
 import '../../home_map/data/location_publisher.dart';
 import '../domain/models/profile_models.dart';
@@ -131,96 +132,100 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       // `.noSpinner` keeps the pull-to-refresh gesture but draws no progress
       // arc — the refresh is signalled by the sections dropping back to their
       // skeletons instead (see `skipLoadingOnRefresh: false` below).
-      body: RefreshIndicator.noSpinner(
-        onRefresh: () async {
-          ref.invalidate(userProfileProvider);
-          ref.invalidate(hunterStatsProvider);
-          ref.invalidate(hunterHistoryProvider);
-          ref.invalidate(ownerPostsProvider);
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              // USER INFO HEADER WIDGET WITH REAL DATA
-              profileAsync.when(
-                // Show the skeleton on a pull-to-refresh too, not just the
-                // first load: with no spinner it is the only refresh feedback.
-                skipLoadingOnRefresh: false,
-                data: (profile) => ProfileHeaderWidget(
-                  username: profile.username,
-                  phone: profile.phone ?? '',
-                  email: profile.email ?? '',
-                  photoUrl: profile.profileImageUrl,
-                  onEditPressed: () => _openEditProfileDialog(
-                    profile.username,
-                    profile.phone,
-                    profile.profileImageUrl,
+      body: ContentWidth(
+        child: RefreshIndicator.noSpinner(
+          onRefresh: () async {
+            ref.invalidate(userProfileProvider);
+            ref.invalidate(hunterStatsProvider);
+            ref.invalidate(hunterHistoryProvider);
+            ref.invalidate(ownerPostsProvider);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                // USER INFO HEADER WIDGET WITH REAL DATA
+                profileAsync.when(
+                  // Show the skeleton on a pull-to-refresh too, not just the
+                  // first load: with no spinner it is the only refresh feedback.
+                  skipLoadingOnRefresh: false,
+                  data: (profile) => ProfileHeaderWidget(
+                    username: profile.username,
+                    phone: profile.phone ?? '',
+                    email: profile.email ?? '',
+                    photoUrl: profile.profileImageUrl,
+                    onEditPressed: () => _openEditProfileDialog(
+                      profile.username,
+                      profile.phone,
+                      profile.profileImageUrl,
+                    ),
                   ),
-                ),
-                loading: () => const ProfileHeaderSkeleton(),
-                error: (err, stack) => Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Could not load your profile: $err',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                      TextButton(
-                        onPressed: () => ref.invalidate(userProfileProvider),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ROLE TAB TOGGLE WIDGET (HUNTER vs PET OWNER)
-              RoleTabToggleWidget(
-                selectedTab: _selectedTab,
-                onTabSelected: (index) => setState(() => _selectedTab = index),
-              ),
-
-              const SizedBox(height: 16),
-
-              // TAB BODY CONTENT WITH REAL PROVIDERS
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _selectedTab == 0
-                    ? _buildTabBody(
-                        loading:
-                            hunterStatsAsync.isLoading ||
-                            hunterHistoryAsync.isLoading,
-                        error:
-                            hunterStatsAsync.error ?? hunterHistoryAsync.error,
-                        onRetry: () {
-                          ref.invalidate(hunterStatsProvider);
-                          ref.invalidate(hunterHistoryProvider);
-                        },
-                        skeleton: const HunterTabSkeleton(),
-                        content: () => _buildHunterTab(
-                          hunterStatsAsync,
-                          hunterHistoryAsync,
+                  loading: () => const ProfileHeaderSkeleton(),
+                  error: (err, stack) => Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 32,
                         ),
-                      )
-                    : _buildTabBody(
-                        loading: ownerPostsAsync.isLoading,
-                        error: ownerPostsAsync.error,
-                        onRetry: () => ref.invalidate(ownerPostsProvider),
-                        skeleton: const OwnerTabSkeleton(),
-                        content: () => _buildOwnerTab(ownerPostsAsync),
-                      ),
-              ),
-              const SizedBox(height: 32),
-            ],
+                        const SizedBox(height: 8),
+                        Text(
+                          'Could not load your profile: $err',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        TextButton(
+                          onPressed: () => ref.invalidate(userProfileProvider),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ROLE TAB TOGGLE WIDGET (HUNTER vs PET OWNER)
+                RoleTabToggleWidget(
+                  selectedTab: _selectedTab,
+                  onTabSelected: (index) =>
+                      setState(() => _selectedTab = index),
+                ),
+
+                const SizedBox(height: 16),
+
+                // TAB BODY CONTENT WITH REAL PROVIDERS
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _selectedTab == 0
+                      ? _buildTabBody(
+                          loading:
+                              hunterStatsAsync.isLoading ||
+                              hunterHistoryAsync.isLoading,
+                          error:
+                              hunterStatsAsync.error ??
+                              hunterHistoryAsync.error,
+                          onRetry: () {
+                            ref.invalidate(hunterStatsProvider);
+                            ref.invalidate(hunterHistoryProvider);
+                          },
+                          skeleton: const HunterTabSkeleton(),
+                          content: () => _buildHunterTab(
+                            hunterStatsAsync,
+                            hunterHistoryAsync,
+                          ),
+                        )
+                      : _buildTabBody(
+                          loading: ownerPostsAsync.isLoading,
+                          error: ownerPostsAsync.error,
+                          onRetry: () => ref.invalidate(ownerPostsProvider),
+                          skeleton: const OwnerTabSkeleton(),
+                          content: () => _buildOwnerTab(ownerPostsAsync),
+                        ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),
