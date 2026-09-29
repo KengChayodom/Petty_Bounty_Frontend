@@ -17,6 +17,7 @@ _$MatchModelImpl _$$MatchModelImplFromJson(Map<String, dynamic> json) =>
       lastSeenTime: json['last_seen_time'] as String,
       imageUrl: json['image_url'] as String,
       similarity: (json['similarity'] as num).toDouble(),
+      matchStars: (json['match_stars'] as num?)?.toInt(),
       distanceMeters: (json['distance_meters'] as num).toDouble(),
       status: json['status'] as String,
     );
@@ -32,6 +33,7 @@ Map<String, dynamic> _$$MatchModelImplToJson(_$MatchModelImpl instance) =>
       'last_seen_time': instance.lastSeenTime,
       'image_url': instance.imageUrl,
       'similarity': instance.similarity,
+      'match_stars': instance.matchStars,
       'distance_meters': instance.distanceMeters,
       'status': instance.status,
     };

@@ -16,7 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:petty_bounty/src/core/auth/auth_service.dart';
 import 'package:petty_bounty/src/features/auth/presentation/register_screen.dart';
-import 'package:petty_bounty/src/features/auth/presentation/widgets/auth_scaffold.dart';
+import 'package:petty_bounty/src/features/auth/presentation/widgets/glass_auth_scaffold.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _FakeAuthService extends AuthService {
@@ -66,6 +66,14 @@ AuthResponse _withSession() => AuthResponse(
 /// `context.pop()`. `/` is a launcher that pushes `/register` so there is
 /// something to pop back to.
 Future<void> _pump(WidgetTester tester, _FakeAuthService auth) async {
+  // The auth screens run a repeating ambient animation. `pumpAndSettle` waits
+  // for the frame queue to drain, which a loop never lets happen, so the tests
+  // take the same "reduce motion" path a user with the accessibility switch on
+  // would get.
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+
   final router = GoRouter(
     initialLocation: '/',
     routes: [
@@ -86,10 +94,11 @@ Future<void> _pump(WidgetTester tester, _FakeAuthService auth) async {
   await tester.pumpAndSettle();
 }
 
-/// AuthField renders its label as a sibling [Text] above the [TextFormField],
-/// not inside the decoration, so the field is reached through its AuthField.
+/// GlassAuthField renders its label through the input decoration, so the label
+/// [Text] sits under the field rather than beside it — the field is reached
+/// through its GlassAuthField either way.
 Finder _field(String label) => find.descendant(
-  of: find.widgetWithText(AuthField, label),
+  of: find.widgetWithText(GlassAuthField, label),
   matching: find.byType(TextFormField),
 );
 

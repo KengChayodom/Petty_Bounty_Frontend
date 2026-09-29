@@ -34,7 +34,11 @@ mixin _$MatchModel {
   String get lastSeenTime => throw _privateConstructorUsedError;
   @JsonKey(name: 'image_url')
   String get imageUrl => throw _privateConstructorUsedError;
-  double get similarity => throw _privateConstructorUsedError;
+  double get similarity =>
+      throw _privateConstructorUsedError; // The backend's own 1 to 3 rating, from the score that ordered the list.
+// Absent from a backend that predates it. See MatchStars.stars.
+  @JsonKey(name: 'match_stars')
+  int? get matchStars => throw _privateConstructorUsedError;
   @JsonKey(name: 'distance_meters')
   double get distanceMeters => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
@@ -61,6 +65,7 @@ abstract class $MatchModelCopyWith<$Res> {
       @JsonKey(name: 'last_seen_time') String lastSeenTime,
       @JsonKey(name: 'image_url') String imageUrl,
       double similarity,
+      @JsonKey(name: 'match_stars') int? matchStars,
       @JsonKey(name: 'distance_meters') double distanceMeters,
       String status});
 }
@@ -87,6 +92,7 @@ class _$MatchModelCopyWithImpl<$Res, $Val extends MatchModel>
     Object? lastSeenTime = null,
     Object? imageUrl = null,
     Object? similarity = null,
+    Object? matchStars = freezed,
     Object? distanceMeters = null,
     Object? status = null,
   }) {
@@ -127,6 +133,10 @@ class _$MatchModelCopyWithImpl<$Res, $Val extends MatchModel>
           ? _value.similarity
           : similarity // ignore: cast_nullable_to_non_nullable
               as double,
+      matchStars: freezed == matchStars
+          ? _value.matchStars
+          : matchStars // ignore: cast_nullable_to_non_nullable
+              as int?,
       distanceMeters: null == distanceMeters
           ? _value.distanceMeters
           : distanceMeters // ignore: cast_nullable_to_non_nullable
@@ -157,6 +167,7 @@ abstract class _$$MatchModelImplCopyWith<$Res>
       @JsonKey(name: 'last_seen_time') String lastSeenTime,
       @JsonKey(name: 'image_url') String imageUrl,
       double similarity,
+      @JsonKey(name: 'match_stars') int? matchStars,
       @JsonKey(name: 'distance_meters') double distanceMeters,
       String status});
 }
@@ -181,6 +192,7 @@ class __$$MatchModelImplCopyWithImpl<$Res>
     Object? lastSeenTime = null,
     Object? imageUrl = null,
     Object? similarity = null,
+    Object? matchStars = freezed,
     Object? distanceMeters = null,
     Object? status = null,
   }) {
@@ -221,6 +233,10 @@ class __$$MatchModelImplCopyWithImpl<$Res>
           ? _value.similarity
           : similarity // ignore: cast_nullable_to_non_nullable
               as double,
+      matchStars: freezed == matchStars
+          ? _value.matchStars
+          : matchStars // ignore: cast_nullable_to_non_nullable
+              as int?,
       distanceMeters: null == distanceMeters
           ? _value.distanceMeters
           : distanceMeters // ignore: cast_nullable_to_non_nullable
@@ -246,6 +262,7 @@ class _$MatchModelImpl implements _MatchModel {
       @JsonKey(name: 'last_seen_time') required this.lastSeenTime,
       @JsonKey(name: 'image_url') required this.imageUrl,
       required this.similarity,
+      @JsonKey(name: 'match_stars') this.matchStars,
       @JsonKey(name: 'distance_meters') required this.distanceMeters,
       required this.status})
       : _characteristics = characteristics;
@@ -282,6 +299,11 @@ class _$MatchModelImpl implements _MatchModel {
   final String imageUrl;
   @override
   final double similarity;
+// The backend's own 1 to 3 rating, from the score that ordered the list.
+// Absent from a backend that predates it. See MatchStars.stars.
+  @override
+  @JsonKey(name: 'match_stars')
+  final int? matchStars;
   @override
   @JsonKey(name: 'distance_meters')
   final double distanceMeters;
@@ -290,7 +312,7 @@ class _$MatchModelImpl implements _MatchModel {
 
   @override
   String toString() {
-    return 'MatchModel(id: $id, petName: $petName, species: $species, characteristics: $characteristics, bountyAmount: $bountyAmount, lastSeenLocation: $lastSeenLocation, lastSeenTime: $lastSeenTime, imageUrl: $imageUrl, similarity: $similarity, distanceMeters: $distanceMeters, status: $status)';
+    return 'MatchModel(id: $id, petName: $petName, species: $species, characteristics: $characteristics, bountyAmount: $bountyAmount, lastSeenLocation: $lastSeenLocation, lastSeenTime: $lastSeenTime, imageUrl: $imageUrl, similarity: $similarity, matchStars: $matchStars, distanceMeters: $distanceMeters, status: $status)';
   }
 
   @override
@@ -313,6 +335,8 @@ class _$MatchModelImpl implements _MatchModel {
                 other.imageUrl == imageUrl) &&
             (identical(other.similarity, similarity) ||
                 other.similarity == similarity) &&
+            (identical(other.matchStars, matchStars) ||
+                other.matchStars == matchStars) &&
             (identical(other.distanceMeters, distanceMeters) ||
                 other.distanceMeters == distanceMeters) &&
             (identical(other.status, status) || other.status == status));
@@ -331,6 +355,7 @@ class _$MatchModelImpl implements _MatchModel {
       lastSeenTime,
       imageUrl,
       similarity,
+      matchStars,
       distanceMeters,
       status);
 
@@ -360,6 +385,7 @@ abstract class _MatchModel implements MatchModel {
       @JsonKey(name: 'last_seen_time') required final String lastSeenTime,
       @JsonKey(name: 'image_url') required final String imageUrl,
       required final double similarity,
+      @JsonKey(name: 'match_stars') final int? matchStars,
       @JsonKey(name: 'distance_meters') required final double distanceMeters,
       required final String status}) = _$MatchModelImpl;
 
@@ -389,6 +415,10 @@ abstract class _MatchModel implements MatchModel {
   String get imageUrl;
   @override
   double get similarity;
+  @override // The backend's own 1 to 3 rating, from the score that ordered the list.
+// Absent from a backend that predates it. See MatchStars.stars.
+  @JsonKey(name: 'match_stars')
+  int? get matchStars;
   @override
   @JsonKey(name: 'distance_meters')
   double get distanceMeters;

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/network/app_http_client.dart';
 import '../../../../core/app_config.dart';
@@ -10,9 +11,28 @@ import '../models/missing_pet_model.dart';
 class MissingPetRepositoryImpl {
   final String baseUrl = AppConfig.apiBaseUrl;
   final http.Client _client;
+  final String? Function() _authHeader;
 
-  MissingPetRepositoryImpl({http.Client? client})
-    : _client = client ?? AppHttpClient.instance;
+  MissingPetRepositoryImpl({
+    http.Client? client,
+    String? Function()? authHeader,
+  }) : _client = client ?? AppHttpClient.instance,
+       _authHeader = authHeader ?? _sessionAuthHeader;
+
+  /// `Bearer <jwt>` for the signed-in user, or null when there is no session.
+  ///
+  /// Read on every call so a silently refreshed token is always used. Falls
+  /// back to null, meaning "anonymous", when Supabase has not been initialised,
+  /// which is the case in unit tests that build this repository with a fake
+  /// client.
+  static String? _sessionAuthHeader() {
+    try {
+      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      return token == null ? null : 'Bearer $token';
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Fetch nearby missing pets within a radius
   Future<List<MissingPetEntity>> getNearbyMissingPets({
@@ -49,7 +69,15 @@ class MissingPetRepositoryImpl {
   /// /nearby (numeric latitude/longitude projected from the geography,
   /// numeric bounty_amount), so no client-side normalisation is needed.
   Future<MissingPetEntity> getMissingPet(String petId) async {
-    final response = await _client.get(Uri.parse('$baseUrl/missing-pets/$petId'));
+    // The backend requires a signed-in caller here, because this response
+    // carries the owner's username, phone number and photo. The router already
+    // sends a signed-out user to the login screen, so a missing session is not
+    // a state this screen reaches.
+    final auth = _authHeader();
+    final response = await _client.get(
+      Uri.parse('$baseUrl/missing-pets/$petId'),
+      headers: {'Authorization': ?auth},
+    );
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;

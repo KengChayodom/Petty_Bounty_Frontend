@@ -9,7 +9,7 @@ import '../../../core/auth/auth_service.dart';
 import '../../../core/notifications/fcm_service.dart';
 import '../../../routing/app_router.dart';
 import '../domain/auth_validators.dart';
-import 'widgets/auth_scaffold.dart';
+import 'widgets/glass_auth_scaffold.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -22,6 +22,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocus = FocusNode();
 
   bool _loading = false;
   String? _error;
@@ -30,6 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -68,42 +70,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AuthScaffold(
+    return GlassAuthScaffold(
       formKey: _formKey,
-      subtitle: 'Sign in to your account',
+      title: 'Welcome back',
+      subtitle: 'Sign in to keep the search going.',
+      footer: GlassFooterLink(
+        question: "Don't have an account?",
+        action: 'Register',
+        onTap: _loading ? null : () => context.push(AppRoutes.register),
+      ),
       children: [
-        // Labelled "User name" to match the design; still bound to the email
-        // controller because Supabase auth logs in by email (the user types
-        // their email here), so SRS-03/04 email validation is preserved.
-        AuthField(
+        // Labelled "Email" because Supabase auth logs in by email, so the
+        // SRS-03/04 email validation applies to whatever is typed here.
+        GlassAuthField(
           label: 'Email',
+          icon: Icons.alternate_email,
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
           validator: AuthValidators.email,
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
         ),
-        AuthField(
+        GlassAuthField(
           label: 'Password',
+          icon: Icons.lock_outline,
           controller: _passwordController,
+          focusNode: _passwordFocus,
           obscureText: true,
           autofillHints: const [AutofillHints.password],
           validator: AuthValidators.loginPassword,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) {
+            if (!_loading) _submit();
+          },
         ),
-        if (_error != null) ...[
-          const SizedBox(height: 4),
-          AuthErrorText(_error!),
-        ],
-        const SizedBox(height: 6),
-        AuthPrimaryButton(
+        if (_error != null) GlassErrorBanner(_error!),
+        const SizedBox(height: 4),
+        GlassPrimaryButton(
           label: 'Sign in',
           loading: _loading,
           onPressed: _submit,
-        ),
-        const SizedBox(height: 24),
-        AuthFooterLink(
-          question: "Don't you have account ?",
-          action: 'Register here',
-          onTap: _loading ? null : () => context.push(AppRoutes.register),
         ),
       ],
     );
