@@ -55,13 +55,8 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
     );
   }
 
-  Widget _buildStars(double similarity) {
-    int starCount = 1;
-    if (similarity >= 0.9) {
-      starCount = 3;
-    } else if (similarity >= 0.7) {
-      starCount = 2;
-    }
+  Widget _buildStars(MatchModel match) {
+    final starCount = match.stars;
 
     return Row(
       children: List.generate(3, (index) {
@@ -413,7 +408,7 @@ class _MatchingResultsScreenState extends ConsumerState<MatchingResultsScreen> {
                                   ],
                                 ),
                               ),
-                              _buildStars(match.similarity),
+                              _buildStars(match),
                             ],
                           ),
                         ),
