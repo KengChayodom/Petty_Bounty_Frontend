@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,7 +16,6 @@ import '../features/lost_pet_post/presentation/lost_pet_post_screen.dart';
 import '../features/lost_pet_post/presentation/edit_lost_pet_post_screen.dart';
 import '../features/status_tracker/presentation/status_tracker_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_screen.dart';
-import '../features/bounty_payment/presentation/bounty_payment_preview_screen.dart';
 import '../features/bounty_payment/presentation/hunter_bounty_screen.dart';
 import 'root_navigator_key.dart';
 
@@ -34,10 +32,6 @@ class AppRoutes {
   static const String lostPetPostEdit = '/lost-pet-post/edit';
   static const String statusTracker = '/status-tracker';
   static const String leaderboard = '/leaderboard';
-
-  /// TEMPORARY, debug builds only: the bounty payment card with typed-in test
-  /// numbers. Remove once the card is wired into the report's flow.
-  static const String bountyPaymentPreview = '/dev/bounty-payment';
 
   /// The returning hunter's view of one bounty: `/bounty/:petId`.
   static const String bounty = '/bounty';
@@ -106,14 +100,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           petId: state.pathParameters['petId']!,
         ),
       ),
-
-      // TEMPORARY, debug builds only — see AppRoutes.bountyPaymentPreview.
-      if (kDebugMode)
-        GoRoute(
-          path: AppRoutes.bountyPaymentPreview,
-          name: 'bounty-payment-preview',
-          builder: (context, state) => const BountyPaymentPreviewScreen(),
-        ),
 
       // The returning hunter's bounty — reached from the hunter tab's list.
       GoRoute(

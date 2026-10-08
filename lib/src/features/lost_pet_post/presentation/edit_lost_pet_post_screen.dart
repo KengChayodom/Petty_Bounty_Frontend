@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/theme/app_glass.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,7 +14,7 @@ import '../../profile/domain/providers/profile_providers.dart';
 import '../data/lost_pet_post_repository.dart';
 import 'widgets/collar_marker_widget.dart' show PetImageEyedropperDialog;
 
-const Color _kAccent = Color(0xFF0022FF);
+const Color _kAccent = kBrandDeep;
 final RegExp _kHexColor = RegExp(r'^#[0-9A-Fa-f]{6}$');
 
 // Swatch shown while a report has no coat colour. Display only, never sent.
@@ -34,22 +36,18 @@ class EditLostPetPostScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: kDaylight,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: kDaylight,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: kInk),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'EDIT REPORT',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-            fontSize: 16,
-          ),
+          'Edit report',
+          style: TextStyle(fontFamily: kDisplayFamily, fontSize: 20, fontWeight: FontWeight.w800, color: kInk),
         ),
         centerTitle: true,
       ),
@@ -98,7 +96,7 @@ class _ResolveReportState extends State<_ResolveReport> {
                   Text(
                     'Could not load this report.\n${snapshot.error ?? ''}',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(color: kInkMuted),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
@@ -267,7 +265,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('$e'), backgroundColor: kBrandErrorDeep),
       );
     }
   }
@@ -284,7 +282,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _card(
-                title: 'NAME',
+                title: 'Name',
                 icon: Icons.text_fields_rounded,
                 child: TextFormField(
                   controller: _nameController,
@@ -296,7 +294,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 ),
               ),
               _card(
-                title: 'COAT COLOURS',
+                title: 'Coat colours',
                 icon: Icons.palette_outlined,
                 child: _ColorTilesRow(
                   primaryHex: _primaryColorHex ?? _kNoColorSwatch,
@@ -308,7 +306,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 ),
               ),
               _card(
-                title: 'CHARACTERISTICS / TRAITS',
+                title: 'Marks and traits',
                 icon: Icons.pets_outlined,
                 child: TextFormField(
                   controller: _traitsController,
@@ -319,7 +317,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 ),
               ),
               _card(
-                title: 'BOUNTY & REWARD',
+                title: 'Reward',
                 icon: Icons.card_giftcard_outlined,
                 child: _BountyEditor(
                   isBountyMode: _isBountyMode,
@@ -337,7 +335,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 onPressed: _isSaving ? null : _save,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kAccent,
-                  disabledBackgroundColor: Colors.grey.shade300,
+                  disabledBackgroundColor: kInkMuted.withValues(alpha: 0.3),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -348,11 +346,10 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 child: _isSaving
                     ? const BusyButtonLabel(width: 120)
                     : const Text(
-                        'SAVE CHANGES',
+                        'Save changes',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
                         ),
                       ),
               ),
@@ -366,9 +363,9 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
 
   InputDecoration _fieldDecoration(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.grey),
+        hintStyle: const TextStyle(color: kInkMuted),
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: kFieldFill,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -386,10 +383,10 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: kInkMuted.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: kInk.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -407,8 +404,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 0.8,
-                  color: Colors.black87,
+                  color: kInk,
                 ),
               ),
             ],
@@ -442,7 +438,7 @@ class _ColorTilesRow extends StatelessWidget {
     try {
       return Color(int.parse('0xFF${hex.replaceAll('#', '')}'));
     } catch (_) {
-      return Colors.blue;
+      return kBrandDeep;
     }
   }
 
@@ -458,7 +454,7 @@ class _ColorTilesRow extends StatelessWidget {
             borderColor: _kAccent,
             borderWidth: 2,
             swatch: _parse(primaryHex),
-            label: 'PRIMARY',
+            label: 'Main',
           ),
         ),
         const SizedBox(width: 12),
@@ -466,17 +462,17 @@ class _ColorTilesRow extends StatelessWidget {
           child: _tile(
             onTap: onPickSecondary,
             borderColor: secondaryColor != null
-                ? Colors.teal
-                : Colors.grey.shade300,
+                ? kBrandDeep
+                : kInkMuted.withValues(alpha: 0.3),
             borderWidth: secondaryColor != null ? 2 : 1.2,
             swatch: secondaryColor,
-            label: secondaryColor != null ? 'SECONDARY' : 'NONE',
+            label: secondaryColor != null ? 'Second' : 'None',
             trailing: secondaryColor != null
                 ? GestureDetector(
                     onTap: onClearSecondary,
                     child: const Padding(
                       padding: EdgeInsets.all(4),
-                      child: Icon(Icons.close, size: 16, color: Colors.grey),
+                      child: Icon(Icons.close, size: 16, color: kInkMuted),
                     ),
                   )
                 : null,
@@ -511,10 +507,10 @@ class _ColorTilesRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: swatch ?? Colors.grey[200],
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: kInkMuted.withValues(alpha: 0.3)),
               ),
               child: swatch == null
-                  ? const Icon(Icons.block, size: 16, color: Colors.grey)
+                  ? const Icon(Icons.block, size: 16, color: kInkMuted)
                   : null,
             ),
             const SizedBox(width: 12),
@@ -524,10 +520,9 @@ class _ColorTilesRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
                   color: swatch == null
-                      ? Colors.grey.shade400
-                      : Colors.black87,
+                      ? kInkMuted.withValues(alpha: 0.45)
+                      : kInk,
                 ),
               ),
             ),
@@ -570,15 +565,15 @@ class _BountyEditor extends StatelessWidget {
               _modeButton(
                 selected: !isBountyMode,
                 icon: Icons.favorite,
-                label: 'HELP FREE',
-                activeColor: Colors.green,
+                label: 'No cash reward',
+                activeColor: kSuccessDeep,
                 onTap: () => onModeChanged(false),
               ),
               _modeButton(
                 selected: isBountyMode,
                 icon: Icons.monetization_on_outlined,
-                label: 'BOUNTY',
-                activeColor: Colors.orange,
+                label: 'Cash reward',
+                activeColor: kBrandDeep,
                 onTap: () => onModeChanged(true),
               ),
             ],
@@ -589,7 +584,7 @@ class _BountyEditor extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: kFieldFill,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -599,7 +594,7 @@ class _BountyEditor extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: kBrandDeep,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -614,8 +609,8 @@ class _BountyEditor extends StatelessWidget {
                     ],
                     style: const TextStyle(
                       fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
+                      fontWeight: FontWeight.w700,
+                      color: kInk,
                     ),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
@@ -671,12 +666,12 @@ class _BountyEditor extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: selected ? activeColor : Colors.grey),
+              Icon(icon, size: 18, color: selected ? activeColor : kInkMuted),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? activeColor : Colors.grey,
+                  color: selected ? activeColor : kInkMuted,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -701,7 +696,7 @@ class _BountyEditor extends StatelessWidget {
           label,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: kInk,
             fontSize: 13,
           ),
         ),

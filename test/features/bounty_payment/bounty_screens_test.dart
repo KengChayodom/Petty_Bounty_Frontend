@@ -167,20 +167,20 @@ void main() {
 
     testWidgets('a payment within the window: confirm and not-received', (t) async {
       await _pump(t, _hunter(withinWindow), _view(role: 'hunter', unpaid: false, payment: _payment()));
-      expect(find.text('I received the money'), findsOneWidget);
-      expect(find.text('Not received'), findsOneWidget);
+      expect(find.text('The money arrived'), findsOneWidget);
+      expect(find.text('It did not arrive'), findsOneWidget);
     });
 
     testWidgets('after the dispute window only confirming is offered', (t) async {
       await _pump(t, _hunter(afterWindow), _view(role: 'hunter', unpaid: false, payment: _payment()));
-      expect(find.text('I received the money'), findsOneWidget);
-      expect(find.text('Not received'), findsNothing);
+      expect(find.text('The money arrived'), findsOneWidget);
+      expect(find.text('It did not arrive'), findsNothing);
     });
 
     testWidgets('confirming asks first, then answers Confirm', (t) async {
       final repo = await _pump(t, _hunter(withinWindow),
           _view(role: 'hunter', unpaid: false, payment: _payment()));
-      await t.tap(find.text('I received the money'));
+      await t.tap(find.text('The money arrived'));
       await t.pumpAndSettle();
       await t.tap(find.text('Yes'));
       await t.pumpAndSettle();
@@ -190,7 +190,7 @@ void main() {
     testWidgets('disputing answers Dispute', (t) async {
       final repo = await _pump(t, _hunter(withinWindow),
           _view(role: 'hunter', unpaid: false, payment: _payment()));
-      await t.tap(find.text('Not received'));
+      await t.tap(find.text('It did not arrive'));
       await t.pumpAndSettle();
       await t.tap(find.text('Yes'));
       await t.pumpAndSettle();

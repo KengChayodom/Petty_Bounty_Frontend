@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_glass.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -48,7 +50,7 @@ class LocationTileWidget extends ConsumerWidget {
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: kFieldFill,
           borderRadius: BorderRadius.circular(16),
         ),
         child: hasLocation
@@ -57,18 +59,18 @@ class LocationTileWidget extends ConsumerWidget {
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Row(
                   children: [
-                    Icon(Icons.location_on, color: Colors.red, size: 22),
+                    Icon(Icons.location_on, color: kBrandErrorDeep, size: 22),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Last seen location (Tap to select on map)',
                         style: TextStyle(
-                          color: Colors.black87,
+                          color: kInk,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                    Icon(Icons.map_outlined, color: Colors.grey, size: 18),
+                    Icon(Icons.map_outlined, color: kInkMuted, size: 18),
                   ],
                 ),
               ),
@@ -120,7 +122,7 @@ class _LocationPreview extends StatelessWidget {
                   height: 36,
                   child: const Icon(
                     Icons.location_pin,
-                    color: Color(0xFF0022FF),
+                    color: kBrandDeep,
                     size: 36,
                   ),
                 ),

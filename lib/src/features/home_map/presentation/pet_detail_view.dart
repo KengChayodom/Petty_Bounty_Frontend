@@ -7,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/constants/pet_species.dart';
 import '../../../core/map/cached_tile_provider.dart';
+import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/brand_widgets.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../domain/entities/missing_pet_entity.dart';
 
@@ -59,250 +61,182 @@ class PetDetailView extends StatelessWidget {
         ? traitsVal
         : (pet.characteristicsText.isNotEmpty
             ? pet.characteristicsText
-            : "No additional description provided.");
+            : 'The owner added no description.');
 
+    const headerHeight = 340.0;
+    const overlap = 28.0;
     return SingleChildScrollView(
       controller: scrollController,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildHeaderImage(pet),
-          const SizedBox(height: 40),
-          _buildSectionTitle('DETAILS'),
-          _buildDetailsRow(pet, breed),
-          _buildSectionTitle('DESCRIPTION'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              '" $description "',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: Colors.black87,
+          _buildHeaderImage(pet, breed, headerHeight),
+          Transform.translate(
+            offset: const Offset(0, -overlap),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: kDaylight,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  IntrinsicHeight(child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _fact('Last seen', Text(
+                          _formatDateTime(pet.lastSeenTime),
+                          style: _factValue,
+                        )),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _fact('Colour', Row(
+                          children: [
+                            Container(
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: _parseColor(pet.primaryColorHex),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: kInk.withValues(alpha: 0.15)),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(breed,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: _factValue),
+                            ),
+                          ],
+                        )),
+                      ),
+                    ],
+                  )),
+                  const SizedBox(height: 22),
+                  const SheetHeading('What they look like'),
+                  const SizedBox(height: 8),
+                  Text(
+                    description,
+                    style: TextStyle(
+                        fontSize: 15, height: 1.45, color: kInk.withValues(alpha: 0.85)),
+                  ),
+                  const SizedBox(height: 22),
+                  const SheetHeading('Last seen here'),
+                  const SizedBox(height: 10),
+                  _buildSightingMap(pet),
+                  const SizedBox(height: 20),
+                  _buildOwnerCard(context, pet),
+                  const SizedBox(height: 24),
+                  _buildActionButtons(context, pet),
+                  const SizedBox(height: 12),
+                ],
               ),
             ),
           ),
-          _buildSectionTitle('DATE LOST'),
-          _buildDateLostPill(_formatDateTime(pet.lastSeenTime)),
-          _buildSectionTitle('LAST SEEN LOCATION'),
-          _buildSightingMap(pet),
-          _buildSectionTitle('OWNER'),
-          _buildOwnerCard(context, pet),
-          const SizedBox(height: 30),
-          _buildActionButtons(context, pet),
-          const SizedBox(height: 30),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderImage(MissingPetEntity pet) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Stack(
-          children: [
-            CachedNetworkImage(
-              imageUrl: pet.imageUrl,
-              height: 320,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              // Skeleton, not a spinner: the bone occupies the exact 320px
-              // the decoded image will take, so nothing reflows on arrival.
-              placeholder: (context, url) => const Skeletonizer.zone(
-                child: Bone(height: 320),
-              ),
-              errorWidget: (context, url, error) => Container(
-                height: 320,
-                color: Colors.grey[300],
-                child: const Icon(Icons.error, size: 48),
-              ),
+  static const TextStyle _factValue =
+      TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: kInk);
+
+  Widget _fact(String label, Widget value) {
+    return SheetTile(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: TextStyle(fontSize: 13, color: kInk.withValues(alpha: 0.6))),
+          const SizedBox(height: 4),
+          value,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderImage(MissingPetEntity pet, String breed, double height) {
+    final species = pet.species.trim();
+    return SizedBox(
+      height: height,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CachedNetworkImage(
+            imageUrl: pet.imageUrl,
+            fit: BoxFit.cover,
+            // Skeleton, not a spinner: the bone occupies the exact box the
+            // decoded image will take, so nothing reflows on arrival.
+            placeholder: (context, url) => Skeletonizer.zone(
+              child: Bone(height: height),
             ),
-            Container(
-              height: 320,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.center,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.9),
-                    Colors.transparent,
-                  ],
-                ),
+            errorWidget: (context, url, error) => const HeroPhoto(imageUrl: null),
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0, 0.3, 1],
+                colors: [Color(0x59120A04), Color(0x00120A04), Color(0xBF120A04)],
               ),
-            ),
-          ],
-        ),
-        Positioned(
-          bottom: 45,
-          left: 30,
-          child: Text(
-            pet.petName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 48,
-              fontWeight: FontWeight.w900,
-              fontStyle: FontStyle.italic,
-              letterSpacing: 1.2,
             ),
           ),
-        ),
-        Positioned(
-          bottom: -30,
-          left: 40,
-          right: 40,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Column(
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 50,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
-                  'Total Bounty',
-                  style: TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pet.petName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: displayStyle(size: 44, color: kDaylight),
+                      ),
+                      if (species.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '${PetSpecies.emojiFor(pet.species)} $species, $breed',
+                          style: TextStyle(
+                              fontSize: 15, color: kDaylight.withValues(alpha: 0.88)),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                const SizedBox(width: 12),
+                // The reward is what a hunter reads first.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text(
-                      '฿',
-                      style: TextStyle(
-                        color: Colors.deepOrange,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
+                    Text('Reward',
+                        style: TextStyle(
+                            fontSize: 13, color: kDaylight.withValues(alpha: 0.8))),
+                    const SizedBox(height: 2),
                     Text(
                       NumberFormat('#,##0').format(pet.bountyAmount),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        fontStyle: FontStyle.italic,
-                      ),
+                      style: displayStyle(size: 36, color: kBrandLight),
                     ),
+                    Text('THB',
+                        style: TextStyle(
+                            fontSize: 12, color: kDaylight.withValues(alpha: 0.8))),
                   ],
                 ),
               ],
             ),
           ),
-        ),
-        Positioned(
-          bottom: -10,
-          right: 35,
-          child: Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailsRow(MissingPetEntity pet, String breed) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildDetailItem(
-              'COLOR',
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: _parseColor(pet.primaryColorHex),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            _buildDetailItem(
-              'BREED',
-              Text(
-                breed,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            _buildDetailItem(
-              'SPECIES',
-              Text(
-                PetSpecies.emojiFor(pet.species),
-                style: const TextStyle(fontSize: 24),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailItem(String title, Widget content) {
-    return Column(
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-          ),
-        ),
-        const SizedBox(height: 8),
-        content,
-      ],
-    );
-  }
-
-  Widget _buildDateLostPill(String formattedDate) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.calendar_today, size: 16, color: Colors.black54),
-            const SizedBox(width: 8),
-            Text(
-              formattedDate,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -310,11 +244,11 @@ class PetDetailView extends StatelessWidget {
   Widget _buildSightingMap(MissingPetEntity pet) {
     final petLocation = LatLng(pet.latitude, pet.longitude);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.zero,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: SizedBox(
-          height: 160,
+          height: 150,
           child: FlutterMap(
             options: MapOptions(
               initialCenter: petLocation,
@@ -337,7 +271,7 @@ class PetDetailView extends StatelessWidget {
                     height: 40,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.redAccent,
+                        color: kBrandDeep,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 3),
                         boxShadow: [
@@ -366,45 +300,29 @@ class PetDetailView extends StatelessWidget {
     final ownerName = pet.ownerUsername?.trim();
     final username = ownerName?.isNotEmpty == true ? ownerName! : 'Pet Owner';
     final ownerPhone = pet.ownerPhone?.trim();
-    final subtitle = ownerPhone?.isNotEmpty == true ? ownerPhone! : 'Owner';
+    final subtitle = ownerPhone?.isNotEmpty == true ? 'Tel. ${ownerPhone!}' : 'Owner';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey[300]!),
+    return Row(
+      children: [
+        _buildOwnerAvatar(context, pet.ownerProfileImageUrl),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Posted by $username',
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 15, color: kInk),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 13, color: kInk.withValues(alpha: 0.6)),
+              ),
+            ],
+          ),
         ),
-        child: Row(
-          children: [
-            _buildOwnerAvatar(context, pet.ownerProfileImageUrl),
-            const SizedBox(width: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  username,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
@@ -413,23 +331,23 @@ class PetDetailView extends StatelessWidget {
   /// errors). Decoded to the painted 50pt box to spare the raster cache.
   Widget _buildOwnerAvatar(BuildContext context, String? imageUrl) {
     Widget fallback() => Container(
-          width: 50,
-          height: 50,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: Colors.blueAccent,
-            borderRadius: BorderRadius.circular(25),
+            color: const Color(0xFFCDB6A2),
+            borderRadius: BorderRadius.circular(22),
           ),
-          child: const Icon(Icons.person, color: Colors.white),
+          child: const Icon(Icons.person, color: kDaylight),
         );
     if (imageUrl == null || imageUrl.isEmpty) return fallback();
     return ClipRRect(
-      borderRadius: BorderRadius.circular(25),
+      borderRadius: BorderRadius.circular(22),
       child: CachedNetworkImage(
         imageUrl: imageUrl,
-        width: 50,
-        height: 50,
+        width: 44,
+        height: 44,
         fit: BoxFit.cover,
-        memCacheWidth: (50 * MediaQuery.devicePixelRatioOf(context)).round(),
+        memCacheWidth: (44 * MediaQuery.devicePixelRatioOf(context)).round(),
         placeholder: (_, _) => fallback(),
         errorWidget: (_, _, _) => fallback(),
       ),
@@ -437,10 +355,13 @@ class PetDetailView extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context, MissingPetEntity pet) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    final species = pet.species.trim().toLowerCase();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FloatingActionButton(
+        BrandButton(
+          label: species.isEmpty ? 'I saw this pet' : 'I saw this $species',
+          icon: Icons.photo_camera_rounded,
           onPressed: () {
             // TARGETED sighting: the hunter is looking at THIS pet and found
             // it. Close the sheet, then open the camera in targeted mode
@@ -453,40 +374,17 @@ class PetDetailView extends StatelessWidget {
               'petName': pet.petName,
             });
           },
-          backgroundColor: Colors.blue[600],
-          elevation: 0,
-          child: const Icon(Icons.camera_alt, color: Colors.white),
         ),
-        const SizedBox(width: 20),
-        InkWell(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: const Icon(Icons.close, color: Colors.white, size: 24),
+        const SizedBox(height: 6),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(
+            foregroundColor: kInk.withValues(alpha: 0.7),
+            minimumSize: const Size.fromHeight(44),
           ),
+          child: const Text('Close', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         ),
       ],
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 25, bottom: 15),
-      child: Center(
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontWeight: FontWeight.w900,
-            fontSize: 14,
-            letterSpacing: 2.0,
-          ),
-        ),
-      ),
     );
   }
 }

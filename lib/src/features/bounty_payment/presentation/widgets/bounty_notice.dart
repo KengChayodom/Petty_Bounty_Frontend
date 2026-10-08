@@ -20,7 +20,7 @@ class BountyNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (tone) {
-      BountyNoticeTone.success => const Color(0xFF1B7F3B),
+      BountyNoticeTone.success => kSuccessDeep,
       BountyNoticeTone.warning => kBrandErrorDeep,
       BountyNoticeTone.info => kBrandDeep,
     };
@@ -43,12 +43,12 @@ class BountyNotice extends StatelessWidget {
               children: [
                 Text(title,
                     style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w900, color: color)),
+                        fontSize: 16, fontWeight: FontWeight.w700, color: color)),
                 if (body != null) ...[
                   const SizedBox(height: 4),
                   Text(body!,
                       style: TextStyle(
-                          fontSize: 13, height: 1.35, color: kInk.withValues(alpha: 0.7))),
+                          fontSize: 14, height: 1.4, color: kInk.withValues(alpha: 0.7))),
                 ],
               ],
             ),

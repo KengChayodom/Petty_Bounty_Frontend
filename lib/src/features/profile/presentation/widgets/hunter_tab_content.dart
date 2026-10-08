@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/models/profile_models.dart';
 import '../../../bounty_payment/presentation/my_bounties_section.dart';
+import '../../../../core/ui/brand_widgets.dart';
 import 'hunter_history_card.dart';
 import 'profile_stat_card.dart';
 
@@ -23,95 +24,44 @@ class HunterTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Bounties the hunter is owed or has been paid (Feature 6).
-        const MyBountiesSection(),
-        // HUNTER CAREERS HEADER
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'HUNTER CAREERS',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: Colors.grey,
-                letterSpacing: 1.0,
-              ),
-            ),
-            Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // 3 STATS CARDS
         Row(
           children: [
             Expanded(
               child: ProfileStatCard(
-                backgroundColor: const Color(0xFFFFF3E0),
-                icon: Icons.star_rounded,
-                iconColor: const Color(0xFFFFB300),
                 numberText: '$earnedPoints',
-                numberColor: const Color(0xFFFF6D00),
-                label: 'EARNED POINT',
-                labelColor: const Color(0xFFFF6D00),
+                label: 'Points',
+                highlight: true,
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: ProfileStatCard(
-                backgroundColor: const Color(0xFFF5F5F5),
-                icon: Icons.search_rounded,
-                iconColor: Colors.black87,
                 numberText: '$sightingCount',
-                numberColor: Colors.black87,
-                label: 'SIGHTING',
-                labelColor: Colors.black87,
+                label: 'Sightings',
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: ProfileStatCard(
-                backgroundColor: const Color(0xFFE8F5E9),
-                icon: Icons.workspace_premium_rounded,
-                iconColor: const Color(0xFF4CAF50),
                 numberText: '$rescuesCount',
-                numberColor: const Color(0xFF2E7D32),
-                label: 'RESCUES',
-                labelColor: const Color(0xFF2E7D32),
+                label: 'Pets home',
               ),
             ),
           ],
         ),
-
         const SizedBox(height: 24),
-
-        // SIGHT SENT HISTORY HEADER
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'SIGHT SENT HISTORY',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: Colors.grey,
-                letterSpacing: 1.0,
-              ),
-            ),
-            Icon(Icons.filter_list_rounded, color: Colors.black87),
-          ],
-        ),
-        const SizedBox(height: 12),
-
+        // Bounties the hunter is owed or has been paid (Feature 6).
+        const MyBountiesSection(),
+        const SheetHeading('Your sightings'),
+        const SizedBox(height: 10),
         // SIGHT SENT HISTORY LIST
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: historyItems.length,
-          separatorBuilder: (_, index) => const SizedBox(height: 12),
+          separatorBuilder: (_, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             return HunterHistoryCard(item: historyItems[index]);
           },

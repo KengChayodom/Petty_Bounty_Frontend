@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/theme/app_glass.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -85,7 +87,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please add a pet photo first!'),
-          backgroundColor: Colors.red,
+          backgroundColor: kBrandErrorDeep,
         ),
       );
       return;
@@ -95,7 +97,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please set the last seen location first!'),
-          backgroundColor: Colors.red,
+          backgroundColor: kBrandErrorDeep,
         ),
       );
       return;
@@ -130,7 +132,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to upload photo: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: kBrandErrorDeep,
             ),
           );
         }
@@ -173,7 +175,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to submit report: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: kBrandErrorDeep,
           ),
         );
       }
@@ -222,30 +224,30 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
     final bool isCurrentActive =
         isUnlocked && !isCompleted && (stepIndex == _lastUnlockedStep);
 
-    Color borderColor = Colors.grey.shade200;
-    Color badgeBg = const Color(0xFF0022FF).withValues(alpha: 0.1);
-    Color badgeText = const Color(0xFF0022FF);
+    Color borderColor = kInkMuted.withValues(alpha: 0.18);
+    Color badgeBg = kBrandDeep.withValues(alpha: 0.1);
+    Color badgeText = kBrandDeep;
     IconData badgeIcon = icon;
-    String badgeLabel = 'STEP $stepNumber';
+    String badgeLabel = 'Step $stepNumber';
 
     if (!isUnlocked) {
-      borderColor = Colors.grey.shade200;
-      badgeBg = Colors.grey.shade100;
-      badgeText = Colors.grey.shade500;
+      borderColor = kInkMuted.withValues(alpha: 0.18);
+      badgeBg = kInkMuted.withValues(alpha: 0.12);
+      badgeText = kInkMuted.withValues(alpha: 0.6);
       badgeIcon = Icons.lock_outline_rounded;
-      badgeLabel = 'LOCKED';
+      badgeLabel = 'Locked';
     } else if (isCompleted) {
-      borderColor = Colors.green.shade300;
-      badgeBg = Colors.green.shade50;
-      badgeText = Colors.green.shade700;
+      borderColor = kSuccessDeep.withValues(alpha: 0.3);
+      badgeBg = kSuccessDeep.withValues(alpha: 0.08);
+      badgeText = kSuccessDeep;
       badgeIcon = Icons.check_circle_rounded;
       badgeLabel = '';
     } else if (isCurrentActive) {
-      borderColor = const Color(0xFF0022FF);
-      badgeBg = const Color(0xFF0022FF);
+      borderColor = kBrandDeep;
+      badgeBg = kBrandDeep;
       badgeText = Colors.white;
       badgeIcon = Icons.arrow_circle_right_rounded;
-      badgeLabel = 'ACTIVE';
+      badgeLabel = 'Now';
     }
 
     final cardWidget = Container(
@@ -262,8 +264,8 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
         boxShadow: [
           BoxShadow(
             color: isCurrentActive
-                ? const Color(0xFF0022FF).withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.03),
+                ? kBrandDeep.withValues(alpha: 0.08)
+                : kInk.withValues(alpha: 0.03),
             blurRadius: isCurrentActive ? 16 : 10,
             offset: const Offset(0, 4),
           ),
@@ -305,10 +307,9 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.8,
-                  color: isUnlocked ? Colors.black87 : Colors.grey,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isUnlocked ? kInk : kInkMuted,
                 ),
               ),
             ],
@@ -352,22 +353,18 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: kDaylight,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: kDaylight,
+          scrolledUnderElevation: 0,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: const Icon(Icons.arrow_back, color: kInk),
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
-            'CREATE POSTER',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              fontSize: 16,
-            ),
+            'Report a lost pet',
+            style: TextStyle(fontFamily: kDisplayFamily, fontSize: 20, fontWeight: FontWeight.w800, color: kInk),
           ),
           centerTitle: true,
         ),
@@ -383,7 +380,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                   _buildSectionCard(
                     stepIndex: 0,
                     stepNumber: '1',
-                    title: 'PET PHOTO',
+                    title: 'Photo',
                     icon: Icons.add_a_photo_outlined,
                     isUnlocked: true,
                     isCompleted: isStep0Done,
@@ -394,7 +391,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                   _buildSectionCard(
                     stepIndex: 1,
                     stepNumber: '2',
-                    title: 'DETAILS & CHARACTERISTICS',
+                    title: 'What they look like',
                     icon: Icons.pets_outlined,
                     isUnlocked: 1 <= _lastUnlockedStep,
                     isCompleted: isStep1Done,
@@ -409,7 +406,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: kFieldFill,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Row(
@@ -417,12 +414,12 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue[50],
+                                  color: kBrandTint,
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.text_fields,
-                                  color: Colors.blue,
+                                  color: kBrandDeep,
                                   size: 20,
                                 ),
                               ),
@@ -432,9 +429,9 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                                   controller: _nameController,
                                   textInputAction: TextInputAction.next,
                                   decoration: const InputDecoration(
-                                    hintText: "Pet's Name ...",
+                                    hintText: "Pet's name",
                                     border: InputBorder.none,
-                                    hintStyle: TextStyle(color: Colors.grey),
+                                    hintStyle: TextStyle(color: kInkMuted),
                                   ),
                                   onChanged: (value) {
                                     notifier.updatePetName(value);
@@ -468,7 +465,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                   _buildSectionCard(
                     stepIndex: 2,
                     stepNumber: '3',
-                    title: 'LOCATION & TIME',
+                    title: 'Where and when',
                     icon: Icons.location_on_outlined,
                     isUnlocked: 2 <= _lastUnlockedStep,
                     isCompleted: isStep2Done,
@@ -485,7 +482,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                   _buildSectionCard(
                     stepIndex: 3,
                     stepNumber: '4',
-                    title: 'BOUNTY & REWARD',
+                    title: 'Reward',
                     icon: Icons.card_giftcard_outlined,
                     isUnlocked: 3 <= _lastUnlockedStep,
                     isCompleted: isStep3Done,
@@ -502,13 +499,11 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                         ? null
                         : _submitReport,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0022FF),
-                      disabledBackgroundColor: Colors.grey.shade300,
+                      backgroundColor: kBrandDeep,
+                      disabledBackgroundColor: kInkMuted.withValues(alpha: 0.3),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                      minimumSize: const Size.fromHeight(54),
+                      shape: const StadiumBorder(),
                       elevation: 0,
                     ),
                     child: _isUploading
@@ -520,18 +515,17 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                                 Icons.description_outlined,
                                 size: 20,
                                 color: _lastUnlockedStep < 3
-                                    ? Colors.grey
+                                    ? kInkMuted
                                     : Colors.white,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'BROADCAST CASE',
+                                'Post and alert hunters',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.0,
                                   color: _lastUnlockedStep < 3
-                                      ? Colors.grey
+                                      ? kInkMuted
                                       : Colors.white,
                                 ),
                               ),

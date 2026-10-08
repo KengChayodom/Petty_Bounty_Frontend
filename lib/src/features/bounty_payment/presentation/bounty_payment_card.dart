@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/brand_widgets.dart';
 import '../domain/promptpay_payload.dart';
 
 /// The card a Pet Owner pays the bounty from, once their report is "Found".
@@ -41,95 +42,50 @@ class BountyPaymentCard extends StatelessWidget {
     final number = promptPayNumber;
     final canPay = number != null && PromptPayPayload.isValidMobile(number);
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: kInk.withValues(alpha: 0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: kInk.withValues(alpha: 0.07),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+    return SheetTile(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Pay the bounty to',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: kInk.withValues(alpha: 0.55),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            hunterName,
+            'You owe $hunterName',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: kInk,
-            ),
+            style: TextStyle(fontSize: 15, color: kInk.withValues(alpha: 0.7)),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
+          // The bounty is the one loud element on this screen.
           Text.rich(
             TextSpan(
               text: _baht.format(amount),
-              children: const [
+              children: [
                 TextSpan(
                   text: ' THB',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  style: displayStyle(size: 18, color: kBrandDeep, weight: FontWeight.w700),
                 ),
               ],
             ),
-            style: const TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.w900,
-              color: kBrandDeep,
-            ),
+            style: displayStyle(size: 44, color: kBrandDeep),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           if (canPay) _QrPane(number: number, amount: amount) else const _AwaitingPane(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             canPay
-                ? 'Scan with your banking app. Your bank will show the '
-                    'hunter\'s name before you confirm the transfer.'
+                ? 'Scan with your banking app. Your bank shows the hunter\'s '
+                    'name before you confirm the transfer.'
                 : 'You can pay as soon as the hunter adds a PromptPay number.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12.5,
-              height: 1.35,
-              color: kInk.withValues(alpha: 0.6),
+              fontSize: 14,
+              height: 1.4,
+              color: kInk.withValues(alpha: 0.65),
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: canPay ? onAttachSlip : null,
-              icon: const Icon(Icons.receipt_long_rounded),
-              label: const Text(
-                'Attach transfer slip',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kBrandDeep,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: kInk.withValues(alpha: 0.08),
-                disabledForegroundColor: kInk.withValues(alpha: 0.35),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-            ),
+          BrandButton(
+            label: 'Attach transfer slip',
+            icon: Icons.attach_file_rounded,
+            onPressed: canPay ? onAttachSlip : null,
           ),
         ],
       ),
@@ -192,7 +148,7 @@ class _AwaitingPane extends StatelessWidget {
             child: Text(
               'Waiting for the hunter\'s payout details',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: kInk),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: kInk),
             ),
           ),
         ],
