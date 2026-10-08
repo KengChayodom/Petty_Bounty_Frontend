@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/models/profile_models.dart';
+import '../../../bounty_payment/presentation/my_bounties_section.dart';
 import 'hunter_history_card.dart';
 import 'profile_stat_card.dart';
 
@@ -24,6 +25,8 @@ class HunterTabContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Bounties the hunter is owed or has been paid (Feature 6).
+        const MyBountiesSection(),
         // HUNTER CAREERS HEADER
         const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
