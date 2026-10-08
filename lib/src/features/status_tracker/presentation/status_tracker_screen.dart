@@ -15,6 +15,7 @@ import 'widgets/activity_timeline_skeleton.dart';
 import '../../../core/ui/full_image_view.dart';
 import 'widgets/sighting_map_view.dart';
 import 'widgets/status_stepper.dart';
+import '../../bounty_payment/presentation/owner_bounty_section.dart';
 
 /// Owner-facing "Status Tracker" screen: the search progress of a single lost
 /// pet report — a 4-stage stepper plus the chronological sighting timeline
@@ -447,6 +448,11 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
               if (!resolved) ...[
                 const SizedBox(height: 16),
                 _selfCloseButton(),
+              ],
+              // Once the search has ended, the bounty is settled here.
+              if (resolved) ...[
+                const SizedBox(height: 20),
+                OwnerBountySection(petId: widget.petId),
               ],
               const SizedBox(height: 28),
               const Text(

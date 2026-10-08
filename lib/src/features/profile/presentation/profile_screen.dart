@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -122,6 +123,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         centerTitle: true,
         actions: [
+          // TEMPORARY, debug builds only: opens the bounty payment preview.
+          if (kDebugMode)
+            IconButton(
+              icon: const Icon(Icons.qr_code_2_rounded),
+              tooltip: 'Bounty payment preview (debug)',
+              onPressed: () => context.push(AppRoutes.bountyPaymentPreview),
+            ),
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
             tooltip: 'Log out',
