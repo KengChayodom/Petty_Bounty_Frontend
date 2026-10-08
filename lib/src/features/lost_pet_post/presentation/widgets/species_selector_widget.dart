@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_glass.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/pet_species.dart';
@@ -21,12 +23,11 @@ class SpeciesSelectorWidget extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'SPECIES',
+          'Species',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
-            letterSpacing: 1.0,
+            color: kInkMuted,
           ),
         ),
         const SizedBox(height: 8),
@@ -40,9 +41,9 @@ class SpeciesSelectorWidget extends ConsumerWidget {
                   label: Center(child: Text(s)),
                   selected: isSelected,
                   onSelected: (_) => notifier.updateSpecies(s),
-                  selectedColor: Colors.blue[100],
+                  selectedColor: kBrandTint,
                   labelStyle: TextStyle(
-                    color: isSelected ? Colors.blue[800] : Colors.black87,
+                    color: isSelected ? kBrandDeep : kInk,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

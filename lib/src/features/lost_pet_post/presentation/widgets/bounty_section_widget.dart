@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_glass.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/providers/lost_pet_post_form_provider.dart';
@@ -38,15 +40,15 @@ class BountySectionWidget extends ConsumerWidget {
               _buildModeToggleButton(
                 selected: !isBountyMode,
                 icon: Icons.favorite,
-                label: 'HELP FREE',
-                activeColor: Colors.green,
+                label: 'No cash reward',
+                activeColor: kSuccessDeep,
                 onTap: () => notifier.updateBountyMode(false),
               ),
               _buildModeToggleButton(
                 selected: isBountyMode,
                 icon: Icons.monetization_on_outlined,
-                label: 'BOUNTY',
-                activeColor: Colors.orange,
+                label: 'Cash reward',
+                activeColor: kBrandDeep,
                 onTap: () => notifier.updateBountyMode(true),
               ),
             ],
@@ -60,8 +62,8 @@ class BountySectionWidget extends ConsumerWidget {
             background: const Color(0xFFF1F8F5),
             border: const Color(0xFF81C784),
             icon: Icons.workspace_premium,
-            accent: Colors.green,
-            title: 'XP REWARD ONLY',
+            accent: kSuccessDeep,
+            title: 'Hunters earn points only',
             description:
                 'Hunters will receive Trust Score and XP points for successful findings, but no cash reward will be issued.',
           )
@@ -81,7 +83,7 @@ class BountySectionWidget extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: kFieldFill,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -92,7 +94,7 @@ class BountySectionWidget extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: kBrandDeep,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -103,8 +105,8 @@ class BountySectionWidget extends ConsumerWidget {
                         const TextInputType.numberWithOptions(decimal: true),
                     style: const TextStyle(
                       fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
+                      fontWeight: FontWeight.w700,
+                      color: kInk,
                     ),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
@@ -165,7 +167,7 @@ class BountySectionWidget extends ConsumerWidget {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.2),
+                      color: kInkMuted.withValues(alpha: 0.2),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -176,12 +178,12 @@ class BountySectionWidget extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: selected ? activeColor : Colors.grey),
+              Icon(icon, size: 18, color: selected ? activeColor : kInkMuted),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? activeColor : Colors.grey,
+                  color: selected ? activeColor : kInkMuted,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -253,7 +255,7 @@ class BountySectionWidget extends ConsumerWidget {
           label,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: kInk,
             fontSize: 13,
           ),
         ),

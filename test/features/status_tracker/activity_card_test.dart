@@ -70,8 +70,8 @@ void main() {
       onReject: () {},
     );
 
-    expect(find.text('THAT\'S MY PET'), findsOneWidget);
-    expect(find.text('NOT MINE'), findsOneWidget);
+    expect(find.text('That\'s my pet'), findsOneWidget);
+    expect(find.text('Not mine'), findsOneWidget);
     expect(find.textContaining('Review the earlier'), findsNothing);
   });
 
@@ -87,8 +87,8 @@ void main() {
       onReject: () {},
     );
 
-    expect(find.text('CONFIRM RESCUE'), findsOneWidget);
-    expect(find.text('THAT\'S MY PET'), findsNothing);
+    expect(find.text('Confirm rescue'), findsOneWidget);
+    expect(find.text('That\'s my pet'), findsNothing);
   });
 
   testWidgets('a card waiting its turn is locked and says why', (tester) async {
@@ -96,17 +96,17 @@ void main() {
 
     expect(find.textContaining('Review the earlier sightings first'),
         findsOneWidget);
-    expect(find.text('THAT\'S MY PET'), findsNothing);
-    expect(find.text('NOT MINE'), findsNothing);
+    expect(find.text('That\'s my pet'), findsNothing);
+    expect(find.text('Not mine'), findsNothing);
   });
 
   testWidgets('a decided card shows the verdict instead of buttons',
       (tester) async {
     await _pump(tester, item: _card(ownerStatus: 'Confirmed'));
 
-    expect(find.text('YOU CONFIRMED THIS'), findsOneWidget);
-    expect(find.text('THAT\'S MY PET'), findsNothing);
-    expect(find.text('NOT MINE'), findsNothing);
+    expect(find.text('You confirmed this'), findsOneWidget);
+    expect(find.text('That\'s my pet'), findsNothing);
+    expect(find.text('Not mine'), findsNothing);
   });
 
   testWidgets('a rejected card stays on the timeline with its own badge',
@@ -116,7 +116,7 @@ void main() {
     // unreadable, since the next card is defined by what came before it.
     await _pump(tester, item: _card(ownerStatus: 'Rejected'));
 
-    expect(find.text('YOU SAID NOT MINE'), findsOneWidget);
+    expect(find.text('You said not mine'), findsOneWidget);
   });
 
   testWidgets('the reporting hunter is shown with a number to ring',

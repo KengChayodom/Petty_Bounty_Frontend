@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_glass.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/providers/lost_pet_post_form_provider.dart';
@@ -61,22 +63,22 @@ class LastSeenTimeWidget extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: kFieldFill,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            const Icon(Icons.access_time, color: Colors.blue, size: 22),
+            const Icon(Icons.access_time, color: kBrandDeep, size: 22),
             const SizedBox(width: 12),
             Text(
               'Lost at ${_formatDateTime(lastSeenTime)}',
               style: const TextStyle(
-                color: Colors.black87,
+                color: kInk,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const Spacer(),
-            const Icon(Icons.calendar_today, color: Colors.grey, size: 18),
+            const Icon(Icons.calendar_today, color: kInkMuted, size: 18),
           ],
         ),
       ),

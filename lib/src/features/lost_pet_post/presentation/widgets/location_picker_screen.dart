@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_glass.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -41,15 +43,14 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: kInk),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'SELECT LAST-SEEN LOCATION',
           style: TextStyle(
-            color: Colors.black,
+            color: kInk,
             fontWeight: FontWeight.bold,
-            letterSpacing: 1.0,
             fontSize: 14,
           ),
         ),
@@ -81,7 +82,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                     height: 44,
                     child: const Icon(
                       Icons.location_pin,
-                      color: Color(0xFF0022FF),
+                      color: kBrandDeep,
                       size: 44,
                     ),
                   ),
@@ -103,7 +104,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: kInk.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -112,7 +113,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
               child: const Text(
                 'Tap anywhere on the map to move the pin',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.black54),
+                style: TextStyle(fontSize: 12, color: kInkMuted),
               ),
             ),
           ),
@@ -123,7 +124,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
             child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(_picked),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0022FF),
+                backgroundColor: kBrandDeep,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -132,11 +133,10 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                 elevation: 0,
               ),
               child: const Text(
-                'CONFIRM LOCATION',
+                'Use this location',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1.0,
                 ),
               ),
             ),

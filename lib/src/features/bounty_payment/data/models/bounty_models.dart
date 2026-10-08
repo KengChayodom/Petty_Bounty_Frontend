@@ -58,6 +58,8 @@ class BountyPayment {
 class BountyView {
   const BountyView({
     required this.petId,
+    this.petName,
+    this.imageUrl,
     required this.role,
     required this.petStatus,
     required this.bountyAmount,
@@ -71,6 +73,8 @@ class BountyView {
   });
 
   final String petId;
+  final String? petName;
+  final String? imageUrl;
 
   /// `owner` or `hunter`.
   final String role;
@@ -106,6 +110,8 @@ class BountyView {
 
   factory BountyView.fromJson(Map<String, dynamic> j) => BountyView(
         petId: '${j['pet_id']}',
+        petName: j['pet_name'] as String?,
+        imageUrl: j['image_url'] as String?,
         role: '${j['role']}',
         petStatus: '${j['pet_status']}',
         bountyAmount: _num(j['bounty_amount']),

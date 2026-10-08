@@ -107,7 +107,7 @@ void main() {
     final repo = await _pump(tester);
 
     await tester.enterText(find.widgetWithText(TextFormField, 'Mochi'), '');
-    await tester.tap(find.text('SAVE CHANGES'));
+    await tester.tap(find.text('Save changes'));
     await tester.pump();
 
     expect(find.text('Please enter pet name'), findsOneWidget);
@@ -126,7 +126,7 @@ void main() {
       find.widgetWithText(TextFormField, '1000'),
       '2500',
     );
-    await tester.tap(find.text('SAVE CHANGES'));
+    await tester.tap(find.text('Save changes'));
     await tester.pump();
 
     expect(repo.calls, 1);
@@ -152,7 +152,7 @@ void main() {
       find.widgetWithText(TextFormField, 'shy, one white paw'),
       '',
     );
-    await tester.tap(find.text('SAVE CHANGES'));
+    await tester.tap(find.text('Save changes'));
     await tester.pump();
 
     final chars = repo.lastPatch!['characteristics'] as Map<String, dynamic>;
@@ -166,14 +166,14 @@ void main() {
       error: Exception('Missing pet pet-1 not found or not owned by you'),
     );
 
-    await tester.tap(find.text('SAVE CHANGES'));
+    await tester.tap(find.text('Save changes'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
     expect(repo.calls, 1);
     expect(find.textContaining('not owned by you'), findsOneWidget);
     // still on the form
-    expect(find.text('SAVE CHANGES'), findsOneWidget);
+    expect(find.text('Save changes'), findsOneWidget);
   });
 
   testWidgets('a report with no coat colour is saved without inventing one',
@@ -186,7 +186,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('SAVE CHANGES'));
+    await tester.tap(find.text('Save changes'));
     await tester.pump();
 
     final patch = repo.lastPatch!;
@@ -198,9 +198,9 @@ void main() {
   testWidgets('HELP FREE mode sends bounty 0', (tester) async {
     final repo = await _pump(tester, pet: _pet(bounty: 5000));
 
-    await tester.tap(find.text('HELP FREE'));
+    await tester.tap(find.text('No cash reward'));
     await tester.pump();
-    await tester.tap(find.text('SAVE CHANGES'));
+    await tester.tap(find.text('Save changes'));
     await tester.pump();
 
     expect(repo.lastPatch!['bounty_amount'], 0.0);

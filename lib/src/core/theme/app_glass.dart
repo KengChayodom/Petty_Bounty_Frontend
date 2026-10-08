@@ -1,4 +1,4 @@
-import 'dart:ui' show ImageFilter;
+import 'dart:ui' show FontVariation, ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -37,6 +37,39 @@ const Color kBrandError = Color(0xFFFF8A7A);
 /// Errors on a light surface. [kBrandError] is a tint lifted for dark
 /// backdrops and has nowhere near enough contrast against white.
 const Color kBrandErrorDeep = Color(0xFFC0342B);
+
+/// Positive state on a light surface: a confirmed payment, a paid bounty.
+const Color kSuccessDeep = Color(0xFF1B6B35);
+
+/// Secondary text on a light surface (labels, hints, captions).
+const Color kInkMuted = Color(0xFF6E6259);
+
+/// A pale brand wash: selected chips, icon plates.
+const Color kBrandTint = Color(0xFFFDE3CC);
+
+/// The fill of a text field or picker row inside a white card.
+const Color kFieldFill = Color(0xFFFBF3EA);
+
+/// The display face: pet names, screen titles, and above all bounty amounts,
+/// which are the one loud element on any screen that shows money.
+const String kDisplayFamily = 'BricolageGrotesque';
+
+/// A display text style. The font is one variable file, so the weight is set
+/// both as [fontWeight] (for fallback fonts) and as a `wght` variation.
+TextStyle displayStyle({
+  required double size,
+  Color color = kInk,
+  FontWeight weight = FontWeight.w800,
+}) =>
+    TextStyle(
+      fontFamily: kDisplayFamily,
+      fontSize: size,
+      fontWeight: weight,
+      fontVariations: [FontVariation('wght', weight.value.toDouble())],
+      height: 1.0,
+      letterSpacing: -0.02 * size,
+      color: color,
+    );
 
 /// A frosted pane for chrome that floats over live content: the map's status
 /// card, its recenter button and its nav capsule.

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_glass.dart';
+
 /// The four visual stages of a search, in order. This is a UI abstraction over
 /// the backend's derived `post_status` — not a mirror of the `pet_status`
 /// storage column, which uses different words for different things:
@@ -12,79 +14,67 @@ import 'package:flutter/material.dart';
 /// those words lives in `app/services/pet_logic.py`.
 enum TrackerStage { lost, pending, spotted, rescue }
 
-/// Horizontal 4-step progress indicator (LOST → PENDING → SPOTTED → RESCUE).
-/// Circles and connectors up to and including [current] are filled orange;
-/// everything after is greyed out.
+/// A four-segment progress bar (Reported, Waiting, Seen, Home) with the
+/// stage names under it. Segments up to and including [current] are filled.
 class StatusStepper extends StatelessWidget {
   const StatusStepper({super.key, required this.current});
 
   final TrackerStage current;
 
-  static const _orange = Color(0xFFF57C3A);
-  static const _grey = Color(0xFFBDBDBD);
-
-  static const _stages = <_StageSpec>[
-    _StageSpec(TrackerStage.lost, 'LOST', Icons.bolt_rounded),
-    _StageSpec(TrackerStage.pending, 'PENDING', Icons.hourglass_top_rounded),
-    _StageSpec(TrackerStage.spotted, 'SPOTTED', Icons.visibility_rounded),
-    _StageSpec(
-        TrackerStage.rescue, 'RESCUE', Icons.volunteer_activism_rounded),
-  ];
+  static const _labels = ['Reported', 'Waiting', 'Seen', 'Home'];
 
   @override
   Widget build(BuildContext context) {
     final currentIndex = current.index;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (var i = 0; i < _stages.length; i++) ...[
-          _buildNode(_stages[i], reached: i <= currentIndex),
-          if (i < _stages.length - 1)
-            Expanded(
-              child: Padding(
-                // Nudge the connector up to line through the circles' centers.
-                padding: const EdgeInsets.only(top: 21),
-                child: Container(
-                  height: 3,
-                  color: i < currentIndex ? _orange : _grey,
+    return Semantics(
+      label: 'Search progress: ${_labels[currentIndex]}',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              for (var i = 0; i < _labels.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                Expanded(
+                  child: Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: i <= currentIndex
+                          ? kBrandDeep
+                          : kInk.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildNode(_StageSpec spec, {required bool reached}) {
-    final color = reached ? _orange : _grey;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          child: Icon(spec.icon, color: Colors.white, size: 22),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          spec.label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.5,
-            color: reached ? Colors.black87 : _grey,
+              ],
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              for (var i = 0; i < _labels.length; i++)
+                Expanded(
+                  child: Text(
+                    _labels[i],
+                    textAlign: i == 0
+                        ? TextAlign.left
+                        : i == _labels.length - 1
+                            ? TextAlign.right
+                            : TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight:
+                          i == currentIndex ? FontWeight.w700 : FontWeight.w400,
+                      color: i == currentIndex
+                          ? kInk
+                          : kInk.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
-}
-
-class _StageSpec {
-  final TrackerStage stage;
-  final String label;
-  final IconData icon;
-  const _StageSpec(this.stage, this.label, this.icon);
 }

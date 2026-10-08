@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/brand_widgets.dart';
 import '../data/bounty_repository.dart';
 import '../data/models/bounty_models.dart';
 import '../domain/providers/bounty_providers.dart';
@@ -73,31 +74,40 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(bountyViewProvider(widget.petId));
-    return Scaffold(
-      backgroundColor: kDaylight,
-      appBar: AppBar(
+    return async.when(
+      loading: () => const Scaffold(
         backgroundColor: kDaylight,
-        foregroundColor: kInk,
-        elevation: 0,
-        title: const Text('Your bounty', style: TextStyle(fontWeight: FontWeight.w900)),
+        body: Center(child: CircularProgressIndicator()),
       ),
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
+      error: (e, _) => Scaffold(
+        backgroundColor: kDaylight,
+        appBar: AppBar(backgroundColor: kDaylight, foregroundColor: kInk, elevation: 0),
+        body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(e is BountyNotFound ? 'This bounty is not available.' : 'Could not load the bounty.'),
+            child: Text(e is BountyNotFound
+                ? 'This reward is not available to you.'
+                : 'Could not load the reward. Pull down to try again.'),
           ),
         ),
-        data: (v) => ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      ),
+      data: (v) => PhotoHeroScaffold(
+        imageUrl: v.imageUrl,
+        title: v.petName ?? 'Your reward',
+        subtitle: 'Your reward for bringing them home',
+        heroHeight: 300,
+        onRefresh: () async => ref.invalidate(bountyViewProvider(widget.petId)),
+        trailingTitle: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('${_baht.format(v.bountyAmount)} THB',
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: kBrandDeep)),
-            const SizedBox(height: 16),
-            ..._body(v),
+            Text(_baht.format(v.bountyAmount),
+                style: displayStyle(size: 36, color: kBrandLight)),
+            const SizedBox(height: 4),
+            Text('THB', style: TextStyle(fontSize: 13, color: kDaylight.withValues(alpha: 0.85))),
           ],
         ),
+        children: _body(v),
       ),
     );
   }
@@ -137,19 +147,25 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
               : 'Check your bank account, then confirm. If you do nothing, an '
                   'administrator will review it after three days.',
         ),
-        const SizedBox(height: 16),
-        if (p.slipImageUrl != null)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: CachedNetworkImage(imageUrl: p.slipImageUrl!, fit: BoxFit.contain, height: 360),
+        const SizedBox(height: 22),
+        if (p.slipImageUrl != null) ...[
+          const SheetHeading('Transfer slip'),
+          const SizedBox(height: 10),
+          SheetTile(
+            padding: const EdgeInsets.all(8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: CachedNetworkImage(imageUrl: p.slipImageUrl!, fit: BoxFit.contain, height: 320),
+            ),
           ),
+        ],
         if (p.referenceNo != null) ...[
           const SizedBox(height: 8),
-          Text('Reference: ${p.referenceNo}', style: TextStyle(color: kInk.withValues(alpha: 0.7))),
+          Text('Reference ${p.referenceNo}', style: TextStyle(fontSize: 14, color: kInk.withValues(alpha: 0.65))),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
         _button(
-          label: 'I received the money',
+          label: 'The money arrived',
           icon: Icons.check_circle_rounded,
           onPressed: () async {
             if (await _confirmDialog('Confirm the payment?',
@@ -161,7 +177,8 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
         if (p.canDispute(_now)) ...[
           const SizedBox(height: 10),
           _button(
-            label: 'Not received',
+            label: 'It did not arrive',
+            danger: true,
             icon: Icons.report_gmailerrorred_rounded,
             outlined: true,
             onPressed: () async {
@@ -197,6 +214,7 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
           label: 'Report unpaid',
           icon: Icons.flag_rounded,
           outlined: true,
+          danger: true,
           onPressed: () async {
             if (await _confirmDialog('Report the bounty as unpaid?',
                 'An administrator will contact the owner.')) {
@@ -213,26 +231,13 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
     required IconData icon,
     required VoidCallback onPressed,
     bool outlined = false,
-  }) {
-    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(30));
-    final child = Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15));
-    return SizedBox(
-      height: 50,
-      width: double.infinity,
-      child: outlined
-          ? OutlinedButton.icon(
-              onPressed: _busy ? null : onPressed,
-              icon: Icon(icon),
-              label: child,
-              style: OutlinedButton.styleFrom(foregroundColor: kBrandErrorDeep, shape: shape),
-            )
-          : ElevatedButton.icon(
-              onPressed: _busy ? null : onPressed,
-              icon: Icon(icon),
-              label: child,
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: kBrandDeep, foregroundColor: Colors.white, elevation: 0, shape: shape),
-            ),
-    );
-  }
+    bool danger = false,
+  }) =>
+      BrandButton(
+        label: label,
+        icon: icon,
+        outlined: outlined,
+        danger: danger,
+        onPressed: _busy ? null : onPressed,
+      );
 }

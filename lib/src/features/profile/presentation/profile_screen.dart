@@ -1,11 +1,11 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_service.dart';
 import '../../../core/notifications/fcm_service.dart';
-import '../../../core/ui/adaptive/breakpoints.dart';
+import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/brand_widgets.dart';
 import '../../../routing/app_router.dart';
 import '../../home_map/data/location_publisher.dart';
 import '../domain/models/profile_models.dart';
@@ -69,8 +69,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Profile updated successfully!'),
-                    backgroundColor: Colors.green,
+                    content: Text('Profile saved.'),
+                    backgroundColor: kSuccessDeep,
                   ),
                 );
               }
@@ -79,8 +79,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Failed to update profile: $e'),
-                    backgroundColor: Colors.red,
+                    content: Text('Could not save your profile: $e'),
+                    backgroundColor: kBrandErrorDeep,
                   ),
                 );
               }
@@ -100,142 +100,163 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final ownerPostsAsync = ref.watch(ownerPostsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            }
-          },
-        ),
-        title: const Text(
-          'PROFILE',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 2.0,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          // TEMPORARY, debug builds only: opens the bounty payment preview.
-          if (kDebugMode)
-            IconButton(
-              icon: const Icon(Icons.qr_code_2_rounded),
-              tooltip: 'Bounty payment preview (debug)',
-              onPressed: () => context.push(AppRoutes.bountyPaymentPreview),
-            ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-            tooltip: 'Log out',
-            onPressed: _logout,
-          ),
-        ],
-      ),
+      backgroundColor: kDaylight,
       // `.noSpinner` keeps the pull-to-refresh gesture but draws no progress
       // arc — the refresh is signalled by the sections dropping back to their
       // skeletons instead (see `skipLoadingOnRefresh: false` below).
-      body: ContentWidth(
-        child: RefreshIndicator.noSpinner(
-          onRefresh: () async {
-            ref.invalidate(userProfileProvider);
-            ref.invalidate(hunterStatsProvider);
-            ref.invalidate(hunterHistoryProvider);
-            ref.invalidate(ownerPostsProvider);
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                // USER INFO HEADER WIDGET WITH REAL DATA
-                profileAsync.when(
-                  // Show the skeleton on a pull-to-refresh too, not just the
-                  // first load: with no spinner it is the only refresh feedback.
-                  skipLoadingOnRefresh: false,
-                  data: (profile) => ProfileHeaderWidget(
-                    username: profile.username,
-                    phone: profile.phone ?? '',
-                    email: profile.email ?? '',
-                    photoUrl: profile.profileImageUrl,
-                    onEditPressed: () => _openEditProfileDialog(
-                      profile.username,
-                      profile.phone,
-                      profile.profileImageUrl,
+      body: RefreshIndicator.noSpinner(
+        onRefresh: () async {
+          ref.invalidate(userProfileProvider);
+          ref.invalidate(hunterStatsProvider);
+          ref.invalidate(hunterHistoryProvider);
+          ref.invalidate(ownerPostsProvider);
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            // Dark header band. The role switch below is pulled up so it
+            // straddles the band's lower edge.
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0.7, -1.0),
+                  radius: 1.2,
+                  colors: [Color(0xFF8A4A1F), Color(0xFF2B1C13)],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 58),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _topBar(),
+                    const SizedBox(height: 14),
+                    profileAsync.when(
+                      // Show the skeleton on a pull-to-refresh too, not just
+                      // the first load: with no spinner it is the only refresh
+                      // feedback.
+                      skipLoadingOnRefresh: false,
+                      data: (profile) => ProfileHeaderWidget(
+                        username: profile.username,
+                        phone: profile.phone ?? '',
+                        email: profile.email ?? '',
+                        photoUrl: profile.profileImageUrl,
+                        onEditPressed: () => _openEditProfileDialog(
+                          profile.username,
+                          profile.phone,
+                          profile.profileImageUrl,
+                        ),
+                      ),
+                      loading: () => const ProfileHeaderSkeleton(),
+                      error: (err, stack) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Could not load your profile. Check your connection, then try again.',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: kDaylight.withValues(alpha: 0.85)),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                  foregroundColor: kBrandLight),
+                              onPressed: () =>
+                                  ref.invalidate(userProfileProvider),
+                              child: const Text('Try again'),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                  loading: () => const ProfileHeaderSkeleton(),
-                  error: (err, stack) => Padding(
-                    padding: const EdgeInsets.all(24.0),
+                  ],
+                ),
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0, -28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.red,
-                          size: 32,
+                        RoleTabToggleWidget(
+                          selectedTab: _selectedTab,
+                          onTabSelected: (index) =>
+                              setState(() => _selectedTab = index),
                         ),
+                        const SizedBox(height: 18),
+                        _selectedTab == 0
+                            ? _buildTabBody(
+                                loading: hunterStatsAsync.isLoading ||
+                                    hunterHistoryAsync.isLoading,
+                                error: hunterStatsAsync.error ??
+                                    hunterHistoryAsync.error,
+                                onRetry: () {
+                                  ref.invalidate(hunterStatsProvider);
+                                  ref.invalidate(hunterHistoryProvider);
+                                },
+                                skeleton: const HunterTabSkeleton(),
+                                content: () => _buildHunterTab(
+                                  hunterStatsAsync,
+                                  hunterHistoryAsync,
+                                ),
+                              )
+                            : _buildTabBody(
+                                loading: ownerPostsAsync.isLoading,
+                                error: ownerPostsAsync.error,
+                                onRetry: () =>
+                                    ref.invalidate(ownerPostsProvider),
+                                skeleton: const OwnerTabSkeleton(),
+                                content: () => _buildOwnerTab(ownerPostsAsync),
+                              ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Could not load your profile: $err',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                        TextButton(
-                          onPressed: () => ref.invalidate(userProfileProvider),
-                          child: const Text('Retry'),
-                        ),
                       ],
                     ),
                   ),
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                // ROLE TAB TOGGLE WIDGET (HUNTER vs PET OWNER)
-                RoleTabToggleWidget(
-                  selectedTab: _selectedTab,
-                  onTabSelected: (index) =>
-                      setState(() => _selectedTab = index),
-                ),
-
-                const SizedBox(height: 16),
-
-                // TAB BODY CONTENT WITH REAL PROVIDERS
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _selectedTab == 0
-                      ? _buildTabBody(
-                          loading:
-                              hunterStatsAsync.isLoading ||
-                              hunterHistoryAsync.isLoading,
-                          error:
-                              hunterStatsAsync.error ??
-                              hunterHistoryAsync.error,
-                          onRetry: () {
-                            ref.invalidate(hunterStatsProvider);
-                            ref.invalidate(hunterHistoryProvider);
-                          },
-                          skeleton: const HunterTabSkeleton(),
-                          content: () => _buildHunterTab(
-                            hunterStatsAsync,
-                            hunterHistoryAsync,
-                          ),
-                        )
-                      : _buildTabBody(
-                          loading: ownerPostsAsync.isLoading,
-                          error: ownerPostsAsync.error,
-                          onRetry: () => ref.invalidate(ownerPostsProvider),
-                          skeleton: const OwnerTabSkeleton(),
-                          content: () => _buildOwnerTab(ownerPostsAsync),
-                        ),
-                ),
-                const SizedBox(height: 32),
-              ],
+  Widget _topBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          if (Navigator.of(context).canPop()) ...[
+            GlassIconButton(
+              icon: Icons.arrow_back_ios_new_rounded,
+              tooltip: 'Back',
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Text(
+              'Profile',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: kDaylight.withValues(alpha: 0.85),
+              ),
             ),
           ),
-        ),
+          GlassIconButton(
+            icon: Icons.logout_rounded,
+            tooltip: 'Log out',
+            onPressed: _logout,
+          ),
+        ],
       ),
     );
   }
@@ -260,15 +281,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Column(
           children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 32),
+            const Icon(Icons.error_outline, color: kBrandErrorDeep, size: 32),
             const SizedBox(height: 8),
-            Text(
-              'Could not load this tab: $error',
+            const Text(
+              'Could not load this tab. Check your connection, then try again.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: kBrandErrorDeep, fontSize: 14),
             ),
             const SizedBox(height: 8),
-            TextButton(onPressed: onRetry, child: const Text('Retry')),
+            TextButton(onPressed: onRetry, child: const Text('Try again')),
           ],
         ),
       );
