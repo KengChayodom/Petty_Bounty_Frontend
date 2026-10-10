@@ -195,14 +195,76 @@ void main() {
     expect(chars.containsKey('color'), isFalse);
   });
 
-  testWidgets('HELP FREE mode sends bounty 0', (tester) async {
-    final repo = await _pump(tester, pet: _pet(bounty: 5000));
+  testWidgets('a report with no reward stays at bounty 0', (tester) async {
+    final repo = await _pump(tester, pet: _pet(bounty: 0));
 
-    await tester.tap(find.text('No cash reward'));
-    await tester.pump();
     await tester.tap(find.text('Save changes'));
     await tester.pump();
 
     expect(repo.lastPatch!['bounty_amount'], 0.0);
+  });
+
+  // SRS-100: the bounty may be raised after the report is created, never
+  // lowered. The server refuses a lower amount; the form stops it first.
+  group('the bounty cannot be lowered (SRS-100)', () {
+    testWidgets('a lower amount is refused before anything is sent',
+        (tester) async {
+      final repo = await _pump(tester, pet: _pet(bounty: 1000));
+
+      await tester.enterText(find.widgetWithText(TextFormField, '1000'), '999');
+      await tester.tap(find.text('Save changes'));
+      await tester.pump();
+
+      expect(find.text('Cannot be lower than ฿1000'), findsOneWidget);
+      expect(repo.calls, 0);
+    });
+
+    testWidgets('the same amount saves', (tester) async {
+      final repo = await _pump(tester, pet: _pet(bounty: 1000));
+
+      await tester.tap(find.text('Save changes'));
+      await tester.pump();
+
+      expect(repo.calls, 1);
+      expect(repo.lastPatch!['bounty_amount'], 1000.0);
+    });
+
+    testWidgets('a reward cannot be switched off once set', (tester) async {
+      final repo = await _pump(tester, pet: _pet(bounty: 5000));
+
+      await tester.tap(find.text('No cash reward'));
+      await tester.pump();
+      await tester.tap(find.text('Save changes'));
+      await tester.pump();
+
+      expect(repo.calls, 1);
+      expect(repo.lastPatch!['bounty_amount'], 5000.0);
+    });
+
+    testWidgets('a report with no reward can add one', (tester) async {
+      final repo = await _pump(tester, pet: _pet(bounty: 0));
+
+      await tester.tap(find.text('Cash reward'));
+      await tester.pump();
+      await tester.enterText(find.widgetWithText(TextFormField, ''), '300');
+      await tester.tap(find.text('Save changes'));
+      await tester.pump();
+
+      expect(repo.lastPatch!['bounty_amount'], 300.0);
+    });
+  });
+
+  testWidgets('a backend refusal is shown without the "Exception:" prefix',
+      (tester) async {
+    await _pump(
+      tester,
+      error: Exception('The bounty can be raised but not lowered'),
+    );
+
+    await tester.tap(find.text('Save changes'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('The bounty can be raised but not lowered'), findsOneWidget);
   });
 }
