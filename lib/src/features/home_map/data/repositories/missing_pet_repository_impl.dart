@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/network/app_http_client.dart';
+import '../../../../core/network/auth_headers.dart';
 import '../../../../core/app_config.dart';
 import '../../domain/entities/missing_pet_entity.dart';
 import '../models/missing_pet_model.dart';
@@ -17,22 +17,8 @@ class MissingPetRepositoryImpl {
     http.Client? client,
     String? Function()? authHeader,
   }) : _client = client ?? AppHttpClient.instance,
-       _authHeader = authHeader ?? _sessionAuthHeader;
+       _authHeader = authHeader ?? bearerAuthorization;
 
-  /// `Bearer <jwt>` for the signed-in user, or null when there is no session.
-  ///
-  /// Read on every call so a silently refreshed token is always used. Falls
-  /// back to null, meaning "anonymous", when Supabase has not been initialised,
-  /// which is the case in unit tests that build this repository with a fake
-  /// client.
-  static String? _sessionAuthHeader() {
-    try {
-      final token = Supabase.instance.client.auth.currentSession?.accessToken;
-      return token == null ? null : 'Bearer $token';
-    } catch (_) {
-      return null;
-    }
-  }
 
   /// Fetch nearby missing pets within a radius
   Future<List<MissingPetEntity>> getNearbyMissingPets({

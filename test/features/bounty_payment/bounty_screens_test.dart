@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/bounty_payment/data/bounty_repository.dart';
-import 'package:petty_bounty/src/features/bounty_payment/data/models/bounty_models.dart';
+import 'package:petty_bounty/src/features/bounty_payment/domain/entities/bounty_models.dart';
 import 'package:petty_bounty/src/features/bounty_payment/domain/providers/bounty_providers.dart';
 import 'package:petty_bounty/src/features/bounty_payment/presentation/hunter_bounty_screen.dart';
 import 'package:petty_bounty/src/features/bounty_payment/presentation/owner_bounty_section.dart';

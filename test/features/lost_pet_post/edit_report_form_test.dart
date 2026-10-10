@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/lost_pet_post/data/lost_pet_post_repository.dart';
+import 'package:petty_bounty/src/features/lost_pet_post/domain/providers/lost_pet_post_repository_provider.dart';
 import 'package:petty_bounty/src/features/lost_pet_post/presentation/edit_lost_pet_post_screen.dart';
 import 'package:petty_bounty/src/features/home_map/domain/entities/missing_pet_entity.dart';
 

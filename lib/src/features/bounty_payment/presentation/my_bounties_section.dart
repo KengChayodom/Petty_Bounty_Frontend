@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_glass.dart';
 import '../../../core/ui/brand_widgets.dart';
 import '../../../routing/app_router.dart';
-import '../data/models/bounty_models.dart';
+import '../domain/entities/bounty_models.dart';
 import '../domain/providers/bounty_providers.dart';
 
 /// On the hunter's profile tab: the reports they returned the pet for, each

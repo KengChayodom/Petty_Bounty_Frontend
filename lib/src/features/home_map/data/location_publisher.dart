@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../../core/location/current_fix.dart';
+import '../domain/location_tracking.dart';
 import 'location_api.dart';
 
 /// Keeps the hunter's `last_location` fresh on the backend while the app is in
@@ -22,23 +22,9 @@ import 'location_api.dart';
 ///    map. Denied/disabled location => we skip publishing (never push a
 ///    fallback point, which would cluster denied users at one spot).
 ///
-/// The slice of [LocationPublisher] the logout path needs, kept narrow so a
-/// test can implement it without the geolocator plugin.
-abstract interface class LocationTracking {
-  void stop();
-}
-
-/// Injection point for the logout path (MD-34). Production resolves the
-/// singleton, so behaviour is unchanged; a test overrides it.
-final locationTrackingProvider = Provider<LocationTracking>(
-  (ref) => LocationPublisher.instance,
-);
-
-/// Singleton so [HomeScreen] can [start] it directly. Logout goes through
-/// [locationTrackingProvider] instead — the original note here said the
-/// singleton existed so that logout would need no provider plumbing, and that
-/// was true until the logout path had to be made verifiable (MD-34, 2126-09-02).
-/// Mirrors `FcmService`.
+/// A singleton because one timer must serve the whole app. Screens reach it
+/// through `locationTrackingProvider` (domain), never directly, so a test can
+/// replace it. Mirrors `FcmService`.
 class LocationPublisher implements LocationTracking {
   LocationPublisher._();
   static final LocationPublisher instance = LocationPublisher._();
@@ -51,6 +37,7 @@ class LocationPublisher implements LocationTracking {
   static const Duration _interval = Duration(minutes: 5);
 
   /// Idempotent. Publishes once immediately, then every [_interval].
+  @override
   void start() {
     if (_timer != null) return;
     _publishOnce();

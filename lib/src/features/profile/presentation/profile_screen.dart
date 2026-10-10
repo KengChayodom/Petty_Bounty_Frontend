@@ -7,7 +7,7 @@ import '../../../core/notifications/fcm_service.dart';
 import '../../../core/theme/app_glass.dart';
 import '../../../core/ui/brand_widgets.dart';
 import '../../../routing/app_router.dart';
-import '../../home_map/data/location_publisher.dart';
+import '../../home_map/domain/providers/location_tracking_provider.dart';
 import '../domain/models/profile_models.dart';
 import '../domain/providers/profile_providers.dart';
 import 'widgets/edit_profile_dialog.dart';

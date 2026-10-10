@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/bounty_repository.dart';
-import '../../data/models/bounty_models.dart';
+import '../entities/bounty_models.dart';
 
 /// DI seam for the bounty repository (overridable in tests).
 final bountyRepositoryProvider =

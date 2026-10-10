@@ -13,7 +13,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:petty_bounty/src/features/status_tracker/data/models/sighting_activity.dart';
+import 'package:petty_bounty/src/features/status_tracker/domain/entities/sighting_activity.dart';
 import 'package:petty_bounty/src/features/status_tracker/presentation/widgets/activity_card.dart';
 
 SightingActivity _card({

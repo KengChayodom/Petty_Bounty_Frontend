@@ -5,7 +5,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../../core/theme/app_glass.dart';
 import '../../../../core/ui/skeleton/skeleton.dart';
-import '../../data/models/sighting_activity.dart';
+import '../../domain/entities/sighting_activity.dart';
 
 /// One node in the "RECENT ACTIVITY" timeline: a colored status dot on the
 /// left rail (joined by a vertical connector) and a white info card on the
