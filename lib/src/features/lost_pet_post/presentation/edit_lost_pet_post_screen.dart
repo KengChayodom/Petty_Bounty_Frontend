@@ -265,7 +265,10 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: kBrandErrorDeep),
+        SnackBar(
+          content: Text('$e'.replaceFirst('Exception: ', '')),
+          backgroundColor: kBrandErrorDeep,
+        ),
       );
     }
   }
@@ -321,6 +324,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 icon: Icons.card_giftcard_outlined,
                 child: _BountyEditor(
                   isBountyMode: _isBountyMode,
+                  minAmount: widget.pet.bountyAmount,
                   controller: _bountyController,
                   onModeChanged: (mode) => setState(() => _isBountyMode = mode),
                   onAdd: (amount) {
@@ -539,12 +543,17 @@ class _ColorTilesRow extends StatelessWidget {
 class _BountyEditor extends StatelessWidget {
   const _BountyEditor({
     required this.isBountyMode,
+    required this.minAmount,
     required this.controller,
     required this.onModeChanged,
     required this.onAdd,
   });
 
   final bool isBountyMode;
+
+  /// SRS-100: the bounty the report already carries. It may be raised, never
+  /// lowered, so a reward once set cannot be switched off either.
+  final double minAmount;
   final TextEditingController controller;
   final ValueChanged<bool> onModeChanged;
   final ValueChanged<double> onAdd;
@@ -567,7 +576,7 @@ class _BountyEditor extends StatelessWidget {
                 icon: Icons.favorite,
                 label: 'No cash reward',
                 activeColor: kSuccessDeep,
-                onTap: () => onModeChanged(false),
+                onTap: minAmount > 0 ? null : () => onModeChanged(false),
               ),
               _modeButton(
                 selected: isBountyMode,
@@ -625,6 +634,10 @@ class _BountyEditor extends StatelessWidget {
                           double.tryParse(value.replaceAll(',', ''));
                       if (parsed == null) return 'Invalid amount';
                       if (parsed < 0) return 'Bounty cannot be negative';
+                      if (parsed < minAmount) {
+                        return 'Cannot be lower than '
+                            '฿${minAmount.toStringAsFixed(0)}';
+                      }
                       return null;
                     },
                   ),
@@ -632,6 +645,14 @@ class _BountyEditor extends StatelessWidget {
               ],
             ),
           ),
+          if (minAmount > 0)
+            const Padding(
+              padding: EdgeInsets.only(top: 8, left: 4),
+              child: Text(
+                'The reward can be raised, not lowered.',
+                style: TextStyle(color: kInkMuted, fontSize: 12),
+              ),
+            ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -651,31 +672,35 @@ class _BountyEditor extends StatelessWidget {
     required IconData icon,
     required String label,
     required Color activeColor,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
+    // A choice that is locked out (onTap null) is shown faded.
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: selected ? activeColor : kInkMuted),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: selected ? activeColor : kInkMuted,
-                  fontWeight: FontWeight.bold,
+      child: Opacity(
+        opacity: onTap == null && !selected ? 0.4 : 1,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 18, color: selected ? activeColor : kInkMuted),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? activeColor : kInkMuted,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
