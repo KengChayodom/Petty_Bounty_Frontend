@@ -7,7 +7,6 @@ import '../../../core/constants/pet_species.dart';
 import '../../../core/theme/app_glass.dart';
 import '../../../core/location/current_fix.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
-import '../data/sighting_repository.dart';
 import '../domain/pending_upload.dart';
 import '../domain/sighting_providers.dart';
 import 'report_sent_screen.dart';

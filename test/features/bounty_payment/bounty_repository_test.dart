@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:petty_bounty/src/features/bounty_payment/data/bounty_repository.dart';
+import 'package:petty_bounty/src/features/bounty_payment/domain/entities/bounty_errors.dart';
 
 Map<String, dynamic> _ownerView({Map<String, dynamic>? payment, bool unpaid = true}) => {
       'pet_id': 'p1',

@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/app_config.dart';
 import '../../../../core/constants/pet_species.dart';
 import '../../../../core/ui/skeleton/skeleton.dart';
-import '../../data/lost_pet_post_repository.dart';
+import '../../domain/providers/lost_pet_post_repository_provider.dart';
 import '../../domain/providers/lost_pet_post_form_provider.dart';
 
 List<String> get _speciesOptions => PetSpecies.labels;

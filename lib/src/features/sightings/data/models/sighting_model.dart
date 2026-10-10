@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'match_model.dart';
+import '../../domain/entities/match_model.dart';
 
 part 'sighting_model.freezed.dart';
 part 'sighting_model.g.dart';

@@ -6,8 +6,8 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
-import '../data/lost_pet_post_repository.dart';
-import '../data/models/lost_pet_post_request.dart';
+import '../domain/providers/lost_pet_post_repository_provider.dart';
+import '../domain/entities/lost_pet_post_request.dart';
 import '../domain/providers/lost_pet_post_form_provider.dart';
 import 'widgets/bounty_section_widget.dart';
 import 'widgets/broadcast_progress_dialog.dart';

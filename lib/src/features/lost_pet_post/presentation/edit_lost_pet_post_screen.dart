@@ -6,12 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
-import '../../home_map/data/repositories/missing_pet_repository_impl.dart';
 import '../../home_map/domain/entities/missing_pet_entity.dart';
 import '../../home_map/domain/providers/nearby_pets_providers.dart';
 import '../../home_map/presentation/pet_detail_skeleton.dart';
 import '../../profile/domain/providers/profile_providers.dart';
-import '../data/lost_pet_post_repository.dart';
+import '../domain/providers/lost_pet_post_repository_provider.dart';
 import 'widgets/collar_marker_widget.dart' show PetImageEyedropperDialog;
 
 const Color _kAccent = kBrandDeep;
@@ -60,22 +59,22 @@ class EditLostPetPostScreen extends StatelessWidget {
 /// deliberately NOT `PetDetailResolver`, which prefers a possibly-stale
 /// in-memory copy from the map list. Editing must start from the current DB
 /// values, or a second edit would seed from what the owner saw last time.
-class _ResolveReport extends StatefulWidget {
+class _ResolveReport extends ConsumerStatefulWidget {
   const _ResolveReport({required this.petId});
 
   final String petId;
 
   @override
-  State<_ResolveReport> createState() => _ResolveReportState();
+  ConsumerState<_ResolveReport> createState() => _ResolveReportState();
 }
 
-class _ResolveReportState extends State<_ResolveReport> {
+class _ResolveReportState extends ConsumerState<_ResolveReport> {
   late Future<MissingPetEntity> _fetch;
 
   @override
   void initState() {
     super.initState();
-    _fetch = MissingPetRepositoryImpl().getMissingPet(widget.petId);
+    _fetch = ref.read(missingPetRepositoryProvider).getMissingPet(widget.petId);
   }
 
   @override
@@ -101,7 +100,8 @@ class _ResolveReportState extends State<_ResolveReport> {
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => setState(() {
-                      _fetch = MissingPetRepositoryImpl()
+                      _fetch = ref
+                          .read(missingPetRepositoryProvider)
                           .getMissingPet(widget.petId);
                     }),
                     child: const Text('Retry'),
