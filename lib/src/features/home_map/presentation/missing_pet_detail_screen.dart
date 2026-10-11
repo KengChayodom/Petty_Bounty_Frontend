@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/ui/adaptive/breakpoints.dart';
 import 'pet_detail_resolver.dart';
 import 'pet_detail_view.dart';
 
@@ -19,9 +20,11 @@ class MissingPetDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Missing Pet')),
-      body: PetDetailResolver(
-        petId: petId,
-        builder: (context, pet) => PetDetailView(pet: pet),
+      body: ContentWidth(
+        child: PetDetailResolver(
+          petId: petId,
+          builder: (context, pet) => PetDetailView(pet: pet),
+        ),
       ),
     );
   }

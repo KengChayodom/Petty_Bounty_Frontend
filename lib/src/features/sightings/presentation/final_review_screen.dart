@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/full_image_view.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../data/models/match_model.dart';
@@ -74,25 +75,27 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
         ),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          _yourPhoto(),
-          const SizedBox(height: 24),
-          _sectionLabel('VERIFICATION MATCH'),
-          const SizedBox(height: 10),
-          _matchCard(),
-          const SizedBox(height: 24),
-          _sectionLabel('REPORT STATUS'),
-          const SizedBox(height: 10),
-          _statusToggle(),
-          const SizedBox(height: 24),
-          _sectionLabel('LOCATION CONFIRM'),
-          const SizedBox(height: 10),
-          _locationPreview(),
-          const SizedBox(height: 32),
-          _sendButton(),
-        ],
+      body: ContentWidth(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          children: [
+            _yourPhoto(),
+            const SizedBox(height: 24),
+            _sectionLabel('VERIFICATION MATCH'),
+            const SizedBox(height: 10),
+            _matchCard(),
+            const SizedBox(height: 24),
+            _sectionLabel('REPORT STATUS'),
+            const SizedBox(height: 10),
+            _statusToggle(),
+            const SizedBox(height: 24),
+            _sectionLabel('LOCATION CONFIRM'),
+            const SizedBox(height: 10),
+            _locationPreview(),
+            const SizedBox(height: 32),
+            _sendButton(),
+          ],
+        ),
       ),
     );
   }

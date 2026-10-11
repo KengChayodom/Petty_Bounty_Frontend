@@ -15,6 +15,7 @@ import '../data/location_publisher.dart';
 import '../../../core/map/cached_tile_provider.dart';
 import '../../../core/theme/app_glass.dart';
 import '../../../core/notifications/fcm_service.dart';
+import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import 'home_map_skeleton.dart';
 import 'marker_helper.dart';
@@ -499,12 +500,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             // The only widget that renders `isLoading`. Subscribing here
             // rather than at the root is what keeps a fetch from rebuilding
             // the map underneath it.
-            child: _retractable(
-              context,
-              const Offset(0, -3),
-              Consumer(
-                builder: (context, ref, _) =>
-                    _buildSearchBar(ref.watch(nearbyPetsProvider)),
+            //
+            // Capped so the pane stays a pane on an iPad instead of spanning
+            // the whole map.
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: kFloatingChromeMaxWidth,
+                ),
+                child: _retractable(
+                  context,
+                  const Offset(0, -3),
+                  Consumer(
+                    builder: (context, ref, _) =>
+                        _buildSearchBar(ref.watch(nearbyPetsProvider)),
+                  ),
+                ),
               ),
             ),
           ),
@@ -547,10 +559,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             left: 16,
             right: 16,
             bottom: MediaQuery.of(context).padding.bottom + 16,
-            child: _retractable(
-              context,
-              const Offset(0, 3),
-              _buildSeamlessBottomNav(),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: kFloatingChromeMaxWidth,
+                ),
+                child: _retractable(
+                  context,
+                  const Offset(0, 3),
+                  _buildSeamlessBottomNav(),
+                ),
+              ),
             ),
           ),
         ],
