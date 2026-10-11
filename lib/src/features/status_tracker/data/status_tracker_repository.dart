@@ -5,21 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_config.dart';
 import '../../../core/network/app_http_client.dart';
-import 'models/sighting_activity.dart';
-
-/// The queue moved underneath the owner — the backend's 409.
-///
-/// A separate type because the recovery is different from every other failure:
-/// nothing is wrong with what the owner asked for, their copy of the timeline
-/// is simply stale, so the screen re-reads it instead of showing an error.
-class SightingQueueConflict implements Exception {
-  const SightingQueueConflict(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
-}
+import '../../../core/network/auth_headers.dart';
+import '../domain/entities/sighting_activity.dart';
+import '../domain/entities/sighting_queue_conflict.dart';
 
 /// Repository for the Status Tracker screen — reads the sighting timeline for
 /// a single missing pet the caller owns.
@@ -38,13 +26,8 @@ class StatusTrackerRepository {
         // Android-emulator-needs-10.0.2.2 case) — never hardcode localhost.
         _baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
 
-  Map<String, String> get _authHeaders {
-    final token = _supabase.auth.currentSession?.accessToken;
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
+  Map<String, String> get _authHeaders =>
+      jsonHeaders(bearerAuthorization(_supabase));
 
   /// Fetch the reverse-chronological sighting timeline for [petId] via
   /// `GET /missing-pets/{id}/sightings`. The endpoint already returns newest

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/theme/app_glass.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/providers/nearby_pets_providers.dart';
@@ -28,7 +30,7 @@ class PetDetailSheet extends ConsumerWidget {
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: kDaylight,
             borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           ),
           clipBehavior: Clip.hardEdge,

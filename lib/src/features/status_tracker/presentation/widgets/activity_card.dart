@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../../core/theme/app_glass.dart';
 import '../../../../core/ui/skeleton/skeleton.dart';
-import '../../data/models/sighting_activity.dart';
+import '../../domain/entities/sighting_activity.dart';
 
 /// One node in the "RECENT ACTIVITY" timeline: a colored status dot on the
 /// left rail (joined by a vertical connector) and a white info card on the
@@ -56,10 +57,11 @@ class ActivityCard extends StatelessWidget {
   /// Flags this sighting for moderator review (overflow menu on the photo).
   final VoidCallback? onReport;
 
-  static const _orange = Color(0xFFF57C3A);
-  static const _green = Color(0xFF4CAF7D);
-  static const _red = Color(0xFFE5372A);
-  static const _grey = Color(0xFF9AA0A6);
+  static const _orange = kBrandDeep;
+  static const _green = kSuccessDeep;
+  static const _red = kBrandErrorDeep;
+  static const _grey = Color(0xFF7A6E66);
+  static const _rail = Color(0x1A120A04);
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +94,7 @@ class ActivityCard extends StatelessWidget {
                   child: Center(
                     child: Container(
                       width: 2,
-                      color: isFirst ? Colors.transparent : const Color(0xFFE0E0E0),
+                      color: isFirst ? Colors.transparent : _rail,
                     ),
                   ),
                 ),
@@ -108,7 +110,7 @@ class ActivityCard extends StatelessWidget {
                   child: Center(
                     child: Container(
                       width: 2,
-                      color: isLast ? Colors.transparent : const Color(0xFFE0E0E0),
+                      color: isLast ? Colors.transparent : _rail,
                     ),
                   ),
                 ),
@@ -132,14 +134,8 @@ class ActivityCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kInk.withValues(alpha: 0.07)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -193,19 +189,9 @@ class ActivityCard extends StatelessWidget {
                 Text(
                   '${item.detectedSpecies} ${item.actionType}',
                   style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.actionType.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                    color: accent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: kInk,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -213,15 +199,11 @@ class ActivityCard extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.access_time_rounded,
-                          size: 13, color: Colors.grey),
+                          size: 14, color: _grey),
                       const SizedBox(width: 4),
                       Text(
                         item.timeFormatted,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey,
-                        ),
+                        style: const TextStyle(fontSize: 13, color: _grey),
                       ),
                     ],
                   ),
@@ -247,11 +229,7 @@ class ActivityCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           'Review the earlier sightings first.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                          ),
+                          style: const TextStyle(fontSize: 13, color: _grey),
                         ),
                       ),
                     ],
@@ -259,15 +237,16 @@ class ActivityCard extends StatelessWidget {
                 ],
                 if (showConfirmButton) ...[
                   const SizedBox(height: 14),
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
+                      SizedBox(
                         child: ElevatedButton(
                           onPressed: isConfirming ? null : onConfirm,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _green,
+                            backgroundColor: _orange,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            minimumSize: const Size.fromHeight(50),
                             shape: const StadiumBorder(),
                             elevation: 0,
                           ),
@@ -279,34 +258,32 @@ class ActivityCard extends StatelessWidget {
                               // two different words on the button.
                               : Text(
                                   item.isCaught
-                                      ? 'CONFIRM RESCUE'
-                                      : 'THAT\'S MY PET',
+                                      ? 'Confirm rescue'
+                                      : 'That\'s my pet',
                                   style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.5,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                         ),
                       ),
                       if (onReject != null) ...[
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: ElevatedButton(
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          child: OutlinedButton(
                             onPressed: isConfirming ? null : onReject,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _red,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: _red,
+                              side: BorderSide(
+                                  width: 1.5, color: _red.withValues(alpha: 0.55)),
+                              minimumSize: const Size.fromHeight(50),
                               shape: const StadiumBorder(),
-                              elevation: 0,
                             ),
                             child: const Text(
-                              'NOT MINE',
+                              'Not mine',
                               style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -346,19 +323,15 @@ class ActivityCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: kInk,
                 ),
               ),
               if (phone != null)
                 Text(
                   'Tel. $phone',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 13, color: _grey),
                 ),
             ],
           ),
@@ -422,11 +395,10 @@ class ActivityCard extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            confirmed ? 'YOU CONFIRMED THIS' : 'YOU SAID NOT MINE',
+            confirmed ? 'You confirmed this' : 'You said not mine',
             style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.5,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
               color: color,
             ),
           ),
@@ -468,7 +440,7 @@ class ActivityCard extends StatelessWidget {
                       width: 36,
                       height: 36,
                       child: const Icon(Icons.location_pin,
-                          color: Color(0xFFB5651D), size: 36),
+                          color: kBrandDeep, size: 36),
                     ),
                   ],
                 ),
@@ -482,12 +454,11 @@ class ActivityCard extends StatelessWidget {
                   onTap: onViewMap,
                   child: const Center(
                     child: Text(
-                      'VIEW ON MAP',
+                      'View on map',
                       style: TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         fontSize: 15,
-                        letterSpacing: 1.0,
                       ),
                     ),
                   ),
@@ -501,9 +472,9 @@ class ActivityCard extends StatelessWidget {
   }
 
   Widget _imageFallback() => Container(
-        color: const Color(0xFFF0F0F0),
+        color: const Color(0xFFEFE3D6),
         child: const Center(
-          child: Icon(Icons.pets, size: 48, color: Colors.grey),
+          child: Icon(Icons.pets, size: 48, color: _grey),
         ),
       );
 

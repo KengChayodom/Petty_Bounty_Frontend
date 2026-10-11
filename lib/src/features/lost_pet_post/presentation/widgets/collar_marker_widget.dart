@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_glass.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,7 +26,7 @@ class CollarMarkerWidget extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a pet photo in Step 1 first!'),
-          backgroundColor: Colors.orange,
+          backgroundColor: kBrandDeep,
         ),
       );
       return;
@@ -58,7 +60,7 @@ class CollarMarkerWidget extends ConsumerWidget {
         final clean = hex.replaceAll('#', '');
         return Color(int.parse('0xFF$clean'));
       } catch (_) {
-        return Colors.blue;
+        return kBrandDeep;
       }
     }
 
@@ -68,12 +70,11 @@ class CollarMarkerWidget extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'PET COAT COLOR',
+          'Coat colour',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
-            letterSpacing: 1.0,
+            color: kInkMuted,
           ),
         ),
         const SizedBox(height: 10),
@@ -88,12 +89,12 @@ class CollarMarkerWidget extends ConsumerWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: const Color(0xFF0022FF),
+                color: kBrandDeep,
                 width: 2.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: kInk.withValues(alpha: 0.03),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -107,24 +108,23 @@ class CollarMarkerWidget extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: primaryColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: kInkMuted.withValues(alpha: 0.3)),
                   ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  'COAT COLOR',
+                  'Coat colour',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                    letterSpacing: 0.5,
+                    color: kInk,
                   ),
                 ),
                 const Spacer(),
                 const Icon(
                   Icons.colorize,
                   size: 18,
-                  color: Color(0xFF0022FF),
+                  color: kBrandDeep,
                 ),
               ],
             ),
@@ -133,12 +133,11 @@ class CollarMarkerWidget extends ConsumerWidget {
 
         const SizedBox(height: 18),
         const Text(
-          'CHARACTERISTICS / TRAITS',
+          'Marks and traits',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
-            letterSpacing: 1.0,
+            color: kInkMuted,
           ),
         ),
         const SizedBox(height: 8),
@@ -149,7 +148,7 @@ class CollarMarkerWidget extends ConsumerWidget {
             hintText:
                 "e.g., White patch on chest, friendly, responds to Luna",
             filled: true,
-            fillColor: Colors.grey[100],
+            fillColor: kFieldFill,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -201,7 +200,7 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
       final clean = _sampledHex.replaceAll('#', '');
       _sampledColor = Color(int.parse('0xFF$clean'));
     } catch (_) {
-      _sampledColor = Colors.blue;
+      _sampledColor = kBrandDeep;
     }
   }
 
@@ -250,9 +249,9 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
   @override
   Widget build(BuildContext context) {
     final titleText = widget.isSecondary
-        ? 'PICK SECONDARY COLOR'
-        : 'PICK PRIMARY COLOR';
-    final themeColor = widget.isSecondary ? Colors.teal : const Color(0xFF0022FF);
+        ? 'Pick a second colour'
+        : 'Pick the main colour';
+    final themeColor = widget.isSecondary ? kBrandDeep : kBrandDeep;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -287,7 +286,7 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
             const SizedBox(height: 4),
             const Text(
               'Touch on your pet photo to select exact coat color',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: kInkMuted),
             ),
             const SizedBox(height: 14),
 
@@ -329,7 +328,7 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
                             border: Border.all(color: Colors.white, width: 3),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
+                                color: kInk.withValues(alpha: 0.3),
                                 blurRadius: 8,
                               ),
                             ],
@@ -357,11 +356,11 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: _isDuplicate ? Colors.orange.shade50 : Colors.grey[100],
+                color: _isDuplicate ? kBrandDeep.withValues(alpha: 0.08) : kFieldFill,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: _isDuplicate
-                      ? Colors.orange.shade300
+                      ? kBrandDeep.withValues(alpha: 0.3)
                       : Colors.transparent,
                 ),
               ),
@@ -373,7 +372,7 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
                     decoration: BoxDecoration(
                       color: _sampledColor,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: kInkMuted.withValues(alpha: 0.3)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -383,12 +382,12 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
                       children: [
                         Text(
                           widget.isSecondary
-                              ? 'SELECTED SECONDARY COLOR'
-                              : 'SELECTED PRIMARY COLOR',
+                              ? 'Second colour'
+                              : 'Main colour',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: _isDuplicate ? Colors.orange.shade800 : Colors.grey,
+                            color: _isDuplicate ? kBrandDeep : kInkMuted,
                           ),
                         ),
                         if (_isDuplicate)
@@ -397,7 +396,7 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: Colors.redAccent,
+                              color: kBrandErrorDeep,
                             ),
                           ),
                       ],
@@ -426,11 +425,10 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
                 ),
               ),
               child: const Text(
-                'CONFIRM',
+                'Confirm',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
-                  letterSpacing: 1.0,
                 ),
               ),
             ),

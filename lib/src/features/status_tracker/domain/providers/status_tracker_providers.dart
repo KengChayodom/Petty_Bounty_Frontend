@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/sighting_activity.dart';
+import '../entities/sighting_activity.dart';
 import '../../data/status_tracker_repository.dart';
 
 /// DI seam for the Status Tracker repository (overridable in tests).

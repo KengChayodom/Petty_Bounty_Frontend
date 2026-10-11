@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Role selector tab bar (Hunter 🤠 vs Pet Owner 🐾).
+import '../../../../core/theme/app_glass.dart';
+
+/// Switches the profile between the hunter view and the owner view. One
+/// account plays both roles, so this is a view switch, not a mode.
 class RoleTabToggleWidget extends StatelessWidget {
   const RoleTabToggleWidget({
     super.key,
@@ -14,69 +17,54 @@ class RoleTabToggleWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
-      child: Row(
-        children: [
-          // Hunter Tab Button
-          Expanded(
-            child: GestureDetector(
-              onTap: () => onTabSelected(0),
-              child: Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  color: selectedTab == 0
-                      ? const Color(0xFFD4E2FF)
-                      : Colors.white,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: selectedTab == 0
-                          ? const Color(0xFF0022FF)
-                          : Colors.transparent,
-                      width: 3,
-                    ),
-                  ),
-                ),
-                child: Icon(
-                  Icons.sports_rounded,
-                  size: 28,
-                  color: selectedTab == 0
-                      ? const Color(0xFF0022FF)
-                      : Colors.grey[400],
-                ),
-              ),
-            ),
-          ),
-
-          // Pet Owner Tab Button
-          Expanded(
-            child: GestureDetector(
-              onTap: () => onTabSelected(1),
-              child: Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  color: selectedTab == 1
-                      ? const Color(0xFFFFE5D9)
-                      : Colors.white,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: selectedTab == 1
-                          ? const Color(0xFFFF7A00)
-                          : Colors.transparent,
-                      width: 3,
-                    ),
-                  ),
-                ),
-                child: Icon(
-                  Icons.pets_rounded,
-                  size: 26,
-                  color: selectedTab == 1
-                      ? const Color(0xFFFF7A00)
-                      : Colors.grey[400],
-                ),
-              ),
-            ),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: kInk.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: kInk.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _segment('As hunter', 0)),
+          const SizedBox(width: 6),
+          Expanded(child: _segment('As owner', 1)),
+        ],
+      ),
+    );
+  }
+
+  Widget _segment(String label, int index) {
+    final selected = selectedTab == index;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        color: selected ? kBrandDeep : Colors.transparent,
+        borderRadius: BorderRadius.circular(15),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(15),
+          onTap: () => onTabSelected(index),
+          child: SizedBox(
+            height: 44,
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color: selected ? Colors.white : kInk.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_glass.dart';
+import '../../../../core/ui/brand_widgets.dart';
 import '../../domain/models/profile_models.dart';
 
-/// Card item widget for Hunter Sighting Sent History.
+/// One sighting the hunter sent: what they saw, when, what the owner said,
+/// and the points it earned.
 class HunterHistoryCard extends StatelessWidget {
   const HunterHistoryCard({super.key, required this.item});
 
@@ -10,223 +13,67 @@ class HunterHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget statusBadge;
-    switch (item.status) {
-      case SightingStatus.verified:
-        statusBadge = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.check_circle_rounded,
-                  size: 14, color: Color(0xFF2E7D32)),
-              SizedBox(width: 4),
-              Text(
-                'VERIFIED',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2E7D32),
-                ),
-              ),
-            ],
-          ),
-        );
-        break;
-      case SightingStatus.waitingVerified:
-        statusBadge = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF8E1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.access_time_rounded,
-                  size: 14, color: Color(0xFFF57F17)),
-              SizedBox(width: 4),
-              Text(
-                'WAITING VERIFIED',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFF57F17),
-                ),
-              ),
-            ],
-          ),
-        );
-        break;
-      case SightingStatus.unmatch:
-        statusBadge = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEEEEEE),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.remove_circle_rounded,
-                  size: 14, color: Colors.grey),
-              SizedBox(width: 4),
-              Text(
-                'UNMATCH',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black54,
-                ),
-              ),
-            ],
-          ),
-        );
-        break;
-    }
+    final (String verdict, Color verdictColor) = switch (item.status) {
+      SightingStatus.verified => ('Owner confirmed', kSuccessDeep),
+      SightingStatus.waitingVerified => ('Waiting for the owner', kBrandDeep),
+      SightingStatus.unmatch => ('Not their pet', kInk.withValues(alpha: 0.55)),
+    };
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
+    final String points = item.points != null
+        ? '+${item.points}'
+        : item.isDuplicate
+            ? 'Duplicate'
+            : item.status == SightingStatus.unmatch
+                ? '0'
+                : '';
+
+    return SheetTile(
+      padding: const EdgeInsets.all(12),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.grey[200],
-                  backgroundImage: item.petImageUrl != null
-                      ? NetworkImage(item.petImageUrl!)
-                      : null,
-                  child: item.petImageUrl == null
-                      ? const Icon(Icons.pets, color: Colors.grey)
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${item.detectedSpecies} Sighting',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // The hunter's action: SPOTTED (just saw it) vs RESCUE
-                    // (caught it — the bounty-eligible action).
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          item.isCaught
-                              ? Icons.volunteer_activism_rounded
-                              : Icons.visibility_rounded,
-                          size: 13,
-                          color: item.isCaught
-                              ? const Color(0xFF2E7D5B)
-                              : const Color(0xFFEE6D33),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          item.isCaught ? 'RESCUE' : 'SPOTTED',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                            color: item.isCaught
-                                ? const Color(0xFF2E7D5B)
-                                : const Color(0xFFEE6D33),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                statusBadge,
-              ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: HeroPhoto(imageUrl: item.petImageUrl),
             ),
           ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.all(14),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'POINTS',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    Text(
-                      item.points != null
-                          ? '+${item.points} point'
-                          : item.isDuplicate
-                              ? 'Duplicate (0 point)'
-                              : item.status == SightingStatus.unmatch
-                                  ? '0 point'
-                                  : 'Pending',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: item.points != null
-                            ? const Color(0xFFFF6D00)
-                            : Colors.grey,
-                      ),
-                    ),
-                  ],
+                Text(
+                  // The hunter's action: seen, or caught (the one a reward
+                  // can follow).
+                  '${item.detectedSpecies} ${item.isCaught ? 'caught' : 'seen'}',
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w700, color: kInk),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Text(
-                      'SENT AT',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.access_time_rounded,
-                        size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      item.sentAtFormatted,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 2),
+                Text(
+                  item.sentAtFormatted,
+                  style: TextStyle(fontSize: 13, color: kInk.withValues(alpha: 0.6)),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  verdict,
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600, color: verdictColor),
                 ),
               ],
             ),
           ),
+          if (points.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Text(
+              points,
+              style: item.points != null
+                  ? displayStyle(size: 20, color: kBrandDeep)
+                  : TextStyle(fontSize: 13, color: kInk.withValues(alpha: 0.55)),
+            ),
+          ],
         ],
       ),
     );

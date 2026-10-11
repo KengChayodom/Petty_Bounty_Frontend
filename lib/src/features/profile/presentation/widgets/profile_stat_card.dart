@@ -1,56 +1,39 @@
 import 'package:flutter/material.dart';
 
-/// Reusable stat card widget for Hunter & Pet Owner career metrics.
+import '../../../../core/theme/app_glass.dart';
+import '../../../../core/ui/brand_widgets.dart';
+
+/// One career number on the profile: a large figure over a short label.
 class ProfileStatCard extends StatelessWidget {
   const ProfileStatCard({
     super.key,
-    required this.backgroundColor,
-    required this.icon,
-    required this.iconColor,
     required this.numberText,
-    required this.numberColor,
     required this.label,
-    required this.labelColor,
+    this.highlight = false,
   });
 
-  final Color backgroundColor;
-  final IconData icon;
-  final Color iconColor;
   final String numberText;
-  final Color numberColor;
   final String label;
-  final Color labelColor;
+
+  /// The figure in brand orange: the one number this tab leads with.
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return SheetTile(
+      padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 24, color: iconColor),
-          const SizedBox(height: 6),
           Text(
             numberText,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: numberColor,
-            ),
+            maxLines: 1,
+            style: displayStyle(size: 28, color: highlight ? kBrandDeep : kInk),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              color: labelColor,
-              letterSpacing: 0.5,
-            ),
-            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: kInk.withValues(alpha: 0.65)),
           ),
         ],
       ),

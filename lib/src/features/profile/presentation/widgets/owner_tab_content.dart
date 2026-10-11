@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/models/profile_models.dart';
+import '../../../../core/ui/brand_widgets.dart';
 import 'owner_post_card.dart';
 import 'profile_stat_card.dart';
 
@@ -27,81 +28,35 @@ class OwnerTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // PET OWNER CAREERS HEADER
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'PET OWNER CAREERS',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: Colors.grey,
-                letterSpacing: 1.0,
-              ),
-            ),
-            Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // 2 STATS CARDS
         Row(
           children: [
             Expanded(
               child: ProfileStatCard(
-                backgroundColor: const Color(0xFFEE6D33),
-                icon: Icons.description_outlined,
-                iconColor: Colors.white,
                 numberText: '$postsCount',
-                numberColor: Colors.white,
-                label: 'POSTS',
-                labelColor: Colors.white,
+                label: 'Reports',
+                highlight: true,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: ProfileStatCard(
-                backgroundColor: const Color(0xFF10B981),
-                icon: Icons.volunteer_activism_rounded,
-                iconColor: Colors.white,
                 numberText: '$recoversCount',
-                numberColor: Colors.white,
-                label: 'RECOVERS',
-                labelColor: Colors.white,
+                label: 'Pets home',
               ),
             ),
           ],
         ),
-
         const SizedBox(height: 24),
-
-        // MY POSTED HEADER
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'MY POSTED',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: Colors.grey,
-                letterSpacing: 1.0,
-              ),
-            ),
-            Icon(Icons.filter_list_rounded, color: Colors.black87),
-          ],
-        ),
-        const SizedBox(height: 12),
-
+        const SheetHeading('Your reports'),
+        const SizedBox(height: 10),
         // MY POSTED LIST
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: postItems.length,
-          separatorBuilder: (_, index) => const SizedBox(height: 12),
+          separatorBuilder: (_, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             final item = postItems[index];
             return OwnerPostCard(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_glass.dart';
+
 import '../../../../core/ui/skeleton/skeleton.dart';
 
 /// The modal shown while a missing-pet report is uploaded and broadcast.
@@ -46,14 +48,14 @@ class BroadcastProgressDialog extends StatelessWidget {
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
-                color: Colors.black87,
+                color: kInk,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: const TextStyle(fontSize: 12, color: kInkMuted),
             ),
           ],
         ),

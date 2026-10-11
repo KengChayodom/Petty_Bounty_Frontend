@@ -16,6 +16,7 @@ import '../features/lost_pet_post/presentation/lost_pet_post_screen.dart';
 import '../features/lost_pet_post/presentation/edit_lost_pet_post_screen.dart';
 import '../features/status_tracker/presentation/status_tracker_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_screen.dart';
+import '../features/bounty_payment/presentation/hunter_bounty_screen.dart';
 import 'root_navigator_key.dart';
 
 // Define route paths as constants to prevent typos
@@ -31,6 +32,9 @@ class AppRoutes {
   static const String lostPetPostEdit = '/lost-pet-post/edit';
   static const String statusTracker = '/status-tracker';
   static const String leaderboard = '/leaderboard';
+
+  /// The returning hunter's view of one bounty: `/bounty/:petId`.
+  static const String bounty = '/bounty';
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -95,6 +99,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => EditLostPetPostScreen(
           petId: state.pathParameters['petId']!,
         ),
+      ),
+
+      // The returning hunter's bounty — reached from the hunter tab's list.
+      GoRoute(
+        path: '${AppRoutes.bounty}/:petId',
+        name: 'bounty',
+        builder: (context, state) =>
+            HunterBountyScreen(petId: state.pathParameters['petId']!),
       ),
 
       // Leaderboard (rank list) — reached from the home nav.

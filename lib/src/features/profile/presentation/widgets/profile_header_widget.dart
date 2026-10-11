@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// User Avatar + Display Name + Contact Details Header card.
+import '../../../../core/theme/app_glass.dart';
+import '../../../../core/ui/brand_widgets.dart';
+
+/// The account's avatar, name and contact details, drawn in light text on the
+/// profile screen's dark header band.
 class ProfileHeaderWidget extends StatelessWidget {
   const ProfileHeaderWidget({
     super.key,
@@ -19,64 +23,57 @@ class ProfileHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+    final muted = kDaylight.withValues(alpha: 0.8);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 16, 0),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: Colors.grey[200],
-            backgroundImage: photoUrl != null ? NetworkImage(photoUrl!) : null,
-            child: photoUrl == null
-                ? Icon(Icons.person, size: 36, color: Colors.grey[400])
-                : null,
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: kDaylight.withValues(alpha: 0.7), width: 2),
+            ),
+            child: CircleAvatar(
+              radius: 30,
+              backgroundColor: const Color(0xFFCDB6A2),
+              backgroundImage: photoUrl != null ? NetworkImage(photoUrl!) : null,
+              child: photoUrl == null
+                  ? const Icon(Icons.person, size: 32, color: kDaylight)
+                  : null,
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      username,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: onEditPressed,
-                      child: const Icon(
-                        Icons.edit_outlined,
-                        size: 20,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
                 Text(
-                  phone.isNotEmpty ? 'Tel. $phone' : 'Tel. —',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: phone.isNotEmpty ? Colors.grey[700] : Colors.grey[400],
-                  ),
+                  username,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: displayStyle(size: 28, color: kDaylight),
                 ),
+                const SizedBox(height: 6),
+                // The phone doubles as the PromptPay number a reward is paid
+                // to, so the header says so: that is why it must be right.
                 Text(
-                  email.isNotEmpty ? 'Email $email' : 'Email —',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: email.isNotEmpty ? Colors.grey[700] : Colors.grey[400],
-                  ),
+                  phone.isNotEmpty ? '$phone, used for PromptPay' : 'Add a phone number to receive rewards',
+                  style: TextStyle(fontSize: 14, color: muted),
                 ),
+                if (email.isNotEmpty)
+                  Text(email,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14, color: muted)),
               ],
             ),
+          ),
+          const SizedBox(width: 8),
+          GlassIconButton(
+            icon: Icons.edit_outlined,
+            tooltip: 'Edit profile',
+            onPressed: onEditPressed,
           ),
         ],
       ),

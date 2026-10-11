@@ -1,13 +1,12 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/ui/adaptive/breakpoints.dart';
-import '../../../core/ui/skeleton/skeleton.dart';
+import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/brand_widgets.dart';
 import '../../../routing/app_router.dart';
-import '../data/models/sighting_activity.dart';
-import '../data/status_tracker_repository.dart';
+import '../domain/entities/sighting_activity.dart';
+import '../domain/entities/sighting_queue_conflict.dart';
 import '../domain/providers/status_tracker_providers.dart';
 import '../../profile/domain/providers/profile_providers.dart';
 import 'widgets/activity_card.dart';
@@ -15,6 +14,7 @@ import 'widgets/activity_timeline_skeleton.dart';
 import '../../../core/ui/full_image_view.dart';
 import 'widgets/sighting_map_view.dart';
 import 'widgets/status_stepper.dart';
+import '../../bounty_payment/presentation/owner_bounty_section.dart';
 
 /// Owner-facing "Status Tracker" screen: the search progress of a single lost
 /// pet report — a 4-stage stepper plus the chronological sighting timeline
@@ -161,7 +161,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4CAF7D),
+                backgroundColor: kBrandDeep,
                 foregroundColor: Colors.white,
               ),
               onPressed: () => Navigator.pop(ctx, true),
@@ -197,7 +197,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
                 ? 'Sighting confirmed.'
                 : 'Marked as not a match.',
           ),
-          backgroundColor: const Color(0xFF4CAF7D),
+          backgroundColor: kSuccessDeep,
         ),
       );
     } on SightingQueueConflict catch (e) {
@@ -211,7 +211,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       if (!mounted) return;
       setState(() => _decidingId = null);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('$e'), backgroundColor: kBrandErrorDeep),
       );
     }
   }
@@ -258,7 +258,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF7D),
+              backgroundColor: kBrandDeep,
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(ctx, true),
@@ -286,14 +286,14 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Search ended — glad your pet is home!'),
-          backgroundColor: Color(0xFF4CAF7D),
+          backgroundColor: kSuccessDeep,
         ),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isConfirming = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('$e'), backgroundColor: kBrandErrorDeep),
       );
     }
   }
@@ -315,7 +315,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Report this sighting',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ),
             ),
@@ -323,7 +323,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
               ListTile(
                 leading: const Icon(
                   Icons.flag_outlined,
-                  color: Colors.redAccent,
+                  color: kBrandErrorDeep,
                 ),
                 title: Text(r),
                 onTap: () => Navigator.pop(ctx, r),
@@ -346,7 +346,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('$e'), backgroundColor: kBrandErrorDeep),
       );
     }
   }
@@ -395,133 +395,53 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
         .toList(growable: false);
     final resolved = _isResolved(postStatus);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF9FAFB),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () {
-            if (context.canPop()) context.pop();
-          },
-        ),
-        title: const Text(
-          'STATUS TRACKER',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 15,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 2.0,
+    return PhotoHeroScaffold(
+      imageUrl: widget.petImageUrl,
+      title: widget.petName,
+      subtitle: resolved ? 'Home. The search has ended.' : 'Still searching',
+      onRefresh: _pullToRefresh,
+      actions: [
+        // Edit the report's name / bounty / colour / traits. Hidden once the
+        // search has ended — there is nothing left to edit then.
+        if (!resolved)
+          GlassIconButton(
+            icon: Icons.edit_outlined,
+            tooltip: 'Edit report',
+            onPressed: () async {
+              final changed = await context.push<bool>(
+                '${AppRoutes.lostPetPostEdit}/${widget.petId}',
+              );
+              if (changed == true && mounted) _refresh();
+            },
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          // Edit the report's name / bounty / colour / traits. Hidden
-          // once the search has ended — there is nothing left to edit then.
-          if (!resolved)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined, color: Colors.black87),
-              tooltip: 'Edit report',
-              onPressed: () async {
-                final changed = await context.push<bool>(
-                  '${AppRoutes.lostPetPostEdit}/${widget.petId}',
-                );
-                if (changed == true && mounted) _refresh();
-              },
-            ),
-        ],
-      ),
-      // `.noSpinner`: the pull gesture stays, the progress arc goes. The
-      // timeline dropping to its skeleton is the refresh feedback.
-      body: ContentWidth(
-        child: RefreshIndicator.noSpinner(
-          onRefresh: _pullToRefresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-            children: [
-              _petHeader(),
-              const SizedBox(height: 24),
-              StatusStepper(current: _deriveStage(postStatus, items)),
-              if (!resolved) ...[
-                const SizedBox(height: 16),
-                _selfCloseButton(),
-              ],
-              const SizedBox(height: 28),
-              const Text(
-                'RECENT ACTIVITY',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.0,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 16),
-              timelineAsync.when(
-                // Keep the cards on screen through a decision's re-fetch, and
-                // only through that one — see `_pullRefreshing`. The first load
-                // is unaffected either way: with no previous value to keep,
-                // `loading:` runs regardless and the skeleton still shows.
-                skipLoadingOnRefresh: !_pullRefreshing,
-                // Use the reject-filtered `items`, not the raw provider data.
-                data: (_) => _buildTimeline(items, resolved),
-                loading: () => const ActivityTimelineSkeleton(),
-                error: (err, _) => _timelineError(err),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _petHeader() {
-    return Column(
+      ],
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: SizedBox(
-            width: 96,
-            height: 96,
-            child: widget.petImageUrl != null
-                ? CachedNetworkImage(
-                    imageUrl: widget.petImageUrl!,
-                    fit: BoxFit.cover,
-                    // Decode to the size actually painted. Image.network
-                    // decoded the full 2048px upload into a 96pt box, which
-                    // cost ~12 MB of raster cache per photo — about eight of
-                    // them filled Flutter's whole 100 MB ImageCache and
-                    // started evicting (and re-decoding) on every scroll.
-                    memCacheWidth: (96 * MediaQuery.devicePixelRatioOf(context))
-                        .round(),
-                    placeholder: (_, _) => const Skeletonizer.zone(
-                      child: Bone(width: 96, height: 96),
-                    ),
-                    errorWidget: (_, _, _) => _headerFallback(),
-                  )
-                : _headerFallback(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          widget.petName.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-            color: Colors.black87,
-          ),
+        StatusStepper(current: _deriveStage(postStatus, items)),
+        if (!resolved) ...[
+          const SizedBox(height: 18),
+          _selfCloseButton(),
+        ],
+        // Once the search has ended, the bounty is settled here.
+        if (resolved) ...[
+          const SizedBox(height: 20),
+          OwnerBountySection(petId: widget.petId),
+        ],
+        const SizedBox(height: 28),
+        const SheetHeading('Sightings'),
+        const SizedBox(height: 14),
+        timelineAsync.when(
+          // Keep the cards on screen through a decision's re-fetch, and only
+          // through that one — see `_pullRefreshing`. The first load is
+          // unaffected either way: with no previous value to keep, `loading:`
+          // runs regardless and the skeleton still shows.
+          skipLoadingOnRefresh: !_pullRefreshing,
+          data: (_) => _buildTimeline(items, resolved),
+          loading: () => const ActivityTimelineSkeleton(),
+          error: (err, _) => _timelineError(err),
         ),
       ],
     );
   }
-
-  Widget _headerFallback() => Container(
-    color: const Color(0xFFF0F0F0),
-    child: const Icon(Icons.pets, size: 40, color: Colors.grey),
-  );
 
   Widget _buildTimeline(List<SightingActivity> items, bool resolved) {
     if (items.isEmpty) {
@@ -529,12 +449,12 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Column(
           children: [
-            Icon(Icons.search_off_rounded, size: 40, color: Colors.grey[400]),
+            Icon(Icons.search_off_rounded, size: 40, color: kInk.withValues(alpha: 0.3)),
             const SizedBox(height: 12),
             Text(
-              'No sightings reported yet.\nYou\'ll see hunter activity here as it comes in.',
+              'No sightings yet.\nWhen a hunter spots your pet, it shows up here.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              style: TextStyle(color: kInk.withValues(alpha: 0.65), fontSize: 14),
             ),
           ],
         ),
@@ -580,23 +500,11 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   /// green one) because it rewards nobody: the loud path is confirming the
   /// hunter who actually brought the animal home.
   Widget _selfCloseButton() {
-    return OutlinedButton.icon(
+    return BrandButton(
+      label: 'My pet came home on its own',
+      icon: Icons.home_rounded,
+      outlined: true,
       onPressed: _isConfirming ? null : _confirmRescue,
-      icon: const Icon(Icons.home_rounded, size: 18),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF4CAF7D),
-        side: const BorderSide(color: Color(0xFF4CAF7D)),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: const StadiumBorder(),
-      ),
-      label: const Text(
-        'MY PET CAME HOME ON ITS OWN',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.5,
-        ),
-      ),
     );
   }
 
@@ -605,18 +513,18 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 32),
+          const Icon(Icons.error_outline, color: kBrandErrorDeep, size: 32),
           const SizedBox(height: 8),
           Text(
-            'Could not load activity: $err',
+            'Could not load the sightings. Check your connection, then try again.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
+            style: const TextStyle(color: kBrandErrorDeep),
           ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: () =>
                 ref.invalidate(sightingTimelineProvider(widget.petId)),
-            child: const Text('Retry'),
+            child: const Text('Try again'),
           ),
         ],
       ),

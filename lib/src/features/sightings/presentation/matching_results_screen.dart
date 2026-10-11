@@ -7,7 +7,7 @@ import 'package:petty_bounty/src/core/ui/snackbar_helpers.dart';
 import '../../../core/theme/app_glass.dart';
 import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/full_image_view.dart';
-import '../data/models/match_model.dart';
+import '../domain/entities/match_model.dart';
 import '../domain/sighting_providers.dart';
 import 'final_review_screen.dart';
 
