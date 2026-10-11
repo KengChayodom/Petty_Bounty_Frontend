@@ -233,7 +233,7 @@ void main() {
     testWidgets('a reward cannot be switched off once set', (tester) async {
       final repo = await _pump(tester, pet: _pet(bounty: 5000));
 
-      await tester.tap(find.text('No cash reward'));
+      await tester.tap(find.text('Points only'));
       await tester.pump();
       await tester.tap(find.text('Save changes'));
       await tester.pump();
@@ -245,7 +245,7 @@ void main() {
     testWidgets('a report with no reward can add one', (tester) async {
       final repo = await _pump(tester, pet: _pet(bounty: 0));
 
-      await tester.tap(find.text('Cash reward'));
+      await tester.tap(find.text('Bounty'));
       await tester.pump();
       await tester.enterText(find.widgetWithText(TextFormField, ''), '300');
       await tester.tap(find.text('Save changes'));
