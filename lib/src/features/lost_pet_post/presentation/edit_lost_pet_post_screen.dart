@@ -574,14 +574,14 @@ class _BountyEditor extends StatelessWidget {
               _modeButton(
                 selected: !isBountyMode,
                 icon: Icons.favorite,
-                label: 'No cash reward',
+                label: 'Points only',
                 activeColor: kSuccessDeep,
                 onTap: minAmount > 0 ? null : () => onModeChanged(false),
               ),
               _modeButton(
                 selected: isBountyMode,
                 icon: Icons.monetization_on_outlined,
-                label: 'Cash reward',
+                label: 'Bounty',
                 activeColor: kBrandDeep,
                 onTap: () => onModeChanged(true),
               ),

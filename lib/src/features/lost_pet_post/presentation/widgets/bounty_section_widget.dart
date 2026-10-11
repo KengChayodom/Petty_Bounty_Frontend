@@ -40,14 +40,14 @@ class BountySectionWidget extends ConsumerWidget {
               _buildModeToggleButton(
                 selected: !isBountyMode,
                 icon: Icons.favorite,
-                label: 'No cash reward',
+                label: 'Points only',
                 activeColor: kSuccessDeep,
                 onTap: () => notifier.updateBountyMode(false),
               ),
               _buildModeToggleButton(
                 selected: isBountyMode,
                 icon: Icons.monetization_on_outlined,
-                label: 'Cash reward',
+                label: 'Bounty',
                 activeColor: kBrandDeep,
                 onTap: () => notifier.updateBountyMode(true),
               ),
@@ -65,7 +65,7 @@ class BountySectionWidget extends ConsumerWidget {
             accent: kSuccessDeep,
             title: 'Hunters earn points only',
             description:
-                'Hunters will receive Trust Score and XP points for successful findings, but no cash reward will be issued.',
+                'Hunters will receive Trust Score and XP points for successful findings, but no bounty will be paid.',
           )
         else ...[
           _buildRewardInfoBox(
@@ -73,9 +73,9 @@ class BountySectionWidget extends ConsumerWidget {
             border: const Color(0xFFFFEEBA),
             icon: Icons.flash_on,
             accent: Colors.brown,
-            title: 'CASH REWARD + XP',
+            title: 'BOUNTY + XP',
             description:
-                'Hunters will receive the full cash bounty PLUS Trust Score and XP points upon successful verification.',
+                'Hunters will receive the full bounty by PromptPay transfer PLUS Trust Score and XP points upon successful verification.',
           ),
           const SizedBox(height: 16),
 
@@ -194,7 +194,7 @@ class BountySectionWidget extends ConsumerWidget {
     );
   }
 
-  /// The green "XP REWARD ONLY" / orange "CASH REWARD + XP" explainer box —
+  /// The green "XP REWARD ONLY" / orange "BOUNTY + XP" explainer box —
   /// one parameterized builder instead of two copy-pasted blocks.
   Widget _buildRewardInfoBox({
     required Color background,
