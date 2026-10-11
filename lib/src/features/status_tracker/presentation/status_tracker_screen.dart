@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
 import '../../../routing/app_router.dart';
 import '../data/models/sighting_activity.dart';
@@ -191,10 +192,10 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
           content: Text(
             closed
                 ? 'Search ended — $awards hunter(s) rewarded. '
-                    'Glad your pet is home!'
+                      'Glad your pet is home!'
                 : decision == 'Confirmed'
-                    ? 'Sighting confirmed.'
-                    : 'Marked as not a match.',
+                ? 'Sighting confirmed.'
+                : 'Marked as not a match.',
           ),
           backgroundColor: const Color(0xFF4CAF7D),
         ),
@@ -205,9 +206,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       if (!mounted) return;
       setState(() => _decidingId = null);
       _refresh();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } catch (e) {
       if (!mounted) return;
       setState(() => _decidingId = null);
@@ -322,8 +321,10 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             ),
             for (final r in reasons)
               ListTile(
-                leading:
-                    const Icon(Icons.flag_outlined, color: Colors.redAccent),
+                leading: const Icon(
+                  Icons.flag_outlined,
+                  color: Colors.redAccent,
+                ),
                 title: Text(r),
                 onTap: () => Navigator.pop(ctx, r),
               ),
@@ -378,8 +379,9 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
     // in its error state (e.g. the backend connection dropped), which would
     // crash `build` before the `timelineAsync.when(error: ...)` branch below
     // gets a chance to render the retry UI.
-    final postStatus =
-        ref.watch(petPostStatusProvider(widget.petId)).valueOrNull;
+    final postStatus = ref
+        .watch(petPostStatusProvider(widget.petId))
+        .valueOrNull;
     // Rejected cards stay on the timeline, wearing their badge: the owner said
     // "not mine", which is a decision worth showing back to them, not an
     // entry to hide. Hiding it would also make the queue's order unreadable.
@@ -432,42 +434,44 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
       ),
       // `.noSpinner`: the pull gesture stays, the progress arc goes. The
       // timeline dropping to its skeleton is the refresh feedback.
-      body: RefreshIndicator.noSpinner(
-        onRefresh: _pullToRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          children: [
-            _petHeader(),
-            const SizedBox(height: 24),
-            StatusStepper(current: _deriveStage(postStatus, items)),
-            if (!resolved) ...[
-              const SizedBox(height: 16),
-              _selfCloseButton(),
-            ],
-            const SizedBox(height: 28),
-            const Text(
-              'RECENT ACTIVITY',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.0,
-                color: Colors.black87,
+      body: ContentWidth(
+        child: RefreshIndicator.noSpinner(
+          onRefresh: _pullToRefresh,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            children: [
+              _petHeader(),
+              const SizedBox(height: 24),
+              StatusStepper(current: _deriveStage(postStatus, items)),
+              if (!resolved) ...[
+                const SizedBox(height: 16),
+                _selfCloseButton(),
+              ],
+              const SizedBox(height: 28),
+              const Text(
+                'RECENT ACTIVITY',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            timelineAsync.when(
-              // Keep the cards on screen through a decision's re-fetch, and
-              // only through that one — see `_pullRefreshing`. The first load
-              // is unaffected either way: with no previous value to keep,
-              // `loading:` runs regardless and the skeleton still shows.
-              skipLoadingOnRefresh: !_pullRefreshing,
-              // Use the reject-filtered `items`, not the raw provider data.
-              data: (_) => _buildTimeline(items, resolved),
-              loading: () => const ActivityTimelineSkeleton(),
-              error: (err, _) => _timelineError(err),
-            ),
-          ],
+              const SizedBox(height: 16),
+              timelineAsync.when(
+                // Keep the cards on screen through a decision's re-fetch, and
+                // only through that one — see `_pullRefreshing`. The first load
+                // is unaffected either way: with no previous value to keep,
+                // `loading:` runs regardless and the skeleton still shows.
+                skipLoadingOnRefresh: !_pullRefreshing,
+                // Use the reject-filtered `items`, not the raw provider data.
+                data: (_) => _buildTimeline(items, resolved),
+                loading: () => const ActivityTimelineSkeleton(),
+                error: (err, _) => _timelineError(err),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -490,8 +494,8 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
                     // cost ~12 MB of raster cache per photo — about eight of
                     // them filled Flutter's whole 100 MB ImageCache and
                     // started evicting (and re-decoding) on every scroll.
-                    memCacheWidth:
-                        (96 * MediaQuery.devicePixelRatioOf(context)).round(),
+                    memCacheWidth: (96 * MediaQuery.devicePixelRatioOf(context))
+                        .round(),
                     placeholder: (_, _) => const Skeletonizer.zone(
                       child: Bone(width: 96, height: 96),
                     ),
@@ -515,9 +519,9 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
   }
 
   Widget _headerFallback() => Container(
-        color: const Color(0xFFF0F0F0),
-        child: const Icon(Icons.pets, size: 40, color: Colors.grey),
-      );
+    color: const Color(0xFFF0F0F0),
+    child: const Icon(Icons.pets, size: 40, color: Colors.grey),
+  );
 
   Widget _buildTimeline(List<SightingActivity> items, bool resolved) {
     if (items.isEmpty) {
@@ -559,9 +563,8 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             onReject: items[i].id == next?.id
                 ? () => _decide(items[i], 'Rejected')
                 : null,
-            isLocked: next != null &&
-                !items[i].isDecided &&
-                items[i].id != next.id,
+            isLocked:
+                next != null && !items[i].isDecided && items[i].id != next.id,
             onViewMap: items[i].hasLocation ? () => _openMap(items[i]) : null,
             onTapImage: items[i].imageUrl != null
                 ? () => _openImage(items[i].imageUrl!)
