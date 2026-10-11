@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_glass.dart';
 import '../../../core/ui/brand_widgets.dart';
-import '../data/bounty_repository.dart';
-import '../data/models/bounty_models.dart';
+import '../domain/entities/bounty_errors.dart';
+import '../domain/entities/bounty_models.dart';
 import '../domain/providers/bounty_providers.dart';
 import 'widgets/bounty_notice.dart';
 
@@ -30,10 +30,10 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
 
   DateTime get _now => (widget.now ?? DateTime.now)();
 
-  Future<void> _act(Future<void> Function(BountyRepository r) action, String done) async {
+  Future<void> _act(Future<void> Function() action, String done) async {
     setState(() => _busy = true);
     try {
-      await action(ref.read(bountyRepositoryProvider));
+      await action();
       _snack(done);
     } on BountyConflict catch (e) {
       _snack(e.message);
@@ -170,7 +170,7 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
           onPressed: () async {
             if (await _confirmDialog('Confirm the payment?',
                 'This closes the case. Only confirm once the money is in your account.')) {
-              await _act((r) => r.answerPayment(p.id, confirm: true), 'Payment confirmed.');
+              await _act(() => ref.read(bountyRepositoryProvider).answerPayment(p.id, confirm: true), 'Payment confirmed.');
             }
           },
         ),
@@ -184,7 +184,7 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
             onPressed: () async {
               if (await _confirmDialog('Report the money as not received?',
                   'An administrator will review the slip.')) {
-                await _act((r) => r.answerPayment(p.id, confirm: false), 'Sent to an administrator.');
+                await _act(() => ref.read(bountyRepositoryProvider).answerPayment(p.id, confirm: false), 'Sent to an administrator.');
               }
             },
           ),
@@ -218,7 +218,7 @@ class _HunterBountyScreenState extends ConsumerState<HunterBountyScreen> {
           onPressed: () async {
             if (await _confirmDialog('Report the bounty as unpaid?',
                 'An administrator will contact the owner.')) {
-              await _act((r) => r.referUnpaid(widget.petId), 'Reported to an administrator.');
+              await _act(() => ref.read(bountyRepositoryProvider).referUnpaid(widget.petId), 'Reported to an administrator.');
             }
           },
         ),

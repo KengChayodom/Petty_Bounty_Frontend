@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/app_config.dart';
-import '../data/sighting_repository.dart';
+import '../domain/sighting_providers.dart';
 import '../domain/pending_upload.dart';
 import 'widgets/camera_skeletons.dart';
 

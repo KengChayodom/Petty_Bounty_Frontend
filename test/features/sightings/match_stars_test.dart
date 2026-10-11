@@ -8,7 +8,7 @@
 // is kept only for a backend that does not send it.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:petty_bounty/src/features/sightings/data/models/match_model.dart';
+import 'package:petty_bounty/src/features/sightings/domain/entities/match_model.dart';
 
 Map<String, dynamic> _json({double similarity = 0.5, Object? stars}) => {
   'id': 'p1',

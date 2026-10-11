@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/repositories/missing_pet_repository_impl.dart';
 import '../domain/entities/missing_pet_entity.dart';
 import '../domain/providers/nearby_pets_providers.dart';
 import 'pet_detail_skeleton.dart';
@@ -55,7 +54,7 @@ class _PetDetailResolverState extends ConsumerState<PetDetailResolver> {
     // phone, which only GET /missing-pets/{id} joins. The in-memory copy still
     // drives the first frame so there's no skeleton flicker, then the fetched
     // record swaps in and fills the owner section.
-    _fetch ??= MissingPetRepositoryImpl().getMissingPet(widget.petId);
+    _fetch ??= ref.read(missingPetRepositoryProvider).getMissingPet(widget.petId);
     return FutureBuilder<MissingPetEntity>(
       future: _fetch,
       builder: (context, snapshot) {

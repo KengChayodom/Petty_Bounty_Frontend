@@ -8,24 +8,9 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/app_config.dart';
 import '../../../core/network/app_http_client.dart';
-import 'models/bounty_models.dart';
-
-/// The report or payment does not exist, or is not the caller's to act on.
-class BountyNotFound implements Exception {
-  const BountyNotFound(this.message);
-  final String message;
-  @override
-  String toString() => message;
-}
-
-/// The request was refused because of the report's or payment's state:
-/// already paid, already decided, or the window has closed.
-class BountyConflict implements Exception {
-  const BountyConflict(this.message);
-  final String message;
-  @override
-  String toString() => message;
-}
+import '../../../core/network/auth_headers.dart';
+import '../domain/entities/bounty_models.dart';
+import '../domain/entities/bounty_errors.dart';
 
 /// Feature #6: the owner pays the returning hunter and submits the slip; the
 /// hunter confirms, disputes, or refers an unpaid report.
@@ -37,7 +22,7 @@ class BountyRepository {
     Future<String> Function(String filePath)? uploadSlip,
   })  : _client = client ?? AppHttpClient.instance,
         _baseUrl = baseUrl ?? AppConfig.apiBaseUrl,
-        _authHeader = authHeader ?? _sessionAuthHeader,
+        _authHeader = authHeader ?? bearerAuthorization,
         _uploadSlip = uploadSlip ?? _uploadToSlipBucket;
 
   final http.Client _client;
@@ -47,14 +32,6 @@ class BountyRepository {
 
   static const String _slipBucket = 'slip-images';
 
-  static String? _sessionAuthHeader() {
-    try {
-      final token = Supabase.instance.client.auth.currentSession?.accessToken;
-      return token == null ? null : 'Bearer $token';
-    } catch (_) {
-      return null; // Supabase not initialised (tests): send no token.
-    }
-  }
 
   /// Uploads straight to Storage, as the sighting photo does. The object name
   /// is random so a slip's URL cannot be guessed; the bucket is public, which
