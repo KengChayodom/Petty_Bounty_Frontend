@@ -15,7 +15,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/core/auth/auth_service.dart';
 import 'package:petty_bounty/src/core/notifications/fcm_service.dart';
-import 'package:petty_bounty/src/features/home_map/data/location_publisher.dart';
+import 'package:petty_bounty/src/features/home_map/domain/location_tracking.dart';
+import 'package:petty_bounty/src/features/home_map/domain/providers/location_tracking_provider.dart';
 import 'package:petty_bounty/src/features/profile/presentation/profile_screen.dart';
 
 /// One shared list, so the assertions are about sequence and not just about
@@ -36,6 +37,9 @@ class _FakePush implements PushRegistration {
 class _FakeTracking implements LocationTracking {
   _FakeTracking(this.journal);
   final _Journal journal;
+
+  @override
+  void start() => journal.steps.add('start');
 
   @override
   void stop() => journal.steps.add('stop');

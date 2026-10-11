@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_config.dart';
 import '../../../core/network/app_http_client.dart';
+import '../../../core/network/auth_headers.dart';
 import '../domain/models/profile_models.dart';
 import 'models/profile_models.dart';
 
@@ -27,13 +28,8 @@ class ProfileRepository {
         // 'localhost' here would silently fail to connect on Android.
         _baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
 
-  Map<String, String> get _authHeaders {
-    final token = _supabase.auth.currentSession?.accessToken;
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
+  Map<String, String> get _authHeaders =>
+      jsonHeaders(bearerAuthorization(_supabase));
 
   /// Guard for endpoints that are meaningless without a session.
   ///
@@ -140,9 +136,9 @@ class ProfileRepository {
       Uri.parse('$_baseUrl/upload/pet-image'),
     );
 
-    final token = _supabase.auth.currentSession?.accessToken;
-    if (token != null) {
-      request.headers['Authorization'] = 'Bearer $token';
+    final authorization = bearerAuthorization(_supabase);
+    if (authorization != null) {
+      request.headers['Authorization'] = authorization;
     }
 
     final mimeType = lookupMimeType(filePath) ?? 'image/jpeg';

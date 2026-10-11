@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:petty_bounty/src/features/sightings/data/models/match_model.dart';
+import 'package:petty_bounty/src/features/sightings/domain/entities/match_model.dart';
 import 'package:petty_bounty/src/features/sightings/presentation/final_review_screen.dart';
 
 const _sdk = '/Users/macguide/flutter 2/bin/cache/artifacts/material_fonts';

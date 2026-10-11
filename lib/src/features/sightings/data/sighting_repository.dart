@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/app_config.dart';
@@ -9,7 +8,7 @@ import '../../../core/auth/auth_service.dart';
 import '../../../core/network/app_http_client.dart';
 import 'package:mime/mime.dart';
 import 'models/sighting_model.dart';
-import 'models/match_model.dart';
+import '../domain/entities/match_model.dart';
 
 class SightingRepository {
   final String baseUrl = AppConfig.apiBaseUrl;
@@ -236,9 +235,3 @@ class SightingRepository {
     }
   }
 }
-
-/// Provider for SightingRepository
-final sightingRepositoryProvider = Provider<SightingRepository>((ref) {
-  final authService = ref.read(authServiceProvider);
-  return SightingRepository(authService);
-});

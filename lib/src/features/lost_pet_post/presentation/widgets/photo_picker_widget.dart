@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_glass.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/app_config.dart';
 import '../../../../core/constants/pet_species.dart';
 import '../../../../core/ui/skeleton/skeleton.dart';
-import '../../data/lost_pet_post_repository.dart';
+import '../../domain/providers/lost_pet_post_repository_provider.dart';
 import '../../domain/providers/lost_pet_post_form_provider.dart';
 
 List<String> get _speciesOptions => PetSpecies.labels;
@@ -78,7 +80,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to pick image: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: kBrandErrorDeep,
           ),
         );
       }
@@ -101,7 +103,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to upload photo: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: kBrandErrorDeep,
           ),
         );
       }
@@ -151,7 +153,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
           content: Text(
             "Couldn't detect a pet in that photo — please try a different one.",
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: kBrandErrorDeep,
         ),
       );
     }
@@ -205,7 +207,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                       children: [
                         IconButton(
                           iconSize: 48,
-                          icon: const Icon(Icons.check_circle, color: Colors.green),
+                          icon: const Icon(Icons.check_circle, color: kSuccessDeep),
                           onPressed: () {
                             ref
                                 .read(lostPetPostFormProvider.notifier)
@@ -218,7 +220,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                         ),
                         IconButton(
                           iconSize: 48,
-                          icon: const Icon(Icons.cancel, color: Colors.red),
+                          icon: const Icon(Icons.cancel, color: kBrandErrorDeep),
                           onPressed: () => setDialogState(() {
                             showCorrectionView = true;
                             selectedSpecies = null;
@@ -238,7 +240,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
               ),
               title: Row(
                 children: [
-                  const Icon(Icons.smart_toy, size: 18, color: Colors.grey),
+                  const Icon(Icons.smart_toy, size: 18, color: kInkMuted),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -264,14 +266,14 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
+                      color: kBrandDeep.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       'Submitting an incorrect species is considered '
                       'interference and may result in a penalty if flagged '
                       'by an admin.',
-                      style: TextStyle(fontSize: 11, color: Colors.orange.shade800),
+                      style: TextStyle(fontSize: 11, color: kBrandDeep),
                     ),
                   ),
                 ],
@@ -316,12 +318,11 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'PET PHOTO',
+          'A clear photo of their face and body',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
-            letterSpacing: 1.0,
+            color: kInkMuted,
           ),
         ),
         const SizedBox(height: 8),
@@ -333,10 +334,10 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                 height: 180,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: kFieldFill,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: imagePath != null ? Colors.blue : Colors.grey[300]!,
+                    color: imagePath != null ? kBrandDeep : Colors.grey[300]!,
                     width: 1.5,
                   ),
                   image: imagePath != null
@@ -356,7 +357,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                                 content: Text(
                                   'That photo could not be loaded — please pick it again.',
                                 ),
-                                backgroundColor: Colors.red,
+                                backgroundColor: kBrandErrorDeep,
                               ),
                             );
                           },
@@ -370,16 +371,15 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                           Icon(
                             Icons.add_a_photo_outlined,
                             size: 36,
-                            color: Colors.grey,
+                            color: kInkMuted,
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'TAP TO ADD PHOTO',
+                            'Tap to add a photo',
                             style: TextStyle(
-                              color: Colors.grey,
+                              color: kInkMuted,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
-                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
@@ -393,7 +393,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: const BoxDecoration(
-                      color: Colors.black54,
+                      color: kInkMuted,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

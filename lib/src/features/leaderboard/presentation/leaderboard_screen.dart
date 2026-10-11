@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_glass.dart';
 import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
-import '../data/models/rank_models.dart';
+import '../domain/entities/rank_models.dart';
 import '../domain/leaderboard_providers.dart';
 
 // Medal colours stay: they mean first, second and third, not "brand".

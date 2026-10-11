@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/leaderboard_repository.dart';
-import '../data/models/rank_models.dart';
+import 'entities/rank_models.dart';
 
 final leaderboardRepositoryProvider =
     Provider<LeaderboardRepository>((ref) => LeaderboardRepository());

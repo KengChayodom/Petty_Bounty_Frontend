@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/ui/skeleton/skeleton.dart';
-import '../../data/models/sighting_activity.dart';
+import '../../domain/entities/sighting_activity.dart';
 import 'activity_card.dart';
 
 /// Skeleton for the "RECENT ACTIVITY" timeline on the status tracker.

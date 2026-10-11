@@ -5,7 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_config.dart';
 import '../../../core/network/app_http_client.dart';
-import 'models/rank_models.dart';
+import '../../../core/network/auth_headers.dart';
+import '../domain/entities/rank_models.dart';
 
 /// Reads the two leaderboards (`GET /leaderboard/users` and `/bounties`).
 class LeaderboardRepository {
@@ -21,13 +22,8 @@ class LeaderboardRepository {
         _client = client ?? AppHttpClient.instance,
         _baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
 
-  Map<String, String> get _authHeaders {
-    final token = _supabase.auth.currentSession?.accessToken;
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
+  Map<String, String> get _authHeaders =>
+      jsonHeaders(bearerAuthorization(_supabase));
 
   /// A page of the hunter board plus the caller's own standing. `me` is the
   /// caller's global rank, returned on every page so the pinned row is right
