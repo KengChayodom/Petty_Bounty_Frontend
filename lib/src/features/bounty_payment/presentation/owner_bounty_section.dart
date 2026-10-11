@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../data/bounty_repository.dart';
-import '../data/models/bounty_models.dart';
+import '../domain/entities/bounty_errors.dart';
+import '../domain/entities/bounty_models.dart';
 import '../domain/providers/bounty_providers.dart';
 import 'bounty_payment_card.dart';
 import 'widgets/bounty_notice.dart';

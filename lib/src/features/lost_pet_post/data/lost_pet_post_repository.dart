@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import '../../../core/app_config.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/network/app_http_client.dart';
-import 'models/lost_pet_post_request.dart';
+import '../domain/entities/lost_pet_post_request.dart';
 
 class LostPetPostRepository {
   final String baseUrl = AppConfig.apiBaseUrl;
@@ -143,8 +142,3 @@ class LostPetPostRepository {
     }
   }
 }
-
-final lostPetPostRepositoryProvider = Provider<LostPetPostRepository>((ref) {
-  final authService = ref.read(authServiceProvider);
-  return LostPetPostRepository(authService);
-});

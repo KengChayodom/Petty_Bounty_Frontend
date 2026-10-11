@@ -10,8 +10,8 @@ import '../../../core/theme/app_glass.dart';
 import '../../../core/ui/adaptive/breakpoints.dart';
 import '../../../core/ui/full_image_view.dart';
 import '../../../core/ui/skeleton/skeleton.dart';
-import '../data/models/match_model.dart';
-import '../data/sighting_repository.dart';
+import '../domain/entities/match_model.dart';
+import '../domain/sighting_providers.dart';
 import 'report_sent_screen.dart';
 
 /// Rescue is an outcome, not an action the way spotting is: the pet is safe.

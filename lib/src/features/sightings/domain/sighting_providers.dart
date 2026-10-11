@@ -1,7 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/sighting_model.dart';
-import '../data/models/match_model.dart';
+import 'entities/match_model.dart';
+import '../../../core/auth/auth_service.dart';
 import '../data/sighting_repository.dart';
+
+/// Provider for SightingRepository
+final sightingRepositoryProvider = Provider<SightingRepository>((ref) {
+  final authService = ref.read(authServiceProvider);
+  return SightingRepository(authService);
+});
 
 /// State for sighting creation and matching
 class SightingState {

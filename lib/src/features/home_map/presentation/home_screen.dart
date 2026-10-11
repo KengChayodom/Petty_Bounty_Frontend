@@ -11,7 +11,7 @@ import 'dart:async';
 import '../domain/entities/missing_pet_entity.dart';
 import '../domain/providers/nearby_pets_providers.dart';
 import '../domain/providers/location_provider.dart'; // โหลด Provider ตัวใหม่ที่เราสร้าง
-import '../data/location_publisher.dart';
+import '../domain/providers/location_tracking_provider.dart';
 import '../../../core/map/cached_tile_provider.dart';
 import '../../../core/theme/app_glass.dart';
 import '../../../core/notifications/fcm_service.dart';
@@ -128,7 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // Keep our position fresh on the backend so geo-targeted push can find us
     // (SRS-24/26). The publisher re-reads GPS each tick and skips the denied/
     // fallback case itself, so denied users never pile up at one point.
-    LocationPublisher.instance.start();
+    ref.read(locationTrackingProvider).start();
 
     await FcmService.instance.initForCurrentUser();
   }
