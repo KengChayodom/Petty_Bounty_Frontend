@@ -75,7 +75,7 @@ class BountySectionWidget extends ConsumerWidget {
             accent: Colors.brown,
             title: 'BOUNTY + XP',
             description:
-                'Hunters will receive the full bounty, paid by PromptPay transfer, PLUS Trust Score and XP points upon successful verification.',
+                'Hunters will receive the full bounty by PromptPay transfer PLUS Trust Score and XP points upon successful verification.',
           ),
           const SizedBox(height: 16),
 
