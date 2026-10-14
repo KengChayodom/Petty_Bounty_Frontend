@@ -9,6 +9,7 @@
 //   UTC-22  AuthValidators.password        (MD-28, SRS-05)
 //   UTC-23  AuthValidators.confirmPassword (MD-29, SRS-06)
 //   UTC-24  AuthValidators.loginPassword   (MD-30, SRS-02 umbrella)
+//   UTC-76  AuthValidators.phone           (MD-92, SRS-02 umbrella)
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/auth/domain/auth_validators.dart';
@@ -72,6 +73,18 @@ void main() {
     });
     test('TC-02 non-empty (no length rule) -> null', () {
       expect(AuthValidators.loginPassword('x'), isNull);
+    });
+  });
+
+  group('UTC-76 AuthValidators.phone', () {
+    test('TC-01 null / empty / whitespace -> "Phone number is required"', () {
+      expect(AuthValidators.phone(null), 'Phone number is required');
+      expect(AuthValidators.phone(''), 'Phone number is required');
+      expect(AuthValidators.phone('   '), 'Phone number is required');
+    });
+    test('TC-02 non-empty (no format rule) -> null', () {
+      expect(AuthValidators.phone('0812345678'), isNull);
+      expect(AuthValidators.phone('x'), isNull);
     });
   });
 }
