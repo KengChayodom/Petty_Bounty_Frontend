@@ -551,7 +551,7 @@ class _BountyEditor extends StatelessWidget {
 
   final bool isBountyMode;
 
-  /// SRS-100: the bounty the report already carries. It may be raised, never
+  /// The bounty the report already carries. It may be raised, never
   /// lowered, so a reward once set cannot be switched off either.
   final double minAmount;
   final TextEditingController controller;
