@@ -354,6 +354,19 @@ class PetDetailView extends StatelessWidget {
     );
   }
 
+  /// TARGETED sighting: the hunter is looking at THIS pet and found it.
+  /// Close the sheet, then open the camera in targeted mode carrying the
+  /// pet's id/species/name so the verification screen submits straight to the
+  /// owner (no AI analyze, no matching).
+  void _reportSighting(BuildContext context, MissingPetEntity pet) {
+    Navigator.pop(context);
+    context.push('/camera', extra: {
+      'targetPetId': pet.id,
+      'species': pet.species,
+      'petName': pet.petName,
+    });
+  }
+
   Widget _buildActionButtons(BuildContext context, MissingPetEntity pet) {
     final species = pet.species.trim().toLowerCase();
     return Column(
@@ -362,18 +375,7 @@ class PetDetailView extends StatelessWidget {
         BrandButton(
           label: species.isEmpty ? 'I saw this pet' : 'I saw this $species',
           icon: Icons.photo_camera_rounded,
-          onPressed: () {
-            // TARGETED sighting: the hunter is looking at THIS pet and found
-            // it. Close the sheet, then open the camera in targeted mode
-            // carrying the pet's id/species/name so the verification screen
-            // submits straight to the owner (no AI analyze, no matching).
-            Navigator.pop(context);
-            context.push('/camera', extra: {
-              'targetPetId': pet.id,
-              'species': pet.species,
-              'petName': pet.petName,
-            });
-          },
+          onPressed: () => _reportSighting(context, pet),
         ),
         const SizedBox(height: 6),
         TextButton(
