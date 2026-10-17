@@ -341,7 +341,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
           .flagSighting(item.id, reason);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reported for review. Thank you.')),
+        const SnackBar(content: Text('Reported for review. Our moderators will take a look.')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -452,7 +452,7 @@ class _StatusTrackerScreenState extends ConsumerState<StatusTrackerScreen> {
             Icon(Icons.search_off_rounded, size: 40, color: kInk.withValues(alpha: 0.3)),
             const SizedBox(height: 12),
             Text(
-              'No sightings yet.\nWhen a hunter spots your pet, it shows up here.',
+              'No sightings reported yet',
               textAlign: TextAlign.center,
               style: TextStyle(color: kInk.withValues(alpha: 0.65), fontSize: 14),
             ),

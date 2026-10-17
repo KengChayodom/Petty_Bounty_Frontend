@@ -349,7 +349,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 child: _isSaving
                     ? const BusyButtonLabel(width: 120)
                     : const Text(
-                        'Save changes',
+                        'Save Changes',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,

@@ -188,6 +188,8 @@ class ProfileRepository {
       final email = (user?.email?.isNotEmpty == true) ? user!.email : ((user?.userMetadata?['email'] as String?)?.isNotEmpty == true ? user!.userMetadata!['email'] as String : null);
       return ProfileUserModel.fromJson({...data, if (email != null) 'email': email});
 
+    } else if (response.statusCode >= 500) {
+      throw Exception('Database error. Please try again later');
     } else {
       final error = jsonDecode(response.body);
       throw Exception(error['detail'] ?? 'Failed to update profile');

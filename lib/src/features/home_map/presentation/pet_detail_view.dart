@@ -368,12 +368,11 @@ class PetDetailView extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context, MissingPetEntity pet) {
-    final species = pet.species.trim().toLowerCase();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         BrandButton(
-          label: species.isEmpty ? 'I saw this pet' : 'I saw this $species',
+          label: 'Report Sighting',
           icon: Icons.photo_camera_rounded,
           onPressed: () => _reportSighting(context, pet),
         ),

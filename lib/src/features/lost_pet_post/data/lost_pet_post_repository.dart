@@ -134,6 +134,7 @@ class LostPetPostRepository {
 
     if (response.statusCode != 200) {
       String detail = 'Failed to save changes (${response.statusCode}).';
+      if (response.statusCode >= 500) throw Exception('Database error. Please try again later');
       try {
         final err = jsonDecode(response.body) as Map<String, dynamic>;
         if (err['detail'] != null) detail = err['detail'].toString();

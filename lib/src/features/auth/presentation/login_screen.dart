@@ -44,7 +44,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref.read(authServiceProvider).signInWithPassword(
+      await ref
+          .read(authServiceProvider)
+          .signInWithPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
@@ -62,7 +64,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Fixed message — never reveal whether the email exists.
       setState(() => _error = 'Invalid email or password');
     } catch (e) {
-      setState(() => _error = 'Something went wrong. Please try again.');
+      setState(
+        () => _error =
+            'Network connection lost. Please check your connection and try again.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }

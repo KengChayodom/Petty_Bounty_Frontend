@@ -722,7 +722,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   // A sheet with a plus, not a map pin: a pin put a second
                   // map-shaped glyph two slots from the Map tab's own.
                   icon: Icons.note_add_outlined,
-                  tooltip: 'Post a missing pet',
+                  tooltip: 'Report Missing Pet',
                   isActive: false,
                   onTap: _openLostPetPost,
                 ),

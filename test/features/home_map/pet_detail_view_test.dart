@@ -65,8 +65,8 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(seconds: 1));
 
-        await tester.ensureVisible(find.text('I saw this cat'));
-        await tester.tap(find.text('I saw this cat'));
+        await tester.ensureVisible(find.text('Report Sighting'));
+        await tester.tap(find.text('Report Sighting'));
         await tester.pump();
         await tester.pump(const Duration(seconds: 1));
 

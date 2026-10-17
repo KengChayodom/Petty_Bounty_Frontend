@@ -86,7 +86,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         () => _error = alreadyRegistered ? 'Email already exists' : e.message,
       );
     } catch (e) {
-      setState(() => _error = 'Something went wrong. Please try again.');
+      setState(
+        () => _error =
+            'Network connection lost. Please check your connection and try again.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
