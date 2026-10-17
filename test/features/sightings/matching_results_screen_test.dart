@@ -104,7 +104,7 @@ void main() {
   final mochi = _match('p1', 'Mochi');
   final tofu = _match('p2', 'Tofu');
 
-  group('UTC-99 MatchingResultsScreen._buildContent', () {
+  group('MatchingResultsScreen._buildContent', () {
     testWidgets('TC-01 no matches and not loading shows the empty message', (
       tester,
     ) async {
@@ -158,7 +158,7 @@ void main() {
     });
   });
 
-  group('UTC-100 MatchingResultsScreen._confirmMatch', () {
+  group('MatchingResultsScreen._confirmMatch', () {
     testWidgets('TC-01 with a location opens the final review of the match', (
       tester,
     ) async {

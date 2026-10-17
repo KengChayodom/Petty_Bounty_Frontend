@@ -24,11 +24,13 @@ const _connectionError = 'Connection error. Ensure backend is running.';
 const _noAnimal = 'No target animal detected, please try again.';
 
 class _FakeRepo implements SightingRepository {
-  _FakeRepo(this.analysis);
+  _FakeRepo(this.analysis, {this.submitFails = false});
 
   final Map<String, dynamic> analysis;
+  final bool submitFails;
   String? analyzedUrl;
   String? submittedSpecies;
+  String? targetedPetId;
 
   @override
   Future<Map<String, dynamic>> analyzeImage(String imageUrl) async {
@@ -45,7 +47,25 @@ class _FakeRepo implements SightingRepository {
     String? notes,
   }) async {
     submittedSpecies = detectedSpecies;
-    return const SightingSubmitResult(
+    if (submitFails) throw Exception('backend down');
+    return _saved;
+  }
+
+  @override
+  Future<SightingSubmitResult> createTargetedSighting({
+    required String imageUrl,
+    required double latitude,
+    required double longitude,
+    required String detectedSpecies,
+    required String targetPetId,
+    String? notes,
+  }) async {
+    targetedPetId = targetPetId;
+    if (submitFails) throw Exception('backend down');
+    return _saved;
+  }
+
+  static const _saved = SightingSubmitResult(
       sighting: SightingModel(
         id: 's1',
         hunterId: 'h1',
@@ -58,7 +78,6 @@ class _FakeRepo implements SightingRepository {
       ),
       matches: [],
     );
-  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>
@@ -99,6 +118,7 @@ Future<void> _pump(
   WidgetTester tester,
   _FakeRepo repo, {
   PendingUpload? upload,
+  String? targetPetId,
 }) async {
   final pending =
       upload ?? PendingUpload(Future.value('https://img.test/up.jpg'));
@@ -110,6 +130,9 @@ Future<void> _pump(
         builder: (_, _) => VerificationScreen(
           imagePath: '/no/such/photo.jpg',
           pendingUpload: pending,
+          targetPetId: targetPetId,
+          targetSpecies: targetPetId == null ? null : 'Cat',
+          targetPetName: targetPetId == null ? null : 'Mochi',
         ),
       ),
       GoRoute(
@@ -137,7 +160,7 @@ void main() {
   });
   tearDown(() => GeolocatorPlatform.instance = realGeolocator);
 
-  group('UTC-101 VerificationScreen._processAIAnalysis', () {
+  group('VerificationScreen._processAIAnalysis', () {
     testWidgets('TC-01 a detected species opens the confirmation dialog', (
       tester,
     ) async {
@@ -205,7 +228,7 @@ void main() {
     });
   });
 
-  group('UTC-102 VerificationScreen._showConfirmationDialog', () {
+  group('VerificationScreen._showConfirmationDialog', () {
     testWidgets('TC-01 Yes submits the detected species', (tester) async {
       final repo = _FakeRepo(_found('Cat'));
       await _pump(tester, repo);
@@ -252,6 +275,65 @@ void main() {
 
       expect(repo.submittedSpecies, 'Dog');
       expect(find.text('MATCHING RESULTS'), findsOneWidget);
+    });
+  });
+
+  group('VerificationScreen._confirmSpecies', () {
+    testWidgets('TC-01 a saved sighting opens the matching results', (
+      tester,
+    ) async {
+      final repo = _FakeRepo(_found('Cat'));
+      await _pump(tester, repo);
+
+      await tester.tap(find.byIcon(Icons.check));
+      await tester.pumpAndSettle();
+
+      expect(find.text('MATCHING RESULTS'), findsOneWidget);
+    });
+
+    testWidgets('TC-02 a sighting the backend refused stays on the screen', (
+      tester,
+    ) async {
+      final repo = _FakeRepo(_found('Cat'), submitFails: true);
+      await _pump(tester, repo);
+
+      await tester.tap(find.byIcon(Icons.check));
+      await tester.pumpAndSettle();
+
+      expect(repo.submittedSpecies, 'Cat');
+      expect(find.text('MATCHING RESULTS'), findsNothing);
+      expect(find.text(_connectionError), findsOneWidget);
+    });
+  });
+
+  group('VerificationScreen._submitTargetedSighting', () {
+    testWidgets('TC-01 a saved targeted sighting shows the sent screen', (
+      tester,
+    ) async {
+      final repo = _FakeRepo(_found('Cat'));
+      await _pump(tester, repo, targetPetId: 'pet-9');
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(repo.targetedPetId, 'pet-9');
+      expect(find.byType(VerificationScreen), findsNothing);
+    });
+
+    testWidgets('TC-02 a targeted sighting the backend refused stays on the screen', (
+      tester,
+    ) async {
+      final repo = _FakeRepo(_found('Cat'), submitFails: true);
+      await _pump(tester, repo, targetPetId: 'pet-9');
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(repo.targetedPetId, 'pet-9');
+      expect(find.byType(VerificationScreen), findsOneWidget);
+      expect(find.text(_connectionError), findsOneWidget);
     });
   });
 }

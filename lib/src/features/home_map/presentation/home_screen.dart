@@ -125,8 +125,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     await ref.read(locationProvider.notifier).ready;
     if (!mounted) return;
 
-    // Keep our position fresh on the backend so geo-targeted push can find us
-    // (SRS-24/26). The publisher re-reads GPS each tick and skips the denied/
+    // Keep our position fresh on the backend so geo-targeted push can find us.
+    // The publisher re-reads GPS each tick and skips the denied/
     // fallback case itself, so denied users never pile up at one point.
     ref.read(locationTrackingProvider).start();
 

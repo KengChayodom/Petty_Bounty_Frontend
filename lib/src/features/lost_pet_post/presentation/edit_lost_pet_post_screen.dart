@@ -19,8 +19,7 @@ final RegExp _kHexColor = RegExp(r'^#[0-9A-Fa-f]{6}$');
 // Swatch shown while a report has no coat colour. Display only, never sent.
 const String _kNoColorSwatch = '#D0D0D0';
 
-/// Owner-facing "Edit Report" screen for a lost-pet report (MD-39 /
-/// UD-11). Covers the fields the product captures and the backend accepts on
+/// Owner-facing "Edit Report" screen for a lost-pet report. Covers the fields the product captures and the backend accepts on
 /// `PATCH /missing-pets/{id}`: name, bounty, primary coat colour, and the
 /// characteristics blob (traits + optional secondary colour). Species, location,
 /// last-seen time and the photo are not editable here.
@@ -551,7 +550,7 @@ class _BountyEditor extends StatelessWidget {
 
   final bool isBountyMode;
 
-  /// SRS-100: the bounty the report already carries. It may be raised, never
+  /// The bounty the report already carries. It may be raised, never
   /// lowered, so a reward once set cannot be switched off either.
   final double minAmount;
   final TextEditingController controller;

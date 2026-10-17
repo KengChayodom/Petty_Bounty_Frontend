@@ -1,8 +1,8 @@
-// UTC-29  AuthService.signOut — End the authenticated session  (MD-33, SRS-16)
+// AuthService.signOut — End the authenticated session 
 //
-// MD-33 is a delegation, and what is worth pinning is the delegation itself:
+// The method is a delegation, and what is worth pinning is the delegation itself:
 // that logging out reaches GoTrue rather than only clearing something local,
-// and that a failure from GoTrue is not swallowed here — MD-34, the caller,
+// and that a failure from GoTrue is not swallowed here — ProfileScreen._logout, the caller,
 // tears push and location down first and would otherwise leave the device
 // unregistered while still holding a live session.
 //
@@ -27,7 +27,7 @@ class _RecordingGoTrue extends GoTrueClient {
 }
 
 void main() {
-  group('UTC-29 AuthService.signOut (MD-33)', () {
+  group('AuthService.signOut', () {
     test('TC-01 the session is ended through GoTrue', () async {
       final gotrue = _RecordingGoTrue();
       await AuthService(auth: gotrue).signOut();
