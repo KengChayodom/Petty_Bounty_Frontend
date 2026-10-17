@@ -29,7 +29,7 @@ MatchModel _match({double similarity = 0.5, Object? stars}) =>
     MatchModel.fromJson(_json(similarity: similarity, stars: stars));
 
 void main() {
-  group('UTC-98 MatchModel.stars', () {
+  group('MatchModel.stars', () {
     test(
       'TC-01 a backend rating wins over similarity and is held to 1 to 3',
       () {

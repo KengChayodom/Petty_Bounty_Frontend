@@ -26,7 +26,7 @@ const _pet = MissingPetEntity(
 );
 
 void main() {
-  group('UTC-104 PetDetailView._reportSighting', () {
+  group('PetDetailView._reportSighting', () {
     testWidgets(
       'TC-01 the report button opens the camera targeted at this pet',
       (tester) async {

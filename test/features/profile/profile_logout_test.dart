@@ -1,4 +1,4 @@
-// UTC-30  ProfileScreen._logout — Full logout  (MD-34, SRS-17, triggers SRS-20)
+// ProfileScreen._logout — Full logout, which also unregisters push
 //
 // The whole point of this method is the ORDER. `unregisterForCurrentUser`
 // deletes the device row through a JWT-scoped backend call, so it has to run
@@ -70,7 +70,7 @@ Future<void> _pumpAndLogout(WidgetTester tester, _Journal journal) async {
 }
 
 void main() {
-  group('UTC-30 ProfileScreen._logout (MD-34)', () {
+  group('ProfileScreen._logout', () {
     testWidgets('TC-01 all three teardown steps run', (tester) async {
       final journal = _Journal();
       await _pumpAndLogout(tester, journal);
@@ -97,6 +97,6 @@ void main() {
     // `takeException()` can claim it), which is itself the symptom. Fixing it
     // is a product decision — retry with the session still valid, or sign out
     // anyway and accept an orphaned device row — so it is recorded against
-    // MD-34 rather than decided here.
+    // this method in the spec rather than decided here.
   });
 }

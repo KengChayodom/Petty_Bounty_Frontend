@@ -136,6 +136,13 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
             detectedSpecies: widget.targetSpecies ?? 'Other',
             targetPetId: widget.targetPetId!,
           );
+      if (!mounted) return;
+
+      // Same check as the discovery path: never confirm a report that failed.
+      if (ref.read(sightingNotifierProvider).errorMessage != null) {
+        _showSubmitFailure();
+        return;
+      }
 
       if (mounted) {
         // Show the sent acknowledgement instead of a snackbar. The targeted
@@ -469,6 +476,15 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     );
   }
 
+  /// A submit the backend did not accept: stay on this screen with the same
+  /// message an upload or analysis failure shows.
+  void _showSubmitFailure() {
+    setState(() {
+      _isLoading = false;
+      _errorMessage = "Connection error. Ensure backend is running.";
+    });
+  }
+
   Future<void> _confirmSpecies(
     String species,
     BuildContext dialogContext,
@@ -491,6 +507,15 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
         detectedSpecies: species,
         bbox: _bbox,
       );
+      if (!mounted) return;
+
+      // The notifier keeps a failed submit in its state rather than throwing,
+      // so check it: the hunter must not see matching results, or "no
+      // matches", for a sighting that was never saved.
+      if (ref.read(sightingNotifierProvider).errorMessage != null) {
+        _showSubmitFailure();
+        return;
+      }
 
       if (mounted) {
         // ส่ง imagePath + พิกัดที่ถ่ายไปให้ matching-results เพื่อโชว์รูปเรา

@@ -71,7 +71,7 @@ void main() {
   });
   tearDown(() => GeolocatorPlatform.instance = original);
 
-  group('UTC-103 HomeScreen._openCamera', () {
+  group('HomeScreen._openCamera', () {
     testWidgets('TC-01 camera button -> camera screen opened with no target pet', (tester) async {
       Object? cameraExtra = 'not opened';
       final router = GoRouter(

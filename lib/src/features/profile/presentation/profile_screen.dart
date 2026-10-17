@@ -30,7 +30,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _logout() async {
     // Read through providers rather than the singletons directly, so the order
-    // below is verifiable (UTC-30). Production resolves the same two objects.
+    // below is verifiable. Production resolves the same two objects.
     await ref.read(pushRegistrationProvider).unregisterForCurrentUser();
     ref.read(locationTrackingProvider).stop();
     await ref.read(authServiceProvider).signOut();

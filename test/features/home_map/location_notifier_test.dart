@@ -84,7 +84,7 @@ void main() {
   setUp(() => original = GeolocatorPlatform.instance);
   tearDown(() => GeolocatorPlatform.instance = original);
 
-  group('UTC-94 LocationNotifier._initLocation', () {
+  group('LocationNotifier._initLocation', () {
     test('TC-01 location service off -> default point, gate released', () async {
       final geo = _FakeGeolocator(serviceEnabled: false);
       GeolocatorPlatform.instance = geo;

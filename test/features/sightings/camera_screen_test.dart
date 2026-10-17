@@ -123,7 +123,7 @@ void _answerPicker(
 }
 
 void main() {
-  group('UTC-95 CameraScreen._runInitializer', () {
+  group('CameraScreen._runInitializer', () {
     testWidgets('TC-01 while initializing -> skeleton, never a spinner', (
       tester,
     ) async {
@@ -214,7 +214,7 @@ void main() {
     });
   });
 
-  group('UTC-96 CameraScreen._takePicture', () {
+  group('CameraScreen._takePicture', () {
     testWidgets('TC-01 controller not initialized -> no capture, stays', (
       tester,
     ) async {
@@ -287,7 +287,7 @@ void main() {
     });
   });
 
-  group('UTC-97 CameraScreen._pickFromGallery', () {
+  group('CameraScreen._pickFromGallery', () {
     Future<_Harness> pumpNoCamera(WidgetTester tester) async {
       final h = _Harness();
       await h.pump(
