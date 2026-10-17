@@ -253,6 +253,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
+  /// Starts a discovery sighting: opens the camera with no target pet.
+  void _openCamera() => context.push('/camera');
+
   void _onMarkerTap(String petId) {
     ref.read(selectedPetIdProvider.notifier).state = petId;
     _showPetDetailBottomSheet();
@@ -742,7 +745,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: Tooltip(
             message: 'Report a sighting',
             child: GestureDetector(
-              onTap: () => context.push('/camera'),
+              onTap: _openCamera,
               child: Container(
                 width: 70,
                 height: 70,

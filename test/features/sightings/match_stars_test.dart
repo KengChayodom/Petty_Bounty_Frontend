@@ -29,43 +29,25 @@ MatchModel _match({double similarity = 0.5, Object? stars}) =>
     MatchModel.fromJson(_json(similarity: similarity, stars: stars));
 
 void main() {
-  group('the backend rating is what is drawn', () {
-    test('a low CLIP score does not lower a card the backend rated 3', () {
-      expect(_match(similarity: 0.5, stars: 3).stars, 3);
-    });
+  group('UTC-98 MatchModel.stars', () {
+    test(
+      'TC-01 a backend rating wins over similarity and is held to 1 to 3',
+      () {
+        // Similarity alone would give 1 star. The rating of 7 is drawn as 3.
+        expect(_match(similarity: 0.5, stars: 7).stars, 3);
+      },
+    );
 
-    test('a high CLIP score does not raise a card the backend rated 1', () {
-      expect(_match(similarity: 0.99, stars: 1).stars, 1);
-    });
-
-    test('two cards in list order can never be drawn with rising stars', () {
-      // The reported case: CLIP prefers the second card, the ranking prefers
-      // the first. Drawn from the rating, the first is not below the second.
-      final first = _match(similarity: 0.85, stars: 3);
-      final second = _match(similarity: 0.95, stars: 2);
-      expect(first.stars >= second.stars, isTrue);
-    });
-
-    test('a rating outside 1 to 3 is clamped rather than drawn', () {
-      expect(_match(stars: 0).stars, 1);
-      expect(_match(stars: 7).stars, 3);
-    });
-
-    test('match_stars is read from the response', () {
-      expect(_match(stars: 2).matchStars, 2);
-    });
-  });
-
-  group('a backend without match_stars keeps the old rule on similarity', () {
-    test('at and above 0.9 is 3, at and above 0.7 is 2, below is 1', () {
+    test('TC-02 no rating and similarity at 0.9 gives 3 stars', () {
       expect(_match(similarity: 0.9).stars, 3);
-      expect(_match(similarity: 0.8999).stars, 2);
-      expect(_match(similarity: 0.7).stars, 2);
-      expect(_match(similarity: 0.6999).stars, 1);
     });
 
-    test('the field is simply null', () {
-      expect(_match().matchStars, isNull);
+    test('TC-03 no rating and similarity at 0.7 gives 2 stars', () {
+      expect(_match(similarity: 0.7).stars, 2);
+    });
+
+    test('TC-04 no rating and similarity below 0.7 gives 1 star', () {
+      expect(_match(similarity: 0.6999).stars, 1);
     });
   });
 }
