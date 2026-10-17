@@ -3,6 +3,7 @@ import '../data/models/sighting_model.dart';
 import 'entities/match_model.dart';
 import '../../../core/auth/auth_service.dart';
 import '../data/sighting_repository.dart';
+import 'entities/sighting_errors.dart';
 
 /// Provider for SightingRepository
 final sightingRepositoryProvider = Provider<SightingRepository>((ref) {
@@ -14,6 +15,10 @@ final sightingRepositoryProvider = Provider<SightingRepository>((ref) {
 class SightingState {
   final bool isLoading;
   final String? errorMessage;
+
+  /// The server's reason when it refused the sighting, null for any other
+  /// failure.
+  final String? refusalReason;
   final SightingModel? sighting;
   final List<MatchModel> matches;
   final String? uploadedImageUrl;
@@ -21,6 +26,7 @@ class SightingState {
   const SightingState({
     this.isLoading = false,
     this.errorMessage,
+    this.refusalReason,
     this.sighting,
     this.matches = const [],
     this.uploadedImageUrl,
@@ -29,6 +35,7 @@ class SightingState {
   SightingState copyWith({
     bool? isLoading,
     String? errorMessage,
+    String? refusalReason,
     SightingModel? sighting,
     List<MatchModel>? matches,
     String? uploadedImageUrl,
@@ -36,6 +43,7 @@ class SightingState {
     return SightingState(
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
+      refusalReason: refusalReason,
       sighting: sighting ?? this.sighting,
       matches: matches ?? this.matches,
       uploadedImageUrl: uploadedImageUrl ?? this.uploadedImageUrl,
@@ -115,6 +123,12 @@ class SightingNotifier extends StateNotifier<SightingState> {
         sighting: result.sighting,
         matches: result.matches,
         isLoading: false,
+      );
+    } on SightingRefused catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.message,
+        refusalReason: e.message,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

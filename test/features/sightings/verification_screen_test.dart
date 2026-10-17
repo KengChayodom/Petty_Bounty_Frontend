@@ -16,6 +16,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:petty_bounty/src/features/sightings/data/models/sighting_model.dart';
 import 'package:petty_bounty/src/features/sightings/data/sighting_repository.dart';
+import 'package:petty_bounty/src/features/sightings/domain/entities/sighting_errors.dart';
 import 'package:petty_bounty/src/features/sightings/domain/pending_upload.dart';
 import 'package:petty_bounty/src/features/sightings/domain/sighting_providers.dart';
 import 'package:petty_bounty/src/features/sightings/presentation/verification_screen.dart';
@@ -24,10 +25,11 @@ const _connectionError = 'Connection error. Ensure backend is running.';
 const _noAnimal = 'No target animal detected, please try again.';
 
 class _FakeRepo implements SightingRepository {
-  _FakeRepo(this.analysis, {this.submitFails = false});
+  _FakeRepo(this.analysis, {this.submitFails = false, this.refusal});
 
   final Map<String, dynamic> analysis;
   final bool submitFails;
+  final String? refusal;
   String? analyzedUrl;
   String? submittedSpecies;
   String? targetedPetId;
@@ -61,6 +63,7 @@ class _FakeRepo implements SightingRepository {
     String? notes,
   }) async {
     targetedPetId = targetPetId;
+    if (refusal != null) throw SightingRefused(refusal!);
     if (submitFails) throw Exception('backend down');
     return _saved;
   }
@@ -334,6 +337,22 @@ void main() {
       expect(repo.targetedPetId, 'pet-9');
       expect(find.byType(VerificationScreen), findsOneWidget);
       expect(find.text(_connectionError), findsOneWidget);
+    });
+
+    testWidgets('TC-03 a refusal shows the server reason and stays', (
+      tester,
+    ) async {
+      const reason = 'You cannot report a sighting on your own report';
+      final repo = _FakeRepo(_found('Cat'), refusal: reason);
+      await _pump(tester, repo, targetPetId: 'pet-9');
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Send'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(VerificationScreen), findsOneWidget);
+      expect(find.text(reason), findsOneWidget);
+      expect(find.text(_connectionError), findsNothing);
     });
   });
 }

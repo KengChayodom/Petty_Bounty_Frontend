@@ -86,7 +86,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
     if (formState.imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please add a pet photo first!'),
+          content: Text('Required fields are empty!'),
           backgroundColor: kBrandErrorDeep,
         ),
       );
@@ -96,7 +96,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
     if (formState.latitude == null || formState.longitude == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please set the last seen location first!'),
+          content: Text('Required fields are empty!'),
           backgroundColor: kBrandErrorDeep,
         ),
       );
@@ -131,7 +131,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
           setState(() => _isUploading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to upload photo: $e'),
+              content: const Text('Network connection lost. Please try again'),
               backgroundColor: kBrandErrorDeep,
             ),
           );
@@ -174,7 +174,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
         setState(() => _isUploading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit report: $e'),
+            content: const Text('Network connection lost. Please try again'),
             backgroundColor: kBrandErrorDeep,
           ),
         );
@@ -194,7 +194,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Broadcasting missing pet case...')),
+      const SnackBar(content: Text('Report successfully published')),
     );
 
     ref.read(lostPetPostFormProvider.notifier).reset();
@@ -363,7 +363,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
-            'Report a lost pet',
+            'Report Missing Pet',
             style: TextStyle(fontFamily: kDisplayFamily, fontSize: 20, fontWeight: FontWeight.w800, color: kInk),
           ),
           centerTitle: true,

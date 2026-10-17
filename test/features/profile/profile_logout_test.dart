@@ -53,7 +53,7 @@ class _FakeAuth extends AuthService {
   Future<void> signOut() async => journal.steps.add('signOut');
 }
 
-Future<void> _pumpAndLogout(WidgetTester tester, _Journal journal) async {
+Future<void> _pumpAndOpenDialog(WidgetTester tester, _Journal journal) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -66,6 +66,12 @@ Future<void> _pumpAndLogout(WidgetTester tester, _Journal journal) async {
   );
   await tester.pump();
   await tester.tap(find.byIcon(Icons.logout_rounded));
+  await tester.pump();
+}
+
+Future<void> _pumpAndLogout(WidgetTester tester, _Journal journal) async {
+  await _pumpAndOpenDialog(tester, journal);
+  await tester.tap(find.widgetWithText(TextButton, 'Log out'));
   await tester.pump();
 }
 
@@ -86,6 +92,20 @@ void main() {
       // carry, and the device row would be orphaned — still receiving pushes
       // for an account no longer signed in on this device.
       expect(journal.steps, ['unregister', 'stop', 'signOut']);
+    });
+
+    testWidgets('TC-03 Cancel on the confirmation keeps the session', (
+      tester,
+    ) async {
+      final journal = _Journal();
+      await _pumpAndOpenDialog(tester, journal);
+      expect(find.text('Log out?'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pump();
+
+      expect(find.text('Log out?'), findsNothing);
+      expect(journal.steps, isEmpty);
     });
 
     // NOT COVERED, and deliberately so: what happens when the unregister call

@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/sightings/domain/entities/match_model.dart';
 import 'package:petty_bounty/src/features/sightings/data/models/sighting_model.dart';
 import 'package:petty_bounty/src/features/sightings/data/sighting_repository.dart';
+import 'package:petty_bounty/src/features/sightings/domain/entities/sighting_errors.dart';
 import 'package:petty_bounty/src/features/sightings/domain/sighting_providers.dart';
 
 SightingSubmitResult _cannedResult({List<MatchModel> matches = const []}) =>
@@ -113,6 +114,26 @@ void main() {
 
       final state = _drive(notifier);
       expect(state.errorMessage, isNotNull);
+      expect(state.refusalReason, isNull);
+      expect(state.isLoading, isFalse);
+    });
+
+    test('TC-03 a refusal keeps the server reason', () async {
+      const reason = 'You cannot report a sighting on your own report';
+      final notifier =
+          SightingNotifier(_FakeRepo(error: const SightingRefused(reason)));
+
+      await notifier.createTargetedSighting(
+        imageUrl: 'x',
+        latitude: 0,
+        longitude: 0,
+        detectedSpecies: 'Cat',
+        targetPetId: 'pet-9',
+      );
+
+      final state = _drive(notifier);
+      expect(state.refusalReason, reason);
+      expect(state.errorMessage, reason);
       expect(state.isLoading, isFalse);
     });
   });

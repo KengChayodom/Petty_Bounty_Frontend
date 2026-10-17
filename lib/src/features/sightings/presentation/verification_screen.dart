@@ -139,8 +139,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
       if (!mounted) return;
 
       // Same check as the discovery path: never confirm a report that failed.
-      if (ref.read(sightingNotifierProvider).errorMessage != null) {
-        _showSubmitFailure();
+      // A refusal the server explains, such as a sighting on the owner's own
+      // report, is shown in its words.
+      final result = ref.read(sightingNotifierProvider);
+      if (result.errorMessage != null) {
+        _showSubmitFailure(result.refusalReason);
         return;
       }
 
@@ -478,10 +481,10 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
 
   /// A submit the backend did not accept: stay on this screen with the same
   /// message an upload or analysis failure shows.
-  void _showSubmitFailure() {
+  void _showSubmitFailure([String? reason]) {
     setState(() {
       _isLoading = false;
-      _errorMessage = "Connection error. Ensure backend is running.";
+      _errorMessage = reason ?? "Connection error. Ensure backend is running.";
     });
   }
 

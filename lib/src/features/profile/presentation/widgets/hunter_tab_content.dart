@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/models/profile_models.dart';
 import '../../../bounty_payment/presentation/my_bounties_section.dart';
+import '../../../../core/theme/app_glass.dart';
 import '../../../../core/ui/brand_widgets.dart';
 import 'hunter_history_card.dart';
 import 'profile_stat_card.dart';
@@ -57,15 +58,25 @@ class HunterTabContent extends StatelessWidget {
         const SheetHeading('Your sightings'),
         const SizedBox(height: 10),
         // SIGHT SENT HISTORY LIST
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: historyItems.length,
-          separatorBuilder: (_, index) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            return HunterHistoryCard(item: historyItems[index]);
-          },
-        ),
+        if (historyItems.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'No activity recorded yet',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: kInkMuted, fontSize: 14),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: historyItems.length,
+            separatorBuilder: (_, index) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              return HunterHistoryCard(item: historyItems[index]);
+            },
+          ),
       ],
     );
   }
