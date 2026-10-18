@@ -21,7 +21,7 @@ const String _kNoColorSwatch = '#D0D0D0';
 
 /// Owner-facing "Edit Report" screen for a lost-pet report. Covers the fields the product captures and the backend accepts on
 /// `PATCH /missing-pets/{id}`: name, bounty, primary coat colour, and the
-/// characteristics blob (traits + optional secondary colour). Species, location,
+/// characteristics blob (traits). Species, location,
 /// last-seen time and the photo are not editable here.
 ///
 /// Closing a recovered case is deliberately NOT here — that stays on the Status
@@ -136,7 +136,6 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
   // Null when the report has no coat colour. Nothing is sent until the owner
   // picks one, so a save never invents a colour that matching would read.
   String? _primaryColorHex;
-  String? _secondaryColorHex;
   late bool _isBountyMode;
   bool _isSaving = false;
 
@@ -161,11 +160,6 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
     );
 
     _primaryColorHex = _seedPrimaryHex(pet, chars);
-    final secondary = chars['secondary_color']?.toString().trim();
-    _secondaryColorHex =
-        (secondary != null && _kHexColor.hasMatch(secondary.toUpperCase()))
-            ? secondary.toUpperCase()
-            : null;
   }
 
   String? _seedPrimaryHex(MissingPetEntity pet, Map<String, dynamic> chars) {
@@ -187,30 +181,15 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
   double get _bountyAmount =>
       double.tryParse(_bountyController.text.replaceAll(',', '')) ?? 0.0;
 
-  void _openColorPicker({required bool isSecondary}) {
+  void _openColorPicker() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => PetImageEyedropperDialog(
         imageUrl: widget.pet.imageUrl,
-        initialHex: isSecondary
-            ? (_secondaryColorHex ?? '#FFFFFF')
-            : (_primaryColorHex ?? _kNoColorSwatch),
-        isSecondary: isSecondary,
-        otherColorHex: isSecondary ? _primaryColorHex : _secondaryColorHex,
+        initialHex: _primaryColorHex ?? _kNoColorSwatch,
         onColorConfirmed: (hex) {
-          setState(() {
-            final upper = hex.toUpperCase();
-            if (isSecondary) {
-              _secondaryColorHex = upper;
-            } else {
-              if (_secondaryColorHex != null &&
-                  upper == _secondaryColorHex!.toUpperCase()) {
-                _secondaryColorHex = null;
-              }
-              _primaryColorHex = upper;
-            }
-          });
+          setState(() => _primaryColorHex = hex.toUpperCase());
         },
       ),
     );
@@ -230,11 +209,9 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
       characteristics['color'] = _primaryColorHex;
     }
     characteristics['traits'] = traits.isNotEmpty ? traits : 'Standard';
-    if (_secondaryColorHex != null) {
-      characteristics['secondary_color'] = _secondaryColorHex;
-    } else {
-      characteristics.remove('secondary_color');
-    }
+    // The secondary colour is no longer offered; drop any value an older
+    // build saved so it stops showing in the description.
+    characteristics.remove('secondary_color');
 
     final patch = <String, dynamic>{
       'pet_name': _nameController.text.trim(),
@@ -296,15 +273,11 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 ),
               ),
               _card(
-                title: 'Coat colours',
+                title: 'Coat colour',
                 icon: Icons.palette_outlined,
-                child: _ColorTilesRow(
+                child: _ColorTile(
                   primaryHex: _primaryColorHex ?? _kNoColorSwatch,
-                  secondaryHex: _secondaryColorHex,
-                  onPickPrimary: () => _openColorPicker(isSecondary: false),
-                  onPickSecondary: () => _openColorPicker(isSecondary: true),
-                  onClearSecondary: () =>
-                      setState(() => _secondaryColorHex = null),
+                  onPickPrimary: _openColorPicker,
                 ),
               ),
               _card(
@@ -420,22 +393,16 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
   }
 }
 
-/// Primary + secondary coat-colour tiles (mirrors `CollarMarkerWidget`'s look,
-/// but drives local state instead of the create form provider).
-class _ColorTilesRow extends StatelessWidget {
-  const _ColorTilesRow({
+/// The primary coat-colour tile (mirrors `CollarMarkerWidget`'s look, but
+/// drives local state instead of the create form provider).
+class _ColorTile extends StatelessWidget {
+  const _ColorTile({
     required this.primaryHex,
-    required this.secondaryHex,
     required this.onPickPrimary,
-    required this.onPickSecondary,
-    required this.onClearSecondary,
   });
 
   final String primaryHex;
-  final String? secondaryHex;
   final VoidCallback onPickPrimary;
-  final VoidCallback onPickSecondary;
-  final VoidCallback onClearSecondary;
 
   Color _parse(String hex) {
     try {
@@ -447,41 +414,12 @@ class _ColorTilesRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondaryColor =
-        secondaryHex != null ? _parse(secondaryHex!) : null;
-    return Row(
-      children: [
-        Expanded(
-          child: _tile(
-            onTap: onPickPrimary,
-            borderColor: _kAccent,
-            borderWidth: 2,
-            swatch: _parse(primaryHex),
-            label: 'Main',
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _tile(
-            onTap: onPickSecondary,
-            borderColor: secondaryColor != null
-                ? kBrandDeep
-                : kInkMuted.withValues(alpha: 0.3),
-            borderWidth: secondaryColor != null ? 2 : 1.2,
-            swatch: secondaryColor,
-            label: secondaryColor != null ? 'Second' : 'None',
-            trailing: secondaryColor != null
-                ? GestureDetector(
-                    onTap: onClearSecondary,
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(Icons.close, size: 16, color: kInkMuted),
-                    ),
-                  )
-                : null,
-          ),
-        ),
-      ],
+    return _tile(
+      onTap: onPickPrimary,
+      borderColor: _kAccent,
+      borderWidth: 2,
+      swatch: _parse(primaryHex),
+      label: 'Main',
     );
   }
 
@@ -491,7 +429,6 @@ class _ColorTilesRow extends StatelessWidget {
     required double borderWidth,
     required Color? swatch,
     required String label,
-    Widget? trailing,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -529,7 +466,6 @@ class _ColorTilesRow extends StatelessWidget {
                 ),
               ),
             ),
-            if (trailing != null) trailing,
           ],
         ),
       ),
