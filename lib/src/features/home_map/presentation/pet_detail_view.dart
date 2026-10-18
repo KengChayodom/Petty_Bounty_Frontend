@@ -30,7 +30,7 @@ Color _parseColor(String? hexColor) {
 }
 
 /// Presentation-only pet detail UI. Takes a fully-resolved [MissingPetEntity]
-/// and renders the rich layout (bounty badge, color/breed/species, date-lost
+/// and renders the rich layout (bounty badge, color/species, date-lost
 /// pill, owner card, action buttons). Shared by BOTH entry points:
 ///   * the map bottom sheet (PetDetailSheet) — passes the sheet's
 ///     [scrollController] so drag-to-scroll links to the content;
@@ -52,7 +52,7 @@ class PetDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String breed = pet.characteristics['breed'] ?? 'Common';
+    final String colorLabel = pet.primaryColorHex?.toUpperCase() ?? 'Not given';
     final String traitsVal =
         (pet.characteristics['traits'] ?? pet.characteristics['description'] ?? '')
             .toString()
@@ -70,7 +70,7 @@ class PetDetailView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildHeaderImage(pet, breed, headerHeight),
+          _buildHeaderImage(pet, headerHeight),
           Transform.translate(
             offset: const Offset(0, -overlap),
             child: Container(
@@ -106,7 +106,7 @@ class PetDetailView extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(breed,
+                              child: Text(colorLabel,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: _factValue),
@@ -160,7 +160,7 @@ class PetDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderImage(MissingPetEntity pet, String breed, double height) {
+  Widget _buildHeaderImage(MissingPetEntity pet, double height) {
     final species = pet.species.trim();
     return SizedBox(
       height: height,
@@ -207,7 +207,7 @@ class PetDetailView extends StatelessWidget {
                       if (species.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Text(
-                          '${PetSpecies.emojiFor(pet.species)} $species, $breed',
+                          '${PetSpecies.emojiFor(pet.species)} $species',
                           style: TextStyle(
                               fontSize: 15, color: kDaylight.withValues(alpha: 0.88)),
                         ),
