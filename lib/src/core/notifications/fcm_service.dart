@@ -30,7 +30,7 @@ abstract interface class PushRegistration {
   Future<void> unregisterForCurrentUser();
 }
 
-/// Injection point for the logout path (MD-34). Production resolves the
+/// Injection point for the logout path. Production resolves the
 /// singleton, so behaviour is unchanged; a test overrides it. Every other
 /// caller still reaches [FcmService.instance] directly — only the path that
 /// needed to be verifiable was routed through a provider.
@@ -172,7 +172,7 @@ class FcmService implements PushRegistration {
     }
   }
 
-  /// Tear down push for the user who is logging out (SRS-20).
+  /// Tear down push for the user who is logging out.
   ///
   /// MUST be called BEFORE `auth.signOut()` so the backend delete still carries
   /// a valid JWT. Order matters: drop the server row first, then invalidate the

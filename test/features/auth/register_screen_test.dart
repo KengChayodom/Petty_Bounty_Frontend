@@ -1,10 +1,10 @@
-// UTC-27  RegisterScreen._submit — Sign-up submission  (MD-31, SRS-07/08/09/10)
+// RegisterScreen._submit — Sign-up submission 
 //
-// MD-31 owns the submission, not the credential store: Supabase Auth writes the
-// account (SRS-08), and what this method answers for is that it passes the
-// entered values on, reports success (SRS-09), routes according to whether a
-// session came back (SRS-10), and turns a duplicate-email failure into its own
-// message rather than GoTrue's raw wording (SRS-07).
+// The method owns the submission, not the credential store: Supabase Auth writes the
+// account, and what this method answers for is that it passes the
+// entered values on, reports success, routes according to whether a
+// session came back, and turns a duplicate-email failure into its own
+// message rather than GoTrue's raw wording.
 //
 // The seam is `AuthService`'s lazy GoTrue getter: a fake subclass can now be
 // constructed without `Supabase.initialize()` having run, and is injected by
@@ -121,7 +121,7 @@ Future<void> _tapRegister(WidgetTester tester) async {
 }
 
 void main() {
-  group('UTC-27 RegisterScreen._submit (MD-31)', () {
+  group('RegisterScreen._submit', () {
     testWidgets('TC-01 submits the trimmed values and confirms success', (
       tester,
     ) async {
@@ -131,12 +131,12 @@ void main() {
       await _tapRegister(tester);
 
       expect(auth.calls, 1);
-      // SRS-08: the entered values reach the credential store, email trimmed.
+      // The entered values reach the credential store, email trimmed.
       expect(auth.seenEmail, 'kim@example.com');
       expect(auth.seenPassword, 'secret123');
       expect(auth.seenUsername, 'Kim');
       expect(auth.seenPhone, '0812345678');
-      // SRS-09: the success notice is always shown.
+      // The success notice is always shown.
       expect(find.text('Registration successful'), findsOneWidget);
     });
 
@@ -148,7 +148,7 @@ void main() {
       await _fillValidForm(tester);
       await _tapRegister(tester);
 
-      // SRS-10: a session exists, so the auth-stream router takes over and the
+      // A session exists, so the auth-stream router takes over and the
       // screen does not pop itself back to the login page.
       expect(find.text('LOGIN'), findsNothing);
     });
@@ -159,7 +159,7 @@ void main() {
       await _fillValidForm(tester);
       await _tapRegister(tester);
 
-      // SRS-10: email confirmation is required, so there is nothing to land on.
+      // Email confirmation is required, so there is nothing to land on.
       expect(find.text('LOGIN'), findsOneWidget);
     });
 
@@ -171,7 +171,7 @@ void main() {
       await _fillValidForm(tester);
       await _tapRegister(tester);
 
-      // SRS-07: GoTrue's wording is replaced, not passed through.
+      // GoTrue's wording is replaced, not passed through.
       expect(find.text('Email already exists'), findsOneWidget);
       expect(find.text('User already registered'), findsNothing);
     });

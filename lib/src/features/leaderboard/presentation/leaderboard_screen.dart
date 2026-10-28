@@ -242,6 +242,14 @@ class _UserBoardState extends ConsumerState<_UserBoard> {
     if (state.error != null && state.entries.isEmpty) {
       return _errorRetry(state.error!, notifier.loadInitial);
     }
+    if (state.entries.isEmpty) {
+      return const Center(
+        child: Text(
+          'No rankings yet',
+          style: TextStyle(color: Color(0x8C120A04)),
+        ),
+      );
+    }
 
     return Column(
       children: [
@@ -404,7 +412,7 @@ class _BountyBoard extends ConsumerWidget {
     if (state.entries.isEmpty) {
       return const Center(
         child: Text(
-          'No active bounties right now.',
+          'No active bounties',
           style: TextStyle(color: Color(0x8C120A04)),
         ),
       );

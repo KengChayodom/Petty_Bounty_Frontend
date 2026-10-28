@@ -125,8 +125,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     await ref.read(locationProvider.notifier).ready;
     if (!mounted) return;
 
-    // Keep our position fresh on the backend so geo-targeted push can find us
-    // (SRS-24/26). The publisher re-reads GPS each tick and skips the denied/
+    // Keep our position fresh on the backend so geo-targeted push can find us.
+    // The publisher re-reads GPS each tick and skips the denied/
     // fallback case itself, so denied users never pile up at one point.
     ref.read(locationTrackingProvider).start();
 
@@ -252,6 +252,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       LatLng(center.latitude + latOffset, center.longitude + lngOffset),
     );
   }
+
+  /// Starts a discovery sighting: opens the camera with no target pet.
+  void _openCamera() => context.push('/camera');
 
   void _onMarkerTap(String petId) {
     ref.read(selectedPetIdProvider.notifier).state = petId;
@@ -719,7 +722,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   // A sheet with a plus, not a map pin: a pin put a second
                   // map-shaped glyph two slots from the Map tab's own.
                   icon: Icons.note_add_outlined,
-                  tooltip: 'Post a missing pet',
+                  tooltip: 'Report Missing Pet',
                   isActive: false,
                   onTap: _openLostPetPost,
                 ),
@@ -742,7 +745,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: Tooltip(
             message: 'Report a sighting',
             child: GestureDetector(
-              onTap: () => context.push('/camera'),
+              onTap: _openCamera,
               child: Container(
                 width: 70,
                 height: 70,

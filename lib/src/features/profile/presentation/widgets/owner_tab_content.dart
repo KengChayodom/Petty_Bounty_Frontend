@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/models/profile_models.dart';
+import '../../../../core/theme/app_glass.dart';
 import '../../../../core/ui/brand_widgets.dart';
 import 'owner_post_card.dart';
 import 'profile_stat_card.dart';
@@ -52,20 +53,30 @@ class OwnerTabContent extends StatelessWidget {
         const SheetHeading('Your reports'),
         const SizedBox(height: 10),
         // MY POSTED LIST
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: postItems.length,
-          separatorBuilder: (_, index) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            final item = postItems[index];
-            return OwnerPostCard(
-              item: item,
-              onViewSightingsPressed: () => onViewSightingsPressed(item),
-              onEditPressed: onEditPressed?.call(item),
-            );
-          },
-        ),
+        if (postItems.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'You have not submitted any missing pet reports yet',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: kInkMuted, fontSize: 14),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: postItems.length,
+            separatorBuilder: (_, index) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              final item = postItems[index];
+              return OwnerPostCard(
+                item: item,
+                onViewSightingsPressed: () => onViewSightingsPressed(item),
+                onEditPressed: onEditPressed?.call(item),
+              );
+            },
+          ),
       ],
     );
   }

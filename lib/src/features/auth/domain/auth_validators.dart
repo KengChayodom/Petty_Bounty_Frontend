@@ -8,35 +8,35 @@
 class AuthValidators {
   AuthValidators._();
 
-  /// Real email validation (SRS-04) — replaces the old `contains('@')` check.
+  /// Real email validation — replaces the old `contains('@')` check.
   static final RegExp emailPattern = RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$');
 
-  /// Username is required (SRS-02 umbrella).
+  /// Username is required.
   static String? username(String? v) =>
       (v == null || v.trim().isEmpty) ? 'Enter a username' : null;
 
-  /// Email required (SRS-03) + well-formed (SRS-04).
+  /// Email required + well-formed.
   static String? email(String? v) {
     if (v == null || v.trim().isEmpty) return 'Email is required!';
     if (!emailPattern.hasMatch(v.trim())) return 'Invalid email format';
     return null;
   }
 
-  /// Sign-up password must be at least 6 characters (SRS-05).
+  /// Sign-up password must be at least 6 characters.
   static String? password(String? v) => (v == null || v.length < 6)
       ? 'Password must be at least 6 characters'
       : null;
 
-  /// Confirm password must equal the original password (SRS-06).
+  /// Confirm password must equal the original password.
   static String? confirmPassword(String? v, String original) =>
       (v != original) ? 'Passwords must match' : null;
 
-  /// Login password is required (SRS-02 umbrella). Unlike sign-up there is no
+  /// Login password is required. Unlike sign-up there is no
   /// length rule here — login just needs a non-empty value to attempt auth.
   static String? loginPassword(String? v) =>
       (v == null || v.isEmpty) ? 'Enter your password' : null;
 
-  /// Phone is required (UC-01 discrepancy fix).
+  /// Phone is required.
   static String? phone(String? v) =>
       (v == null || v.trim().isEmpty) ? 'Phone number is required' : null;
 }

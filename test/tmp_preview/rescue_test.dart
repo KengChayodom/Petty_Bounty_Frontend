@@ -7,7 +7,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/sightings/domain/entities/match_model.dart';
 import 'package:petty_bounty/src/features/sightings/presentation/final_review_screen.dart';
 
-const _sdk = '/Users/macguide/flutter 2/bin/cache/artifacts/material_fonts';
+// The fonts ship with whichever Flutter SDK runs the test, so the path is
+// taken from that SDK rather than from one developer's machine. `flutter test`
+// sets FLUTTER_ROOT; failing that, flutter_tester lives five levels below the
+// SDK root (bin/cache/artifacts/engine/<platform>/flutter_tester).
+final String _sdk = () {
+  final root = Platform.environment['FLUTTER_ROOT'] ??
+      File(Platform.resolvedExecutable)
+          .parent.parent.parent.parent.parent.parent.path;
+  return '$root/bin/cache/artifacts/material_fonts';
+}();
 Future<ByteData> _b(String p) async =>
     ByteData.sublistView(await File(p).readAsBytes());
 
@@ -35,7 +44,10 @@ void main() {
             characteristics: const {}, bountyAmount: 25000,
             lastSeenLocation: 'Bangkok',
             lastSeenTime: '2026-09-28T09:00:00Z',
-            imageUrl: 'https://example.invalid/1.jpg',
+            // Empty, so the avatar shows its placeholder: a URL would load
+            // through the image cache, which needs sqflite and so cannot run
+            // under `flutter test`.
+            imageUrl: '',
             similarity: 0.94, distanceMeters: 320, status: 'searching',
           ),
           imagePath: null,

@@ -44,7 +44,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref.read(authServiceProvider).signInWithPassword(
+      await ref
+          .read(authServiceProvider)
+          .signInWithPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
@@ -59,10 +61,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       // The router's redirect (driven by the auth stream) takes us home.
     } on AuthException catch (_) {
-      // SRS-12: fixed message — never reveal whether the email exists.
+      // Fixed message — never reveal whether the email exists.
       setState(() => _error = 'Invalid email or password');
     } catch (e) {
-      setState(() => _error = 'Something went wrong. Please try again.');
+      setState(
+        () => _error =
+            'Network connection lost. Please check your connection and try again.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -81,7 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       children: [
         // Labelled "Email" because Supabase auth logs in by email, so the
-        // SRS-03/04 email validation applies to whatever is typed here.
+        // Email validation applies to whatever is typed here.
         GlassAuthField(
           label: 'Email',
           icon: Icons.alternate_email,

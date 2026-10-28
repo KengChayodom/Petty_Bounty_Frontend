@@ -1,9 +1,9 @@
-// UTC-28  LoginScreen._submit — Login submission  (MD-32, SRS-12/14)
+// LoginScreen._submit — Login submission 
 //
-// MD-32 owns the submission and the one thing the screen decides for itself:
+// The method owns the submission and the one thing the screen decides for itself:
 // that every authentication failure reads the same, so the form cannot be used
-// to discover which email addresses hold accounts (SRS-12). The landing on Home
-// Map (SRS-14) is not performed here — the router redirect is driven by the auth
+// to discover which email addresses hold accounts. The landing on Home
+// Map is not performed here — the router redirect is driven by the auth
 // stream, and what this method owes it is a session and no error.
 //
 // The seam is `AuthService`'s lazy GoTrue getter, injected by overriding
@@ -85,7 +85,7 @@ Future<void> _tapSignIn(WidgetTester tester) async {
 }
 
 void main() {
-  group('UTC-28 LoginScreen._submit (MD-32)', () {
+  group('LoginScreen._submit', () {
     testWidgets('TC-01 submits the trimmed email and the raw password', (
       tester,
     ) async {
@@ -109,10 +109,10 @@ void main() {
       await _fill(tester);
       await _tapSignIn(tester);
 
-      // SRS-14: the redirect itself is the router's, driven by the auth stream.
+      // The redirect itself is the router's, driven by the auth stream.
       // What this method owes it is a clean state.
       expect(find.text('Invalid email or password'), findsNothing);
-      expect(find.text('Something went wrong. Please try again.'), findsNothing);
+      expect(find.text('Network connection lost. Please check your connection and try again.'), findsNothing);
     });
 
     testWidgets('TC-03 an unknown email reads the same as a wrong password', (
@@ -125,7 +125,7 @@ void main() {
       await _fill(tester);
       await _tapSignIn(tester);
       expect(find.text('Invalid email or password'), findsOneWidget);
-      // SRS-12: GoTrue's wording never reaches the screen.
+      // GoTrue's wording never reaches the screen.
       expect(find.text('User not found'), findsNothing);
     });
 
@@ -153,7 +153,7 @@ void main() {
       // A transport failure is not a credentials failure, and telling the user
       // their password is wrong when the network dropped would be a lie.
       expect(
-        find.text('Something went wrong. Please try again.'),
+        find.text('Network connection lost. Please check your connection and try again.'),
         findsOneWidget,
       );
       expect(find.text('Invalid email or password'), findsNothing);

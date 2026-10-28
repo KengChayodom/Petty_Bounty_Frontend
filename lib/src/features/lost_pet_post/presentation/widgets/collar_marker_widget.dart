@@ -168,16 +168,12 @@ class PetImageEyedropperDialog extends StatefulWidget {
     this.imagePath,
     this.imageUrl,
     required this.initialHex,
-    this.isSecondary = false,
-    this.otherColorHex,
     required this.onColorConfirmed,
   });
 
   final String? imagePath;
   final String? imageUrl;
   final String initialHex;
-  final bool isSecondary;
-  final String? otherColorHex;
   final ValueChanged<String> onColorConfirmed;
 
   @override
@@ -241,17 +237,10 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
     } catch (_) {}
   }
 
-  bool get _isDuplicate {
-    if (widget.otherColorHex == null) return false;
-    return _sampledHex.toUpperCase() == widget.otherColorHex!.toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final titleText = widget.isSecondary
-        ? 'Pick a second colour'
-        : 'Pick the main colour';
-    final themeColor = widget.isSecondary ? kBrandDeep : kBrandDeep;
+    const titleText = 'Pick the main colour';
+    const themeColor = kBrandDeep;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -266,11 +255,11 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.colorize, color: themeColor, size: 22),
+                    const Icon(Icons.colorize, color: themeColor, size: 22),
                     const SizedBox(width: 8),
-                    Text(
+                    const Text(
                       titleText,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
@@ -356,13 +345,8 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: _isDuplicate ? kBrandDeep.withValues(alpha: 0.08) : kFieldFill,
+                color: kFieldFill,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: _isDuplicate
-                      ? kBrandDeep.withValues(alpha: 0.3)
-                      : Colors.transparent,
-                ),
               ),
               child: Row(
                 children: [
@@ -380,25 +364,14 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.isSecondary
-                              ? 'Second colour'
-                              : 'Main colour',
+                        const Text(
+                          'Main colour',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: _isDuplicate ? kBrandDeep : kInkMuted,
+                            color: kInkMuted,
                           ),
                         ),
-                        if (_isDuplicate)
-                          const Text(
-                            'Colors cannot be the same',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: kBrandErrorDeep,
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -408,14 +381,12 @@ class _PetImageEyedropperDialogState extends State<PetImageEyedropperDialog> {
 
             const SizedBox(height: 16),
 
-            // CONFIRM BUTTON (DISABLED IF DUPLICATE)
+            // CONFIRM BUTTON
             ElevatedButton(
-              onPressed: _isDuplicate
-                  ? null
-                  : () {
-                      widget.onColorConfirmed(_sampledHex);
-                      Navigator.pop(context);
-                    },
+              onPressed: () {
+                widget.onColorConfirmed(_sampledHex);
+                Navigator.pop(context);
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: themeColor,
                 foregroundColor: Colors.white,
