@@ -1,12 +1,12 @@
-// Widget tests for the owner's "Edit Report" form (SRS-66 / MD-39 / UD-11).
+// Widget tests for the owner's "Edit Report" form.
 //
 // What these pin:
 //   * the form opens pre-filled from the existing report — an edit screen that
 //     starts blank would silently wipe fields the owner didn't touch;
-//   * a blank name can't be saved (SRS-57 keeps the name required);
+//   * a blank name can't be saved (the name is required);
 //   * Save sends exactly the editable fields to PATCH /missing-pets/{id}, with
 //     the untouched characteristics keys carried through;
-//   * a backend failure keeps the page open with the error shown (UD-11 [E1]);
+//   * a backend failure keeps the page open with the error shown;
 //   * a report with no coat colour is saved without one. Matching reads this
 //     column, so a placeholder written on save would act as a real colour.
 //
@@ -108,7 +108,7 @@ void main() {
     final repo = await _pump(tester);
 
     await tester.enterText(find.widgetWithText(TextFormField, 'Mochi'), '');
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pump();
 
     expect(find.text('Please enter pet name'), findsOneWidget);
@@ -127,7 +127,7 @@ void main() {
       find.widgetWithText(TextFormField, '1000'),
       '2500',
     );
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pump();
 
     expect(repo.calls, 1);
@@ -153,7 +153,7 @@ void main() {
       find.widgetWithText(TextFormField, 'shy, one white paw'),
       '',
     );
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pump();
 
     final chars = repo.lastPatch!['characteristics'] as Map<String, dynamic>;
@@ -167,14 +167,14 @@ void main() {
       error: Exception('Missing pet pet-1 not found or not owned by you'),
     );
 
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
     expect(repo.calls, 1);
     expect(find.textContaining('not owned by you'), findsOneWidget);
     // still on the form
-    expect(find.text('Save changes'), findsOneWidget);
+    expect(find.text('Save Changes'), findsOneWidget);
   });
 
   testWidgets('a report with no coat colour is saved without inventing one',
@@ -187,7 +187,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pump();
 
     final patch = repo.lastPatch!;
@@ -199,21 +199,21 @@ void main() {
   testWidgets('a report with no reward stays at bounty 0', (tester) async {
     final repo = await _pump(tester, pet: _pet(bounty: 0));
 
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pump();
 
     expect(repo.lastPatch!['bounty_amount'], 0.0);
   });
 
-  // SRS-100: the bounty may be raised after the report is created, never
+  // The bounty may be raised after the report is created, never
   // lowered. The server refuses a lower amount; the form stops it first.
-  group('the bounty cannot be lowered (SRS-100)', () {
+  group('the bounty cannot be lowered', () {
     testWidgets('a lower amount is refused before anything is sent',
         (tester) async {
       final repo = await _pump(tester, pet: _pet(bounty: 1000));
 
       await tester.enterText(find.widgetWithText(TextFormField, '1000'), '999');
-      await tester.tap(find.text('Save changes'));
+      await tester.tap(find.text('Save Changes'));
       await tester.pump();
 
       expect(find.text('Cannot be lower than ฿1000'), findsOneWidget);
@@ -223,7 +223,7 @@ void main() {
     testWidgets('the same amount saves', (tester) async {
       final repo = await _pump(tester, pet: _pet(bounty: 1000));
 
-      await tester.tap(find.text('Save changes'));
+      await tester.tap(find.text('Save Changes'));
       await tester.pump();
 
       expect(repo.calls, 1);
@@ -235,7 +235,7 @@ void main() {
 
       await tester.tap(find.text('Points only'));
       await tester.pump();
-      await tester.tap(find.text('Save changes'));
+      await tester.tap(find.text('Save Changes'));
       await tester.pump();
 
       expect(repo.calls, 1);
@@ -248,7 +248,7 @@ void main() {
       await tester.tap(find.text('Bounty'));
       await tester.pump();
       await tester.enterText(find.widgetWithText(TextFormField, ''), '300');
-      await tester.tap(find.text('Save changes'));
+      await tester.tap(find.text('Save Changes'));
       await tester.pump();
 
       expect(repo.lastPatch!['bounty_amount'], 300.0);
@@ -262,7 +262,7 @@ void main() {
       error: Exception('The bounty can be raised but not lowered'),
     );
 
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 

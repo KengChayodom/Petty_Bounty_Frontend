@@ -1,20 +1,21 @@
 // Unit tests for AuthValidators (pure functions — no widget tree, `test` package).
 //
 // These are true unit tests per the Flutter taxonomy: each exercises a single
-// validator function in isolation. One UTC per validator method (UTC-20…26,
-// continuing the backend UTC-01–19 sequence — "one method = one UTC").
+// validator function in isolation. One test-plan block per validator method
+// ("one method = one UTC"):
 //
-//   UTC-20  AuthValidators.username        (MD-26, SRS-02 umbrella)
-//   UTC-21  AuthValidators.email           (MD-27, SRS-03/04)
-//   UTC-22  AuthValidators.password        (MD-28, SRS-05)
-//   UTC-23  AuthValidators.confirmPassword (MD-29, SRS-06)
-//   UTC-24  AuthValidators.loginPassword   (MD-30, SRS-02 umbrella)
+//   AuthValidators.username
+//   AuthValidators.email
+//   AuthValidators.password
+//   AuthValidators.confirmPassword
+//   AuthValidators.loginPassword
+//   AuthValidators.phone
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/auth/domain/auth_validators.dart';
 
 void main() {
-  group('UTC-20 AuthValidators.username', () {
+  group('AuthValidators.username', () {
     test('TC-01 null / empty / whitespace -> "Enter a username"', () {
       expect(AuthValidators.username(null), 'Enter a username');
       expect(AuthValidators.username(''), 'Enter a username');
@@ -25,7 +26,7 @@ void main() {
     });
   });
 
-  group('UTC-21 AuthValidators.email', () {
+  group('AuthValidators.email', () {
     test('TC-01 null / empty -> "Email is required!"', () {
       expect(AuthValidators.email(null), 'Email is required!');
       expect(AuthValidators.email('   '), 'Email is required!');
@@ -40,7 +41,7 @@ void main() {
     });
   });
 
-  group('UTC-22 AuthValidators.password', () {
+  group('AuthValidators.password', () {
     test('TC-01 null / shorter than 6 -> message', () {
       expect(AuthValidators.password(null),
           'Password must be at least 6 characters');
@@ -55,7 +56,7 @@ void main() {
     });
   });
 
-  group('UTC-23 AuthValidators.confirmPassword', () {
+  group('AuthValidators.confirmPassword', () {
     test('TC-01 differs from original -> "Passwords must match"', () {
       expect(AuthValidators.confirmPassword('secret2', 'secret1'),
           'Passwords must match');
@@ -65,13 +66,25 @@ void main() {
     });
   });
 
-  group('UTC-24 AuthValidators.loginPassword', () {
+  group('AuthValidators.loginPassword', () {
     test('TC-01 null / empty -> "Enter your password"', () {
       expect(AuthValidators.loginPassword(null), 'Enter your password');
       expect(AuthValidators.loginPassword(''), 'Enter your password');
     });
     test('TC-02 non-empty (no length rule) -> null', () {
       expect(AuthValidators.loginPassword('x'), isNull);
+    });
+  });
+
+  group('AuthValidators.phone', () {
+    test('TC-01 null / empty / whitespace -> "Phone number is required"', () {
+      expect(AuthValidators.phone(null), 'Phone number is required');
+      expect(AuthValidators.phone(''), 'Phone number is required');
+      expect(AuthValidators.phone('   '), 'Phone number is required');
+    });
+    test('TC-02 non-empty (no format rule) -> null', () {
+      expect(AuthValidators.phone('0812345678'), isNull);
+      expect(AuthValidators.phone('x'), isNull);
     });
   });
 }

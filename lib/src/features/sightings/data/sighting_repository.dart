@@ -9,6 +9,7 @@ import '../../../core/network/app_http_client.dart';
 import 'package:mime/mime.dart';
 import 'models/sighting_model.dart';
 import '../domain/entities/match_model.dart';
+import '../domain/entities/sighting_errors.dart';
 
 class SightingRepository {
   final String baseUrl = AppConfig.apiBaseUrl;
@@ -162,9 +163,17 @@ class SightingRepository {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final data = json['data'] as Map<String, dynamic>;
       return SightingSubmitResult.fromJson(data);
-    } else {
-      throw Exception('Failed to create targeted sighting');
     }
+    if (response.statusCode >= 500) {
+      throw Exception('Database error. Please try again later');
+    }
+    String? detail;
+    try {
+      final err = jsonDecode(response.body) as Map<String, dynamic>;
+      if (err['detail'] != null) detail = err['detail'].toString();
+    } catch (_) {}
+    if (detail != null) throw SightingRefused(detail);
+    throw Exception('Failed to create targeted sighting');
   }
 
   /// Get matching missing pets for a sighting
@@ -186,6 +195,7 @@ class SightingRepository {
     if (response.statusCode != 200 && response.statusCode != 201) {
       String detail =
           'Failed to confirm report status (${response.statusCode}).';
+      if (response.statusCode >= 500) throw Exception('Database error. Please try again later');
       try {
         final err = jsonDecode(response.body) as Map<String, dynamic>;
         if (err['detail'] != null) detail = err['detail'].toString();

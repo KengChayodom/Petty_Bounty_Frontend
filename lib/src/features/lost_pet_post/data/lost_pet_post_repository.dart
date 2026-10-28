@@ -113,7 +113,7 @@ class LostPetPostRepository {
   }
 
   /// Owner edits the editable fields of their own report —
-  /// `PATCH /missing-pets/{id}` (MD-39 / SRS-65). [patch] carries only the
+  /// `PATCH /missing-pets/{id}`. [patch] carries only the
   /// fields being changed (`pet_name`, `bounty_amount`, `primary_color_hex`,
   /// `characteristics`); owner scoping is enforced server-side via the JWT, so
   /// a report that doesn't exist or isn't the caller's comes back as 404.
@@ -134,6 +134,7 @@ class LostPetPostRepository {
 
     if (response.statusCode != 200) {
       String detail = 'Failed to save changes (${response.statusCode}).';
+      if (response.statusCode >= 500) throw Exception('Database error. Please try again later');
       try {
         final err = jsonDecode(response.body) as Map<String, dynamic>;
         if (err['detail'] != null) detail = err['detail'].toString();

@@ -71,14 +71,14 @@ class BountyRepository {
     throw Exception(message);
   }
 
-  /// SRS-104, SRS-105, SRS-107: the payment state of a closed report, with the
+  /// The payment state of a closed report, with the
   /// hunter's PromptPay number for an owner who owes them.
   Future<BountyView> fetchBounty(String petId) async {
     final r = await _client.get(Uri.parse('$_baseUrl/bounty/$petId'), headers: _headers);
     return BountyView.fromJson(_data(r) as Map<String, dynamic>);
   }
 
-  /// SRS-106: uploads the slip, then submits the payment. Nothing is posted if
+  /// Uploads the slip, then submits the payment. Nothing is posted if
   /// the upload fails.
   Future<void> submitPayment(String petId,
       {required String slipPath, String? referenceNo}) async {
@@ -95,7 +95,7 @@ class BountyRepository {
     _data(r);
   }
 
-  /// SRS-108: the returning hunter confirms the payment or disputes it.
+  /// The returning hunter confirms the payment or disputes it.
   Future<void> answerPayment(String paymentId, {required bool confirm}) async {
     final r = await _client.post(
       Uri.parse('$_baseUrl/bounty/payments/$paymentId/answer'),
@@ -105,7 +105,7 @@ class BountyRepository {
     _data(r);
   }
 
-  /// SRS-109: the returning hunter refers an unpaid report.
+  /// The returning hunter refers an unpaid report.
   Future<void> referUnpaid(String petId) async {
     final r = await _client.post(
       Uri.parse('$_baseUrl/bounty/$petId/unpaid'),

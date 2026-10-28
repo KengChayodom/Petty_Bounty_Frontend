@@ -347,7 +347,7 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
         label: _isSending
             ? const BusyButtonLabel(width: 150)
             : const Text(
-                'CONFIRM & SEND REPORT',
+                'Confirm and Send Report',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
@@ -382,7 +382,10 @@ class _FinalReviewScreenState extends ConsumerState<FinalReviewScreen> {
         if (!mounted) return;
         setState(() => _isSending = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e'), backgroundColor: kBrandErrorDeep),
+          SnackBar(
+            content: Text('$e'.replaceFirst('Exception: ', '')),
+            backgroundColor: kBrandErrorDeep,
+          ),
         );
         return;
       }

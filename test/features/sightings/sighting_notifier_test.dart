@@ -1,6 +1,6 @@
-// Unit test for SightingNotifier.createTargetedSighting (MD-35, SRS-49).
+// Unit test for SightingNotifier.createTargetedSighting.
 //
-// SRS-49 = a targeted sighting (from a pet's detail view) is submitted straight
+// A targeted sighting (from a pet's detail view) is submitted straight
 // to that pet's owner, SKIPPING AI species analysis and similarity matching.
 // This is the client-side orchestration: the notifier must call the
 // repository's dedicated `createTargetedSighting` (which hits the separate
@@ -10,13 +10,13 @@
 // True unit test (`test` package, no widget tree): the SightingRepository is a
 // hand-rolled fake injected via the notifier's constructor (`implements` +
 // noSuchMethod, so the real repo — and its Supabase-touching AuthService — is
-// never constructed). State is read via addListener (public API). Continues the
-// UTC sequence at UTC-25.
+// never constructed). State is read via addListener (public API).
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:petty_bounty/src/features/sightings/domain/entities/match_model.dart';
 import 'package:petty_bounty/src/features/sightings/data/models/sighting_model.dart';
 import 'package:petty_bounty/src/features/sightings/data/sighting_repository.dart';
+import 'package:petty_bounty/src/features/sightings/domain/entities/sighting_errors.dart';
 import 'package:petty_bounty/src/features/sightings/domain/sighting_providers.dart';
 
 SightingSubmitResult _cannedResult({List<MatchModel> matches = const []}) =>
@@ -75,7 +75,7 @@ SightingState _drive(SightingNotifier notifier) {
 }
 
 void main() {
-  group('UTC-25 SightingNotifier.createTargetedSighting (MD-35, SRS-49)', () {
+  group('SightingNotifier.createTargetedSighting', () {
     test('TC-01 calls the targeted repo method with targetPetId; matches empty',
         () async {
       final repo = _FakeRepo(result: _cannedResult());
@@ -114,6 +114,26 @@ void main() {
 
       final state = _drive(notifier);
       expect(state.errorMessage, isNotNull);
+      expect(state.refusalReason, isNull);
+      expect(state.isLoading, isFalse);
+    });
+
+    test('TC-03 a refusal keeps the server reason', () async {
+      const reason = 'You cannot report a sighting on your own report';
+      final notifier =
+          SightingNotifier(_FakeRepo(error: const SightingRefused(reason)));
+
+      await notifier.createTargetedSighting(
+        imageUrl: 'x',
+        latitude: 0,
+        longitude: 0,
+        detectedSpecies: 'Cat',
+        targetPetId: 'pet-9',
+      );
+
+      final state = _drive(notifier);
+      expect(state.refusalReason, reason);
+      expect(state.errorMessage, reason);
       expect(state.isLoading, isFalse);
     });
   });

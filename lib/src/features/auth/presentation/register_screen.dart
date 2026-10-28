@@ -66,19 +66,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (!mounted) return;
 
-      // SRS-09: always confirm the sign-up succeeded.
+      // Always confirm the sign-up succeeded.
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Registration successful')));
 
-      // SRS-10: with email confirmation OFF a session exists immediately and
+      // With email confirmation OFF a session exists immediately and
       // the auth-stream router lands the user on Home Map. If confirmation is
       // required (no session) fall back to the login page.
       if (response.session == null) {
         context.pop();
       }
     } on AuthException catch (e) {
-      // SRS-07: surface a clean "Email already exists" for the duplicate case.
+      // Surface a clean "Email already exists" for the duplicate case.
       final alreadyRegistered = e.message.toLowerCase().contains(
         'already registered',
       );
@@ -86,7 +86,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         () => _error = alreadyRegistered ? 'Email already exists' : e.message,
       );
     } catch (e) {
-      setState(() => _error = 'Something went wrong. Please try again.');
+      setState(
+        () => _error =
+            'Network connection lost. Please check your connection and try again.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }

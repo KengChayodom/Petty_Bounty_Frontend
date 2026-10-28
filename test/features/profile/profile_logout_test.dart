@@ -1,4 +1,4 @@
-// UTC-30  ProfileScreen._logout — Full logout  (MD-34, SRS-17, triggers SRS-20)
+// ProfileScreen._logout — Full logout, which also unregisters push
 //
 // The whole point of this method is the ORDER. `unregisterForCurrentUser`
 // deletes the device row through a JWT-scoped backend call, so it has to run
@@ -53,7 +53,7 @@ class _FakeAuth extends AuthService {
   Future<void> signOut() async => journal.steps.add('signOut');
 }
 
-Future<void> _pumpAndLogout(WidgetTester tester, _Journal journal) async {
+Future<void> _pumpAndOpenDialog(WidgetTester tester, _Journal journal) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -69,8 +69,14 @@ Future<void> _pumpAndLogout(WidgetTester tester, _Journal journal) async {
   await tester.pump();
 }
 
+Future<void> _pumpAndLogout(WidgetTester tester, _Journal journal) async {
+  await _pumpAndOpenDialog(tester, journal);
+  await tester.tap(find.widgetWithText(TextButton, 'Log out'));
+  await tester.pump();
+}
+
 void main() {
-  group('UTC-30 ProfileScreen._logout (MD-34)', () {
+  group('ProfileScreen._logout', () {
     testWidgets('TC-01 all three teardown steps run', (tester) async {
       final journal = _Journal();
       await _pumpAndLogout(tester, journal);
@@ -88,6 +94,20 @@ void main() {
       expect(journal.steps, ['unregister', 'stop', 'signOut']);
     });
 
+    testWidgets('TC-03 Cancel on the confirmation keeps the session', (
+      tester,
+    ) async {
+      final journal = _Journal();
+      await _pumpAndOpenDialog(tester, journal);
+      expect(find.text('Log out?'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pump();
+
+      expect(find.text('Log out?'), findsNothing);
+      expect(journal.steps, isEmpty);
+    });
+
     // NOT COVERED, and deliberately so: what happens when the unregister call
     // fails. `_logout` has no try/catch and `onPressed: _logout` discards the
     // Future it returns, so a failure aborts the remaining two steps and
@@ -97,6 +117,6 @@ void main() {
     // `takeException()` can claim it), which is itself the symptom. Fixing it
     // is a product decision — retry with the session still valid, or sign out
     // anyway and accept an orphaned device row — so it is recorded against
-    // MD-34 rather than decided here.
+    // this method in the spec rather than decided here.
   });
 }

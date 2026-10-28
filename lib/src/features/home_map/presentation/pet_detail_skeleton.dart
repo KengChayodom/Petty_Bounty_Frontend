@@ -90,7 +90,7 @@ class PetDetailSkeleton extends StatelessWidget {
     );
   }
 
-  /// The white COLOR / BREED / SPECIES card.
+  /// The white COLOR / SPECIES card.
   Widget _detailsRow() {
     return Padding(
       padding: _sidePadding,
@@ -159,7 +159,7 @@ class PetDetailSkeleton extends StatelessWidget {
   }
 }
 
-/// One COLOR / BREED / SPECIES column: a label bone above the value bone.
+/// One COLOR / SPECIES column: a label bone above the value bone.
 class _DetailItemSkeleton extends StatelessWidget {
   const _DetailItemSkeleton({required this.child});
 

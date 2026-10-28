@@ -8,7 +8,7 @@ import '../domain/location_tracking.dart';
 import 'location_api.dart';
 
 /// Keeps the hunter's `last_location` fresh on the backend while the app is in
-/// use (SRS-26), so a newly reported missing pet can geo-target genuinely
+/// use, so a newly reported missing pet can geo-target genuinely
 /// nearby hunters via `get_nearby_hunters`.
 ///
 /// Design notes (why foreground-only, why a poll):
@@ -44,7 +44,7 @@ class LocationPublisher implements LocationTracking {
     _timer = Timer.periodic(_interval, (_) => _publishOnce());
   }
 
-  /// Stop publishing — call on logout (SRS-20) so a signed-out user is no
+  /// Stop publishing — call on logout so a signed-out user is no
   /// longer tracked.
   @override
   void stop() {

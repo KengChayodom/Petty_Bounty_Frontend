@@ -28,9 +28,30 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   int _selectedTab = 0; // 0 = Hunter, 1 = Pet Owner
 
+  /// Asks before logging out. Cancel leaves the session as it was.
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Log out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) await _logout();
+  }
+
   Future<void> _logout() async {
     // Read through providers rather than the singletons directly, so the order
-    // below is verifiable (UTC-30). Production resolves the same two objects.
+    // below is verifiable. Production resolves the same two objects.
     await ref.read(pushRegistrationProvider).unregisterForCurrentUser();
     ref.read(locationTrackingProvider).stop();
     await ref.read(authServiceProvider).signOut();
@@ -69,7 +90,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Profile saved.'),
+                    content: Text('Profile updated successfully'),
                     backgroundColor: kSuccessDeep,
                   ),
                 );
@@ -79,7 +100,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Could not save your profile: $e'),
+                    content: Text('$e'.replaceFirst('Exception: ', '')),
                     backgroundColor: kBrandErrorDeep,
                   ),
                 );
@@ -254,7 +275,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           GlassIconButton(
             icon: Icons.logout_rounded,
             tooltip: 'Log out',
-            onPressed: _logout,
+            onPressed: _confirmLogout,
           ),
         ],
       ),
