@@ -61,6 +61,7 @@ class MarkerHelper {
         width: 60,
         height: 60,
         child: GestureDetector(
+          key: ValueKey('pet-marker-${pet.id}'),
           onTap: () => onMarkerTap(pet.id),
           child: _buildPetMarker(pet),
         ),

@@ -46,6 +46,7 @@ class LocationTileWidget extends ConsumerWidget {
     final hasLocation = latitude != null && longitude != null;
 
     return GestureDetector(
+      key: const Key('post-location'),
       onTap: () => _openLocationPicker(context, ref),
       child: Container(
         clipBehavior: Clip.antiAlias,

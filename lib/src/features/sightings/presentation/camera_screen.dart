@@ -247,6 +247,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   /// screens so it sits in the same spot in all of them.
   Widget _galleryButton() {
     return GestureDetector(
+      key: const Key('camera-gallery'),
       onTap: _pickFromGallery,
       child: Container(
         height: 50,

@@ -77,3 +77,13 @@ app.*.map.json
 
 ios/Runner.xcodeproj/project.pbxproj
 ios/Runner.xcworkspace/
+# Patrol private defines and generated bundle/evidence
+/.env.ui.local.json
+/.patrol.env
+**/test_bundle.dart
+/patrol-results/
+
+!/.env.ui.example.json
+
+# Project-local automation SDKs, caches and AVDs
+/.ui-tools/
