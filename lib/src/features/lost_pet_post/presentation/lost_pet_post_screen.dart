@@ -426,6 +426,7 @@ class _LostPetPostScreenState extends ConsumerState<LostPetPostScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: TextFormField(
+                                  key: const Key('post-name'),
                                   controller: _nameController,
                                   textInputAction: TextInputAction.next,
                                   decoration: const InputDecoration(

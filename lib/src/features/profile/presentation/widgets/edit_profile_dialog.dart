@@ -200,6 +200,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
             ),
             const SizedBox(height: 6),
             TextField(
+              key: const Key('profile-username'),
               controller: _nameController,
               decoration: InputDecoration(
                 hintText: 'e.g. Hunter Guide',
@@ -222,6 +223,7 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
             ),
             const SizedBox(height: 6),
             TextField(
+              key: const Key('profile-phone'),
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(

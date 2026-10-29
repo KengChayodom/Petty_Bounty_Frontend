@@ -817,6 +817,9 @@ class _GlassAuthFieldState extends State<GlassAuthField> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
+        key: ValueKey(
+          'auth-${widget.label.toLowerCase().replaceAll(" ", "-")}',
+        ),
         controller: widget.controller,
         focusNode: _focusNode,
         obscureText: _obscured,

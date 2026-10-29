@@ -745,6 +745,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: Tooltip(
             message: 'Report a sighting',
             child: GestureDetector(
+              key: const Key('home-camera'),
               onTap: _openCamera,
               child: Container(
                 width: 70,
