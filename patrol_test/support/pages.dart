@@ -84,6 +84,7 @@ class ProfilePage extends PageObject {
   String fieldValue(String name) =>
       tester.widget<TextField>(key(name)).controller!.text;
   Future<void> save(String name, String phone) async {
+    await ui.profileJournal?.recordMutation(ProfileValues(name, phone));
     await enter(key('profile-username'), name);
     await enter(key('profile-phone'), phone);
     await tapText('Save Changes');

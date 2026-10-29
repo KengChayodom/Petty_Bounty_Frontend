@@ -17,5 +17,7 @@ void main() {
       });
       await ui.seeText(profile.name);
     },
+    needs: ['UI_PROFILE_JOURNAL_DIR'],
+    timeout: const Duration(minutes: 2),
   );
 }

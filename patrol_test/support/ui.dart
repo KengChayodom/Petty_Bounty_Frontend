@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 import 'package:petty_bounty/main.dart' as app;
 import 'config.dart';
+import 'profile_journal.dart';
+import 'package:petty_bounty/src/core/app_config.dart';
 export 'config.dart';
 export 'package:flutter/material.dart';
 export 'package:flutter_test/flutter_test.dart';
@@ -20,9 +22,11 @@ void uiTest(
   UiBody body, {
   List<String> needs = const [],
   String? account = 'OWNER',
+  Duration timeout = const Duration(minutes: 5),
 }) {
   final fixture = UiFixture(account: account, needs: needs);
   final missing = fixture.missing;
+  const developing = bool.fromEnvironment('PATROL_HOT_RESTART');
   patrolTest(
     '$suite $title${missing.isEmpty ? '' : ' [NOT RUN: missing ${missing.join(', ')}]'}',
     ($) async {
@@ -30,7 +34,9 @@ void uiTest(
     },
     skip: missing.isNotEmpty,
     tags: [suite],
-    timeout: const Timeout(Duration(minutes: 5)),
+    // Patrol develop holds the last completed test open for hot restart.
+    // UI waits stay bounded; MCP controls the overall develop session lifetime.
+    timeout: developing ? Timeout.none : Timeout(timeout),
     config: const PatrolTesterConfig(printLogs: false),
   );
 }
@@ -40,6 +46,7 @@ void uiTest(
 class Ui {
   Ui(this.$);
   final PatrolIntegrationTester $;
+  ProfileJournal? profileJournal;
   late final auth = AuthPage(this);
   late final profilePage = ProfilePage(this);
   late final map = HomePage(this);
@@ -69,20 +76,20 @@ class Ui {
   Future<void> see(Finder finder) async {
     await until(
       () => finder.evaluate().isNotEmpty,
-      'Expected control: $finder',
+      'Expected the requested control to exist',
     );
     await tester.ensureVisible(finder.first);
     await tester.pump(const Duration(milliseconds: 100));
     await until(
       () => finder.hitTestable().evaluate().isNotEmpty,
-      'Expected the control to be visible: $finder',
+      'Expected the requested control to be visible',
     );
   }
 
   Future<void> seeText(String value) => see(text(value));
   Future<void> gone(Finder finder) => until(
     () => finder.evaluate().isEmpty,
-    'Expected control to disappear: $finder',
+    'Expected the requested control to disappear',
   );
   Future<void> tap(Finder finder) async {
     await see(finder);
@@ -129,7 +136,7 @@ class Ui {
       await tester.drag(scroll.last, const Offset(0, -350));
       await tester.pump(const Duration(milliseconds: 250));
     }
-    fail('Requested fixture/control was not found while scrolling: $finder');
+    fail('Requested fixture/control was not found while scrolling');
   }
 
   Future<void> permissions() async {
