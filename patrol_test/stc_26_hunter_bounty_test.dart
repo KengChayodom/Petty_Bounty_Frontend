@@ -81,6 +81,7 @@ void main() {
     needs: [
       'UI_OWNER_EMAIL',
       'UI_OWNER_PASSWORD',
+      'UI_PROFILE_JOURNAL_DIR',
       'UI_PROMPTPAY_PHONE',
       'UI_PROMPTPAY_PET',
     ],

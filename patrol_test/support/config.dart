@@ -1,5 +1,6 @@
 class UiConfig {
   static const values = <String, String>{
+    'UI_PROFILE_JOURNAL_DIR': String.fromEnvironment('UI_PROFILE_JOURNAL_DIR'),
     'UI_OWNER_EMAIL': String.fromEnvironment('UI_OWNER_EMAIL'),
     'UI_OWNER_PASSWORD': String.fromEnvironment('UI_OWNER_PASSWORD'),
     'UI_HUNTER_EMAIL': String.fromEnvironment('UI_HUNTER_EMAIL'),

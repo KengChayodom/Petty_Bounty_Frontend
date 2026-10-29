@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run real mobile Patrol UI tests; retain runner evidence outside Manual."""
 import argparse
+import json
 from datetime import datetime
 from pathlib import Path
 import shutil
@@ -15,7 +16,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--platform', choices=('ios', 'android'), default='ios')
     parser.add_argument('--device', required=True, help='Device id from `patrol devices`')
-    parser.add_argument('--suite', help='For example STC-02; omit for all 22 suites')
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument('--suite', help='For example STC-02; omit for all 22 suites')
+    selection.add_argument('--ready', action='store_true',
+                           help='Run the four login/logout/profile cases in one build')
     args = parser.parse_args()
     if args.suite and args.suite not in {f'STC-{n:02}' for n in MOBILE}:
         parser.error('Choose one of the 22 mobile STC suites')
@@ -30,6 +34,12 @@ def main():
                '--dart-define-from-file=.env.ui.local.json']
     if args.suite:
         command += ['--tags', args.suite]
+    if args.ready:
+        command += ['--target', 'tool/ui_batches/ready_test.dart']
+    config = json.loads((ROOT / '.env.ui.local.json').read_text())
+    secrets = sorted({v for k, v in config.items()
+                      if any(s in k for s in ('PASSWORD', 'EMAIL')) and v},
+                     key=len, reverse=True)
     android_results = ROOT / 'build/app/outputs/androidTest-results'
     previous_xml = (
         {p: p.stat().st_mtime_ns for p in android_results.rglob('*.xml')}
@@ -42,6 +52,8 @@ def main():
         process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT, text=True)
         for line in process.stdout:
+            for secret in secrets:
+                line = line.replace(secret, '[redacted]')
             print(line, end='')
             log.write(line)
         code = process.wait()
