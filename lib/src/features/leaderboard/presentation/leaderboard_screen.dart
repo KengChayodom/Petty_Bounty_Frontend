@@ -122,6 +122,7 @@ Widget _rankRow({
   required Widget trailing,
 }) {
   return Container(
+    key: ValueKey('rank-$rank-$title'),
     decoration: const BoxDecoration(
       border: Border(bottom: BorderSide(color: _hairline)),
     ),

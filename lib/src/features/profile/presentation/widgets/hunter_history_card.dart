@@ -28,6 +28,7 @@ class HunterHistoryCard extends StatelessWidget {
                 : '';
 
     return SheetTile(
+      key: ValueKey('hunter-history-${item.id}'),
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [

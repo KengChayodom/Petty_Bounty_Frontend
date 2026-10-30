@@ -51,6 +51,7 @@ dependencies:
   qr_flutter: ^4.1.0
 
 dev_dependencies:
+  patrol: 4.10.0
   flutter_test:
     sdk: flutter
 
@@ -64,6 +65,7 @@ dev_dependencies:
   freezed: ^2.4.7
   json_serializable: ^6.7.1
   change_app_package_name: ^1.5.0
+  patrol_mcp: ^0.2.1
 
 flutter:
 
@@ -106,3 +108,11 @@ flutter_launcher_icons:
   image_path: "assets/Petty Bounty Logo.png"
 
 
+
+patrol:
+  app_name: Petty Bounty
+  test_directory: patrol_test
+  android:
+    package_name: com.pettybounty.app
+  ios:
+    bundle_id: com.pettybounty.app

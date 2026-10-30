@@ -264,6 +264,7 @@ class _EditReportFormState extends ConsumerState<EditReportForm> {
                 title: 'Name',
                 icon: Icons.text_fields_rounded,
                 child: TextFormField(
+                  key: const Key('edit-report-name'),
                   controller: _nameController,
                   textInputAction: TextInputAction.next,
                   decoration: _fieldDecoration("Pet's name"),

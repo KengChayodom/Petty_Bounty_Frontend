@@ -59,6 +59,7 @@ class NearbyPetsNotifier extends StateNotifier<NearbyPetsState> {
     required double longitude,
     double radiusKm = 5.0,
   }) async {
+    if (!mounted) return;
     state = state.copyWith(
       isLoading: true,
       errorMessage: null,
@@ -72,15 +73,11 @@ class NearbyPetsNotifier extends StateNotifier<NearbyPetsState> {
         longitude: longitude,
         radiusKm: radiusKm,
       );
-      state = state.copyWith(
-        isLoading: false,
-        pets: pets,
-      );
+      if (!mounted) return;
+      state = state.copyWith(isLoading: false, pets: pets);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      if (!mounted) return;
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
@@ -103,9 +100,9 @@ class NearbyPetsNotifier extends StateNotifier<NearbyPetsState> {
 // Nearby pets state provider
 final nearbyPetsProvider =
     StateNotifierProvider<NearbyPetsNotifier, NearbyPetsState>((ref) {
-  final useCase = ref.watch(getNearbyPetsUseCaseProvider);
-  return NearbyPetsNotifier(useCase);
-});
+      final useCase = ref.watch(getNearbyPetsUseCaseProvider);
+      return NearbyPetsNotifier(useCase);
+    });
 
 // Selected pet ID provider (for bottom sheet)
 final selectedPetIdProvider = StateProvider<String?>((ref) => null);

@@ -12,6 +12,17 @@ import 'src/routing/app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await initializeAppServices();
+  runApp(const ProviderScope(child: PettyBountyApp()));
+}
+
+Future<void>? _initialization;
+
+/// Shared by production and device UI tests. The caller owns the binding.
+Future<void> initializeAppServices() =>
+    _initialization ??= _initializeAppServices();
+
+Future<void> _initializeAppServices() async {
   // Supabase handles Auth (Feature #6), Storage and Realtime directly from the
   // client. It persists and silently refreshes the session across app restarts.
   await Supabase.initialize(
@@ -27,8 +38,6 @@ Future<void> main() async {
   // FcmService + HomeScreen._initPushAfterLocation.
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  runApp(const ProviderScope(child: PettyBountyApp()));
 }
 
 class PettyBountyApp extends ConsumerStatefulWidget {

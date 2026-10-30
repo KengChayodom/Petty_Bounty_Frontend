@@ -31,6 +31,7 @@ class HunterTabContent extends StatelessWidget {
           children: [
             Expanded(
               child: ProfileStatCard(
+                key: const Key('hunter-points'),
                 numberText: '$earnedPoints',
                 label: 'Points',
                 highlight: true,
@@ -39,6 +40,7 @@ class HunterTabContent extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: ProfileStatCard(
+                key: const Key('hunter-sighting-count'),
                 numberText: '$sightingCount',
                 label: 'Sightings',
               ),

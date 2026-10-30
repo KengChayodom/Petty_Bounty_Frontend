@@ -327,6 +327,7 @@ class _PhotoPickerWidgetState extends ConsumerState<PhotoPickerWidget> {
         ),
         const SizedBox(height: 8),
         GestureDetector(
+          key: const Key('post-photo'),
           onTap: _isAnalyzing ? null : _pickImage,
           child: Stack(
             children: [
