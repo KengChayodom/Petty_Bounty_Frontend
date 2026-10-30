@@ -21,6 +21,7 @@ class SightingMapView extends StatelessWidget {
     final point = LatLng(latitude, longitude);
 
     return Scaffold(
+      key: const Key('sighting-map'),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
