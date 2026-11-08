@@ -4,4 +4,12 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Android 9+ blocks cleartext HTTP by default. The FastAPI backend runs
+         on the developer's machine over plain HTTP on the LAN
+         (e.g. http://192.168.1.41:8000), so debug/profile builds must opt in or
+         every request fails with "Cleartext HTTP traffic not permitted".
+         This lives ONLY in the debug/profile source sets — the release manifest
+         is untouched, so production stays HTTPS-only. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

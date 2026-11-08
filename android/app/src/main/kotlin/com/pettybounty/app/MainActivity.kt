@@ -1,4 +1,4 @@
-package com.example.petty_bounty
+package com.pettybounty.app
 
 import io.flutter.embedding.android.FlutterActivity
 

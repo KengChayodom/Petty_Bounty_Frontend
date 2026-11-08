@@ -1,0 +1,374 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/auth/auth_service.dart';
+import '../../../core/notifications/fcm_service.dart';
+import '../../../core/theme/app_glass.dart';
+import '../../../core/ui/brand_widgets.dart';
+import '../../../routing/app_router.dart';
+import '../../home_map/domain/providers/location_tracking_provider.dart';
+import '../domain/models/profile_models.dart';
+import '../domain/providers/profile_providers.dart';
+import 'widgets/edit_profile_dialog.dart';
+import 'widgets/hunter_tab_content.dart';
+import 'widgets/owner_tab_content.dart';
+import 'widgets/profile_header_widget.dart';
+import 'widgets/profile_skeletons.dart';
+import 'widgets/role_tab_toggle_widget.dart';
+
+/// Full Dual-Mode Profile Screen connected to real Backend APIs & Riverpod state.
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  int _selectedTab = 0; // 0 = Hunter, 1 = Pet Owner
+
+  /// Asks before logging out. Cancel leaves the session as it was.
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Log out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) await _logout();
+  }
+
+  Future<void> _logout() async {
+    // Read through providers rather than the singletons directly, so the order
+    // below is verifiable. Production resolves the same two objects.
+    await ref.read(pushRegistrationProvider).unregisterForCurrentUser();
+    ref.read(locationTrackingProvider).stop();
+    await ref.read(authServiceProvider).signOut();
+    // Deliberately NO ref.invalidate here. Invalidating after signOut made the
+    // providers refetch immediately in a signed-out state (no access token ->
+    // backend 401), and because they were cached at root scope those errors
+    // were still there when the next account opened this screen. The providers
+    // are autoDispose instead: the router redirects to /login, this screen
+    // unmounts, and the cache is dropped for free.
+  }
+
+  void _openEditProfileDialog(
+    String currentName,
+    String? currentPhone,
+    String? currentPhoto,
+  ) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return EditProfileDialog(
+          currentUsername: currentName,
+          currentPhone: currentPhone,
+          currentPhotoUrl: currentPhoto,
+          // Returns whether the save succeeded, so the dialog knows whether
+          // it's safe to close (on failure it stays open so the user's
+          // typed changes aren't lost and they can just retry).
+          onSave: (newName, newPhone, newPhoto) async {
+            try {
+              await ref
+                  .read(userProfileProvider.notifier)
+                  .updateProfile(
+                    username: newName,
+                    phone: newPhone,
+                    photoUrl: newPhoto,
+                  );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Profile updated successfully'),
+                    backgroundColor: kSuccessDeep,
+                  ),
+                );
+              }
+              return true;
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('$e'.replaceFirst('Exception: ', '')),
+                    backgroundColor: kBrandErrorDeep,
+                  ),
+                );
+              }
+              return false;
+            }
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profileAsync = ref.watch(userProfileProvider);
+    final hunterStatsAsync = ref.watch(hunterStatsProvider);
+    final hunterHistoryAsync = ref.watch(hunterHistoryProvider);
+    final ownerPostsAsync = ref.watch(ownerPostsProvider);
+
+    return Scaffold(
+      backgroundColor: kDaylight,
+      // `.noSpinner` keeps the pull-to-refresh gesture but draws no progress
+      // arc — the refresh is signalled by the sections dropping back to their
+      // skeletons instead (see `skipLoadingOnRefresh: false` below).
+      body: RefreshIndicator.noSpinner(
+        onRefresh: () async {
+          ref.invalidate(userProfileProvider);
+          ref.invalidate(hunterStatsProvider);
+          ref.invalidate(hunterHistoryProvider);
+          ref.invalidate(ownerPostsProvider);
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          children: [
+            // Dark header band. The role switch below is pulled up so it
+            // straddles the band's lower edge.
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0.7, -1.0),
+                  radius: 1.2,
+                  colors: [Color(0xFF8A4A1F), Color(0xFF2B1C13)],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 58),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _topBar(),
+                    const SizedBox(height: 14),
+                    profileAsync.when(
+                      // Show the skeleton on a pull-to-refresh too, not just
+                      // the first load: with no spinner it is the only refresh
+                      // feedback.
+                      skipLoadingOnRefresh: false,
+                      data: (profile) => ProfileHeaderWidget(
+                        username: profile.username,
+                        phone: profile.phone ?? '',
+                        email: profile.email ?? '',
+                        photoUrl: profile.profileImageUrl,
+                        onEditPressed: () => _openEditProfileDialog(
+                          profile.username,
+                          profile.phone,
+                          profile.profileImageUrl,
+                        ),
+                      ),
+                      loading: () => const ProfileHeaderSkeleton(),
+                      error: (err, stack) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Could not load your profile. Check your connection, then try again.',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: kDaylight.withValues(alpha: 0.85)),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                  foregroundColor: kBrandLight),
+                              onPressed: () =>
+                                  ref.invalidate(userProfileProvider),
+                              child: const Text('Try again'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0, -28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        RoleTabToggleWidget(
+                          selectedTab: _selectedTab,
+                          onTabSelected: (index) =>
+                              setState(() => _selectedTab = index),
+                        ),
+                        const SizedBox(height: 18),
+                        _selectedTab == 0
+                            ? _buildTabBody(
+                                loading: hunterStatsAsync.isLoading ||
+                                    hunterHistoryAsync.isLoading,
+                                error: hunterStatsAsync.error ??
+                                    hunterHistoryAsync.error,
+                                onRetry: () {
+                                  ref.invalidate(hunterStatsProvider);
+                                  ref.invalidate(hunterHistoryProvider);
+                                },
+                                skeleton: const HunterTabSkeleton(),
+                                content: () => _buildHunterTab(
+                                  hunterStatsAsync,
+                                  hunterHistoryAsync,
+                                ),
+                              )
+                            : _buildTabBody(
+                                loading: ownerPostsAsync.isLoading,
+                                error: ownerPostsAsync.error,
+                                onRetry: () =>
+                                    ref.invalidate(ownerPostsProvider),
+                                skeleton: const OwnerTabSkeleton(),
+                                content: () => _buildOwnerTab(ownerPostsAsync),
+                              ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _topBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          if (Navigator.of(context).canPop()) ...[
+            GlassIconButton(
+              icon: Icons.arrow_back_ios_new_rounded,
+              tooltip: 'Back',
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Text(
+              'Profile',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: kDaylight.withValues(alpha: 0.85),
+              ),
+            ),
+          ),
+          GlassIconButton(
+            icon: Icons.logout_rounded,
+            tooltip: 'Log out',
+            onPressed: _confirmLogout,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Loading/error are indistinguishable from a genuine "no activity yet"
+  /// zero if left to `.value` alone — this makes a real backend failure
+  /// visible (with a retry) instead of silently looking like an empty tab.
+  Widget _buildTabBody({
+    required bool loading,
+    required Object? error,
+    required VoidCallback onRetry,
+    required Widget skeleton,
+    required Widget Function() content,
+  }) {
+    if (loading) {
+      // A skeleton of THIS tab's real layout, so the stats row and history
+      // cards don't jump into place once the providers resolve.
+      return skeleton;
+    }
+    if (error != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: kBrandErrorDeep, size: 32),
+            const SizedBox(height: 8),
+            const Text(
+              'Could not load this tab. Check your connection, then try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: kBrandErrorDeep, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            TextButton(onPressed: onRetry, child: const Text('Try again')),
+          ],
+        ),
+      );
+    }
+    return content();
+  }
+
+  Widget _buildHunterTab(
+    AsyncValue hunterStatsAsync,
+    AsyncValue hunterHistoryAsync,
+  ) {
+    // .value is null both while loading and on error — 0 is the honest
+    // placeholder either way, never a made-up positive number.
+    final stats = hunterStatsAsync.value;
+    final List<HunterSightingHistoryItem> historyItems =
+        hunterHistoryAsync.value ?? const <HunterSightingHistoryItem>[];
+
+    return HunterTabContent(
+      earnedPoints: stats?.totalScore ?? 0,
+      sightingCount: stats?.sightingsSubmitted ?? 0,
+      rescuesCount: stats?.sightingsVerified ?? 0,
+      historyItems: historyItems,
+    );
+  }
+
+  Widget _buildOwnerTab(AsyncValue ownerPostsAsync) {
+    final List<OwnerPostHistoryItem> postItems =
+        ownerPostsAsync.value ?? const <OwnerPostHistoryItem>[];
+    final recoversCount = postItems
+        .where((p) => p.status == PostStatus.rescued)
+        .length;
+
+    return OwnerTabContent(
+      postsCount: postItems.length,
+      recoversCount: recoversCount,
+      postItems: postItems,
+      onViewSightingsPressed: (item) {
+        context.push(
+          '${AppRoutes.statusTracker}/${item.id}',
+          extra: {
+            'petName': item.petName,
+            'petImageUrl': item.petImageUrl,
+            'isResolved': item.status == PostStatus.rescued,
+          },
+        );
+      },
+      // Only a report still being searched for is worth editing —
+      // a rescued/expired case's bounty and traits no longer matter.
+      onEditPressed: (item) => item.status == PostStatus.activeSearch
+          ? () async {
+              final changed = await context.push<bool>(
+                '${AppRoutes.lostPetPostEdit}/${item.id}',
+              );
+              if (changed == true) {
+                ref.invalidate(ownerPostsProvider);
+              }
+            }
+          : null,
+    );
+  }
+}
